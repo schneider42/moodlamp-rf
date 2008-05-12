@@ -72,7 +72,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = rx
+TARGET = bridge
 
 
 # Object files directory
