@@ -1,0 +1,31 @@
+----moodlamp-ng---
+
+This is a modified fnordlicht firmware by Tobias Schneider
+(schneider@blinkenlichts.net).
+
+It adds a more useful RC5 interface to control the lamp via
+an infrared remote control.
+
+Most of the added code goes to the static scripts and the rc5 handler.
+The main loop contains a new state machine which controls the global
+behavior of the lamp.
+
+A list of features:
+    -Dimming the lamp.
+    -Powering down the lamp and resuming at the same state.
+    -Storing default values in the internal eeprom, which are used at start up.
+    -Selection of the running script.
+    -Pausing the running script.
+    -Adjusting the speed of the script running.
+    -A sleep timer which dims the lamp over a period of time to zero brightness.
+    -The RGB value can be directly modified by the remote.
+     If this is used while the lamp is paused, any color can be selected.
+
+Changes in the source:
+    -The original RC5 decoder is replaced by Peter Dannegers code.
+    -The speed adjustment is more thoroughly implemented.
+    -The PWM values are scaled by a dimming value.
+    -The RC5 commands are handled in a new module(rc5_handler.c)
+    -The standard avr-lib makefile is used.
+    -The pin for the RC5 receiver changed. This is due to the chosen layout.
+     With the new RC5 lib this can be changed to any pin.
