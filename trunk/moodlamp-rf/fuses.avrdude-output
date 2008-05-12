@@ -1,0 +1,39 @@
+schneider@schneider-laptop:/dump/prj/moodlamp-2008/svn/moodlamp/eetest$ avrdude -p m8 -c usbasp -U hfuse:r:h:h
+
+avrdude: AVR device initialized and ready to accept instructions
+
+Reading | ################################################## | 100% 0.02s
+
+avrdude: Device signature = 0x1e9307
+avrdude: reading hfuse memory:
+
+Reading | ################################################## | 100% 0.01s
+
+avrdude: writing output file "h"
+
+avrdude: safemode: Fuses OK
+
+avrdude done.  Thank you.
+
+schneider@schneider-laptop:/dump/prj/moodlamp-2008/svn/moodlamp/eetest$ cat h
+0xc1
+schneider@schneider-laptop:/dump/prj/moodlamp-2008/svn/moodlamp/eetest$ avrdude -p m8 -c usbasp -U lfuse:r:h:h
+
+avrdude: AVR device initialized and ready to accept instructions
+
+Reading | ################################################## | 100% 0.00s
+
+avrdude: Device signature = 0x1e9307
+avrdude: reading lfuse memory:
+
+Reading | ################################################## | 100% 0.00s
+
+avrdude: writing output file "h"
+
+avrdude: safemode: Fuses OK
+
+avrdude done.  Thank you.
+
+schneider@schneider-laptop:/dump/prj/moodlamp-2008/svn/moodlamp/eetest$ cat h
+0xbf
+
