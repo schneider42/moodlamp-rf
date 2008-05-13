@@ -47,7 +47,8 @@
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
 
 
-#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
+#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega644P__)
+
 /* in atmega88, this isn't needed any more */
 #define UART_UCSRC _BV(_UCSZ0_UART0) | _BV(_UCSZ1_UART0)
 #endif

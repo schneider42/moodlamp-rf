@@ -41,7 +41,7 @@
 #endif
 
 /* check if this cpu is supported */
-#if !(defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega16__))
+#if !(defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega16__) || defined(__AVR_ATmega324P__)  || defined(__AVR_ATmega644P__))
 #error "this cpu isn't supported yet!"
 #endif
 
@@ -115,7 +115,7 @@
 
 /* }}} */
 
-#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
+#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)|| defined(__AVR_ATmega324P__) || defined(__AVR_ATmega644P__)
 /* {{{ */
 #define _ATMEGA88
 

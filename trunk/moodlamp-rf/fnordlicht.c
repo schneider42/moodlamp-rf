@@ -158,10 +158,15 @@ int main(void) {
 
 #if RC5_DECODER
     //init_rc5();
-      //TCCR0B = 1<<CS02;			//divide by 256
+#if defined(__AVR_ATmega324P__) ||  defined(__AVR_ATmega644P__)
+    TCCR0B = 1<<CS02;			//divide by 256
+    TIMSK0 |= 1<<TOIE0;			//enable timer interrupt
+#else
     TCCR0 = 1<<CS02;			//divide by 256
     //TIMSK0 |= 1<<TOIE0;			//enable timer interrupt
     TIMSK |= 1<<TOIE0;			//enable timer interrupt
+#endif
+
 #endif
 
 #if I2C
