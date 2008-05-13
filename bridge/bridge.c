@@ -80,6 +80,8 @@ int main(void)
         if((c = readline())> 0){
             if(buffer[0] == 'P'){
                 rf12packet_send(buffer[1],(unsigned char *)buffer+2,c-2);
+            }else if(buffer[0] == 'B'){
+                rf12packet_sendmc(buffer[1],(unsigned char *)buffer+2,c-2);
             }else if(buffer[0] == 'A'){
                 rf12packet_init(buffer[1]);
             }else if(buffer[0] == 'S'){

@@ -138,6 +138,7 @@ while True:
             #g = 3;
             #b = 4;
             rf12.write("acP%c" % remadr)
+            #rf12.write("acB%c" % remadr)
             s  = ("C%c%c%c" % (r,g,b)).replace('a','aa')
             #print "%d %d %d" % (r,g,b)
             rf12.write(s)

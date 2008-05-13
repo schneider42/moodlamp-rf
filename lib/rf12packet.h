@@ -6,11 +6,14 @@ void rf12packet_process(unsigned char * packet, unsigned char len);
 unsigned char rf12packet_send(unsigned char adr, unsigned char * packet, unsigned char len);
 void rf12packet_init(unsigned char adr);
 unsigned char rf12packet_getstatus(void);
+unsigned char rf12packet_incrseq(void);
 
 extern unsigned char rf12packet_data[50];
 extern unsigned char rf12packet_datalen;
 unsigned char rf12packet_status;
 extern unsigned char rf12packet_sniff;
+unsigned char rf12packet_isidle(void);
+unsigned char rf12packet_sendmc(unsigned char adr, unsigned char * packet, unsigned char len);
 #define STATE_SENDPACKET    0
 #define STATE_WAITFREE      1
 #define STATE_WAITRND       2
