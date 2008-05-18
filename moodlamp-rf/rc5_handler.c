@@ -116,7 +116,10 @@ uint8_t rc5_handler(uint8_t rc5adr, uint8_t rc5cmd)
     }
     else if(rc5cmd == KEY_POWER){
         if(global.state != STATE_STANDBY){
-            global.oldstate = global.state;
+            if(global.state == STATE_SLEEP)
+                global.oldstate = STATE_RUNNING;
+            else
+                global.oldstate = global.state;
             global.state = STATE_ENTERSTANDBY;
         }else{
             global.state = STATE_LEAVESTANDBY;
