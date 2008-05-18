@@ -17,6 +17,7 @@ unsigned char outlen = 0;
 unsigned char inpacket[50];
 unsigned char acked = 0;
 unsigned char seq = 0;
+unsigned char ismulticast = 0;
 unsigned char localadr;
 unsigned char rf12packet_data[50];
 unsigned char rf12packet_datalen = 0;
@@ -121,10 +122,17 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
                 rf12_rxstart();                 //recv ack
                 count = 20;                     //max. 20ms pour le ack
                 acked = 0;
-                if(retries != 0)                //bb mc set this to zero
+                /*if(retries != 0)                //bb mc set this to zero
                     state = STATE_WAITACK;
                 else
+                    state = STATE_IDLE;*/
+                if(ismulticast){
+                    rf12packet_status |= RF12PACKET_PACKETDONE;
+                    rf12_rxstart();
                     state = STATE_IDLE;
+                }else{
+                    state = STATE_WAITACK;
+                }
             }
         break;
         case STATE_WAITACK:
@@ -231,6 +239,7 @@ unsigned char rf12packet_send(unsigned char adr, unsigned char * packet, unsigne
     memcpy(outpacket+4,packet,len);
     outlen = len+4;
     retries = 10;
+    ismulticast = 0;
     return 0;
 }
 
@@ -251,5 +260,6 @@ unsigned char rf12packet_sendmc(unsigned char adr, unsigned char * packet, unsig
     memcpy(outpacket+4,packet,len);
     outlen = len+4;
     retries = 1;
+    ismulticast = 1;
     return 0;
 }

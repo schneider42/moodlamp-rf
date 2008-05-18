@@ -66,7 +66,7 @@ int main(void)
     rf12_setbandwidth(4, 1, 4);		// 200kHz Bandbreite, -6dB Verstärkung, DRSSI threshold: -79dBm 
     rf12_setbaud(19200);			// 19200 baud
     rf12_setpower(0, 6);			// 1mW Ausgangangsleistung, 120kHz Frequenzshift
-    rf12packet_init(3);
+    rf12packet_init(2);
     printf("acDInit doneab");
 
     unsigned int c = 0;

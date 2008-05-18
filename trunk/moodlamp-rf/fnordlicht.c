@@ -217,7 +217,11 @@ int main(void) {
 #endif
     /* enable interrupts globally */
     sei();
-
+//    global_pwm.channels[0].brightness = 0;
+//    global_pwm.channels[1].brightness = 254;
+//   global_pwm.channels[2].brightness = 0;
+//    global.state = STATE_PAUSE;
+//    global.flags.running = 0;
     while (1) {
         //if(global.flags.rfm12base){
         if(rfm12base > 32){
@@ -227,7 +231,8 @@ int main(void) {
             rf12packet_tick();
             if(rf12packet_status & RF12PACKET_NEWDATA){
                 rf12packet_status ^= RF12PACKET_NEWDATA;
-                /*uart_puts("ac");
+#if 0
+                uart_puts("ac");
                 uint8_t c;
                 for(c=0;c<rf12packet_datalen;c++){
                     uart_putc(rf12packet_data[c]);
@@ -235,7 +240,8 @@ int main(void) {
                         uart_putc(rf12packet_data[c]);
                     }
                 }
-                uart_puts("ab");*/
+                uart_puts("ab");
+#endif
                 unsigned char sender = rf12packet_data[3];
                 if(rf12packet_data[4] == 'V'){
                     //sprintf((char *)rf12packet_data,"F=%s T=%s D=%s",
@@ -270,7 +276,9 @@ int main(void) {
                     script_threads[0].speed_adjustment = rf12packet_data[5];
                 }
             }
+            
         }
+
         if(global.flags.timebase){
             static unsigned int beacon = 0;
             if(beacon++ >= 3000){
@@ -324,8 +332,10 @@ int main(void) {
         /* after the last pwm timeslot, rebuild the timeslot table */
         if (global.flags.last_pulse) {
             global.flags.last_pulse = 0;
+
+            //if(TCNT1 >i
             //if(global.flags.running)
-                update_pwm_timeslots();
+                //update_pwm_timeslots();
         }
 
 

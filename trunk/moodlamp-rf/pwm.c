@@ -148,6 +148,20 @@ void update_pwm_timeslots(void)
     uint8_t mask = 0;
     uint8_t last_brightness = 0;
     
+    static uint8_t old[3];
+    static uint8_t olddim = 0;
+    if(old[0] == global_pwm.channels[0].brightness &&
+            old[1] == global_pwm.channels[1].brightness &&
+            old[2] == global_pwm.channels[2].brightness &&
+            olddim == global_pwm.dim){
+        pwm.index = 0;
+        pwm.next_bitmask = 0;
+        return;
+    }
+    old[0] = global_pwm.channels[0].brightness;
+    old[1] = global_pwm.channels[1].brightness;
+    old[2] = global_pwm.channels[2].brightness;
+    olddim = global_pwm.dim;
     for(i=0;i<PWM_CHANNELS;i++){
         global_pwm.channels[i].brightness_scale = scalevalue(global_pwm.channels[i].brightness,global_pwm.dim);
         //if (global_pwm.channels[i].brightness_scale != global_pwm.channels[i].brightness)
@@ -280,6 +294,7 @@ static inline void prepare_next_timeslot(void)
         pwm.index = 0;
         global.flags.last_pulse = 1;
         OCR1B = 65000;
+        update_pwm_timeslots();
     } else {
         /* load new top and bitmask */
         OCR1B = pwm.slots[pwm.index].top;
