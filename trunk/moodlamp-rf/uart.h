@@ -41,7 +41,7 @@
  * for addressing UCSRC */
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
 
-#elif defined(__AVR_ATmega16__)
+#elif defined(__AVR_ATmega16__) || defined(__AVR_ATmega32__)
 /* in atmega8, we need a special switching bit
  * for addressing UCSRC */
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
