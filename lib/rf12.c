@@ -242,6 +242,12 @@ void rf12_init(void)
     MCUCR |= (1<<ISC01);
 	GICR |= (1<<INT0);
 #endif
+
+#ifdef __AVR_ATmega32__
+    MCUCR |= (1<<ISC01);
+	GICR |= (1<<INT0);
+#endif
+
 #ifdef __AVR_ATmega644__
     EICRA |= (1<<ISC01);
     EIMSK |= (1<<INT0);
