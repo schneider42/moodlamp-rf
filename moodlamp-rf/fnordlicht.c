@@ -81,10 +81,13 @@ int uart_putc_file(char c, FILE *stream)
 /** init output channels */
 void init_output(void) { /* {{{ */
     /* set all channels high -> leds off */
-    //PORTC = _BV(PC0) | _BV(PC1) | _BV(PC2);
-    PORTA = 0;
-    /* configure PB0-PB2 as outputs */
-    DDRA = _BV(PC0) | _BV(PC1) | _BV(PC2);
+#if LED_PORT_INVERT
+    LED_PORT = _BV(PC0) | _BV(PC1) | _BV(PC2);
+#else
+    LED_PORT = 0;
+#endif
+    /* configure Px0-Px2 as outputs */
+    LED_PORT_DDR = _BV(PC0) | _BV(PC1) | _BV(PC2);
     //while(1);
 }
 
@@ -153,7 +156,7 @@ int main(void) {
 
 #if SERIAL_UART
     init_uart();
-//    uart_puts("Welcome to fnordlicht");
+    uart_puts("Welcome to fnordlicht");
 #endif
 
 #if RC5_DECODER

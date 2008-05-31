@@ -201,5 +201,18 @@
 #error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
 #endif
 
+#ifndef LED_PORT
+#define LED_PORT PORTA
+#endif
+
+#ifndef LED_PORT_DDR
+#define LED_PORT_DDR DDRA
+#endif
+
+#ifndef LED_PORT_INVERT
+#define LED_PORT_INVERT 0
+#endif
+
+
 
 #endif /* _FNORDLICHT_CONFIG_H */
