@@ -14,6 +14,8 @@ struct RF12_stati
 	unsigned char New:1;
 };
 
+volatile unsigned char rf12_checkcrc = 1;
+
 #ifdef RF12_UseNoneBlockingCalls
 struct RF12_stati RF12_status;
 volatile unsigned char RF12_Index = 0;
@@ -402,21 +404,24 @@ unsigned char rf12_rxfinish(unsigned char *data)
 		return(255);				//not finished yet
 	if(!RF12_status.New)
 		return(254);				//old buffer
-	for(i=0; i<RF12_Data[0] +1 ; i++)
-		crc_chk = crcUpdate(crc_chk, RF12_Data[i]);
 
-	crc = RF12_Data[i++];
-	crc |= RF12_Data[i] << 8;
-	RF12_status.New = 0;
-	if(crc != crc_chk)
-		return(0);				//crc err -or- strsize
-	else
-	{
-		unsigned char i;
-		for(i=0; i<RF12_Data[0]; i++)
-			data[i] = RF12_Data[i+1];
-		return(RF12_Data[0]);			//strsize
-	}
+    RF12_status.New = 0;
+    if(rf12_checkcrc){
+        for(i=0; i<RF12_Data[0] +1 ; i++)
+            crc_chk = crcUpdate(crc_chk, RF12_Data[i]);
+
+        crc = RF12_Data[i++];
+        crc |= RF12_Data[i] << 8;
+        if(crc != crc_chk)
+            return(0);				//crc err -or- strsize
+    }
+//	else
+//	{
+    //unsigned char i;
+    for(i=0; i<RF12_Data[0]; i++)
+        data[i] = RF12_Data[i+1];
+    return(RF12_Data[0]);			//strsize
+//	}
 }
 
 unsigned char rf12_txstart(unsigned char *data, unsigned char size)

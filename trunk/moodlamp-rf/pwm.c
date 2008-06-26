@@ -105,7 +105,7 @@ inline void init_timer1(void)
 
     /* load initial delay, trigger an overflow */
     OCR1B = 65000;
-    DDRD |= (1<<PD6)|(1<<PD5)|(1<<PD4)|(1<<PD3);
+    //DDRD |= (1<<PD6)|(1<<PD5)|(1<<PD4)|(1<<PD3);
 }
 
 /* }}} */
@@ -295,18 +295,18 @@ static inline void prepare_next_timeslot(void)
         /* select first timeslot and trigger timeslot rebuild */
         pwm.index = 0;
         global.flags.last_pulse = 1;
-        PORTD |= (1<<PD6);
+        //PORTD |= (1<<PD6);
         OCR1B = 65000;
         update_pwm_timeslots();
-        PORTD &= ~(1<<PD6);
+        //PORTD &= ~(1<<PD6);
     } else {
         /* load new top and bitmask */
-PORTD |= (1<<PD5);
+//PORTD |= (1<<PD5);
         OCR1B = pwm.slots[pwm.index].top;
         pwm.next_bitmask = pwm.slots[pwm.index].mask;
         /* select next timeslot */
         pwm.index++;
- PORTD &= ~(1<<PD5);
+ //PORTD &= ~(1<<PD5);
     }
 
     /* clear compare interrupts which might have in the meantime happened */
@@ -319,7 +319,7 @@ PORTD |= (1<<PD5);
 ISR(SIG_OUTPUT_COMPARE1A)
 /*{{{*/ {
     static uint8_t timebase = 0;
-    PORTD |= (1<<PD3);
+   // PORTD |= (1<<PD3);
     /* decide if this interrupt is the beginning of a pwm cycle */
     if (pwm.next_bitmask == 0) {
         /* output initial values */
@@ -354,7 +354,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
     }
     /* prepare the next timeslot */
     prepare_next_timeslot();
-    PORTD &= ~(1<<PD3);
+    //PORTD &= ~(1<<PD3);
 
 } /*}}}*/
 
@@ -362,7 +362,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
 ISR(SIG_OUTPUT_COMPARE1B)
 /*{{{*/ {
     /* normal interrupt, output pre-calculated bitmask */
-    PORTD |= (1<<PD4);
+    //PORTD |= (1<<PD4);
 #if LED_PORT_INVERT
     LED_PORT |= pwm.next_bitmask;
 #else
@@ -370,5 +370,5 @@ ISR(SIG_OUTPUT_COMPARE1B)
 #endif
     /* and calculate the next timeslot */
     prepare_next_timeslot();
-    PORTD &= ~(1<<PD4);
+    //PORTD &= ~(1<<PD4);
 } /*}}}*/

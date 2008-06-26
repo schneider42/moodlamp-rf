@@ -136,6 +136,7 @@ unsigned char rf12_txfinished(void);
 void rf12_allstop(void);
 
 extern volatile unsigned char RF12_Index;
+extern volatile unsigned char rf12_checkcrc;
 #endif
 
 

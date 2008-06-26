@@ -88,6 +88,10 @@ void init_output(void) { /* {{{ */
 #endif
     /* configure Px0-Px2 as outputs */
     LED_PORT_DDR = _BV(PC0) | _BV(PC1) | _BV(PC2);
+    PORTD |= (1<<PD3);
+    PORTD &= ~(1<<PD6);
+    //PORTD(1<<PD6));
+    DDRD |= (1<<PD6);
     //while(1);
 }
 
@@ -283,7 +287,7 @@ int main(void) {
         }
 
         if(global.flags.timebase){
-            static unsigned int beacon = 0;
+            static unsigned int beacon = 30000;
             if(beacon++ >= 3000){
                 strcpy((char *)rf12packet_data,"B");
                 if(rf12packet_send(2,
