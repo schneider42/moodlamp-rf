@@ -2,13 +2,13 @@
 #define __RFM12CONFIG_H
 
 /* config */
-#define RF_PORT		PORTC
-#define RF_DDR		DDRC
-#define RF_PIN		PINC
-#define SDI		0
-#define SCK		1
-#define CS		2
-#define SDO		3
+#define RF_PORT		PORTB
+#define RF_DDR		DDRB
+#define RF_PIN		PINB
+#define SDI		5
+#define SCK		7
+#define CS		4
+#define SDO		6
 
 #define RF_IRQDDR	DDRD
 #define RF_IRQPIN	PIND
