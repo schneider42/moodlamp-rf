@@ -1,0 +1,73 @@
+
+funkloader v0.01
+-------------------
+
+funkloader is a bootloader application targetted at the Atmel AVR
+ATmega8.  In theory it should work for other devices but since
+it heavily relies on assembler code, especially regarding the
+startup code, this probably requires quite some adjustments.
+
+One of the main design goals is to keep the loader small in flash
+memory footprint.  This is I shouldn't ever be more than 512 bytes long.
+
+
+a) Using funkloader
+
+   * make sure you've got gcc-avr and avr-libc installed
+
+   * edit pinconfig.h to fit your needs
+
+   * Type `make' to compile the whole thing.
+
+   * If everything goes well, type `make load' to flash the
+     bootloader code to your device.  Maybe you need to modify the
+     command, i.e. the Makefile.
+
+   * In order to adjust the fuse bits of your microcontroller you
+     might want to use `make fuse'.
+
+
+   In order to flash data, use the funkloader application from below
+   contrib.  Use it something like 
+
+   	     contrib/funkloader -H 192.168.23.244 -f myfile.bin
+
+   where -H specifies the IP address of your (bridging) ethersex.
+   Don't forget to enable `rfm12_raw' on it.
+
+
+
+b) Hacking funkloader (and what hacks I used already)
+
+   Just a few notes to get you started in funkloader hacking:
+
+   * funkloader does NOT rely on avr-libc's standard startup code,
+     mainly for size reasons.  This is
+
+      * you must NOT activate any other interrupts, since there is no
+        intact interrupt vector table
+
+      * don't just `sei' if you want to, this reenables the overflow
+        interrupt of timer 1, see below.
+
+      * my startup code does NOT initialize .bss and .data, this is
+        your global variables will not have the values you expect.
+
+   * TIMER 1 OVF interrupt abuse:
+     The current bootloader timeout implementation works like this:
+
+      * We initialize the 16-bit timer in such a way that it overflows
+        after about 2 seconds.  From the interrupt vector we launch
+        the application
+
+      * If we receive a valid bootloading packet we simply disable all
+        interrupts, therefore the automatic activation of the
+        application.
+
+
+
+If it doesn't work, you might want to write an e-mail to
+<stesie@brokenpipe.de>
+
+Have fun!
+  stesie
