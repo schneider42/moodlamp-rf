@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "avr/io.h"
-
+#include "avr/interrupt.h"
 #include "rf12config.h"
 #include "rf12.h"
 #include "rf12packet.h"
@@ -18,7 +18,7 @@ unsigned char inpacket[50];
 unsigned char acked = 0;
 unsigned char seq = 0;
 unsigned char ismulticast = 0;
-unsigned char localadr;
+unsigned char localadr = 23;
 unsigned char rf12packet_data[50];
 unsigned char rf12packet_datalen = 0;
 unsigned char rf12packet_sniff = 0;
@@ -30,6 +30,11 @@ void rf12packet_init(unsigned char adr)
     localadr = adr;
 }
 
+void rf12packet_setadr(unsigned char adr)
+{
+    localadr = adr;
+}
+
 unsigned char rf12packet_getstatus(void)
 {
     return rf12packet_status;
@@ -37,8 +42,10 @@ unsigned char rf12packet_getstatus(void)
 
 void rf12packet_sendpacket(void)
 {
+//	cli();
     rf12_allstop();
     unsigned char c = rf12_txstart(outpacket,outlen);
+//	sei();
     if(c){
 #ifdef RF12DEBUG
         printf("sendpacket ret: %u\r\n", c);
@@ -51,6 +58,7 @@ void rf12packet_sendpacket(void)
 
 void rf12packet_tick(void)      //every 1ms ~ 2bytes
 {
+//    EIMSK &= ~(1<<INT0);
     unsigned char ret = rf12_rxfinish(inpacket);
     if(ret != 255 && ret != 254 && ret != 0){
         rf12packet_process(inpacket,ret);
@@ -68,6 +76,7 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
         return;
         */
     if(rf12_txfinished()){          //!=0 when transmitting
+//        EIMSK |= (1<<INT0);
         return;
     }
     switch(state){
@@ -110,8 +119,13 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
                 if(ret){
                 //if(RF12_Index){
                     state = STATE_WAITFREE;     //busy air ...
+#ifdef  RF12DEBUGBIN
+                    printf("acDwaitab");
+#endif
                 }else{
-                    //printf("send\r\n");
+#ifdef RF12DEBUGBIN
+                    printf("acDsendab");
+#endif
                     rf12packet_sendpacket();    //go kids, go
                     state = STATE_SEND;
                 }
@@ -128,7 +142,7 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
                     state = STATE_IDLE;*/
                 if(ismulticast){
                     rf12packet_status |= RF12PACKET_PACKETDONE;
-                    rf12_rxstart();
+                    //rf12_rxstart();
                     state = STATE_IDLE;
                 }else{
                     state = STATE_WAITACK;
@@ -155,6 +169,8 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
             }
         break;
     }
+
+//    EIMSK |= (1<<INT0);
 }
 #define MAX_HOSTS   10
 static unsigned char seqs[MAX_HOSTS][2];
