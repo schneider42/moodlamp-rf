@@ -81,7 +81,9 @@ OBJDIR = .
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c fifo.c uart.c
+SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c
+#lib/uart.c
+#fifo.c uart.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
@@ -128,21 +130,6 @@ CSTANDARD = -std=gnu89
 
 # Place -D or -U options here for C sources
 CDEFS = -DF_CPU=$(F_CPU)UL
-#CDEFS += -DRF_PORT=PORTC
-#CDEFS += -DRF_DDR=DDRC
-#CDEFS += -DRF_PIN=PINC
-#CDEFS += -DSDI=0
-#CDEFS += -DSCK=1
-#CDEFS += -DCS=2
-#CDEFS += -DSDO=3
-#CDEFS += -DRF12DEBUG
-#CDEFS += -DRF12DEBUGBIN
-
-#CDEFS += -DRF_IRQDDR=DDRD
-#CDEFS += -DRF_IRQPIN=PIND
-#CDEFS += -DRF_IRQPORT=PORTD
-#CDEFS += -DIRQ=2
-
 
 # Place -D or -U options here for C++ sources
 CPPDEFS = -DF_CPU=$(F_CPU)UL

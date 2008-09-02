@@ -324,9 +324,9 @@ ISR(SIG_OUTPUT_COMPARE1A)
     if (pwm.next_bitmask == 0) {
         /* output initial values */
 #if LED_PORT_INVERT
-        LED_PORT = pwm.initial_bitmask;
+        LED_PORT = pwm.initial_bitmask & 0x07;
 #else
-        LED_PORT = ~pwm.initial_bitmask;
+        LED_PORT = ~(pwm.initial_bitmask & 0x07);
 #endif
         /* if next timeslot would happen too fast or has already happened, just spinlock */
         while (TCNT1 + 500 > pwm.slots[pwm.index].top)
@@ -336,9 +336,9 @@ ISR(SIG_OUTPUT_COMPARE1A)
 
             /* output value */
 #if LED_PORT_INVERT
-            LED_PORT |= pwm.slots[pwm.index].mask;
+            LED_PORT |= pwm.slots[pwm.index].mask & 0x07;
 #else
-            LED_PORT &= ~pwm.slots[pwm.index].mask;
+            LED_PORT &= ~(pwm.slots[pwm.index].mask & 0x07);
 #endif
             /* we can safely increment index here, since we are in the first timeslot and there
              * will always be at least one timeslot after this (middle) */
@@ -364,9 +364,9 @@ ISR(SIG_OUTPUT_COMPARE1B)
     /* normal interrupt, output pre-calculated bitmask */
     //PORTD |= (1<<PD4);
 #if LED_PORT_INVERT
-    LED_PORT |= pwm.next_bitmask;
+    LED_PORT |= pwm.next_bitmaski & 0x07;
 #else
-    LED_PORT &= ~pwm.next_bitmask;
+    LED_PORT &= ~(pwm.next_bitmask & 0x07);
 #endif
     /* and calculate the next timeslot */
     prepare_next_timeslot();

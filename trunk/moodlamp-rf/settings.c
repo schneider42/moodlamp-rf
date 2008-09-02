@@ -87,6 +87,7 @@ void settings_read(void)
         global_pwm.channels[0].brightness = 250;
         global_pwm.channels[0].target_brightness = 250;
         global.flags.running = 1;
+        global.uuid[0] = 0;
         global.state = STATE_RUNNING;
     }else{
         temp = (void *) &global_pwm;

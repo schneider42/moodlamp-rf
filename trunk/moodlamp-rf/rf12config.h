@@ -13,8 +13,11 @@
 #define RF_IRQDDR	DDRD
 #define RF_IRQPIN	PIND
 #define RF_IRQPORT  PORTD
-#define IRQ		2		//only used if async mode. Had to be INT0
-					//or INT1/2 when change something in rf12.c
-                    //
+#define IRQ		2
+
+#define RESET_PORT  PORTA
+#define RESET_DDR   DDRA
+#define RESET       PA3
+
 //define RF12DEBUG
 #endif
