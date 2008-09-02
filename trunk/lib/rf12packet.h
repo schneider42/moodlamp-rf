@@ -2,6 +2,7 @@
 #define __RF12PACKET_H_
 
 void rf12packet_tick(void);
+void rf12packet_setadr(unsigned char adr);
 void rf12packet_process(unsigned char * packet, unsigned char len);
 unsigned char rf12packet_send(unsigned char adr, unsigned char * packet, unsigned char len);
 void rf12packet_init(unsigned char adr);
