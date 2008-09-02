@@ -15,7 +15,7 @@
 //Rx
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_file, NULL, _FDEV_SETUP_WRITE);
 
-static char buffer[40];
+static char buffer[150];
 
 unsigned char readline( void )
 {
@@ -45,8 +45,8 @@ unsigned char readline( void )
     }
     if(fill != -1){
         buffer[fill++] = data;
-        if(fill >= 40)
-            fill = 39;
+        if(fill >= 150)
+            fill = 149;
     }
     return 0;
 }
@@ -70,13 +70,38 @@ int main(void)
     printf("acDInit doneab");
 
     unsigned int c = 0;
+    unsigned char raw = 0;
 	//unsigned char ret;
-    //unsigned char buf[20];
+    unsigned char packet[50];
+    unsigned char intransit = 0;
     //unsigned int i = 0;
 	for (;;)
 	{
-        _delay_ms(1);                                                   //generate 1khz clock
-        rf12packet_tick();
+        if(!raw){
+            _delay_ms(1);                                                   //generate 1khz clock
+            rf12packet_tick();
+        }else{
+            if(!rf12_txfinished() && intransit){
+                uart_puts("acFab");
+                intransit = 0;
+            }
+            rf12_rxstart();
+            unsigned char ret = rf12_rxfinish(packet);
+            if(ret != 255 && ret != 254 && ret != 0){
+                uart_puts("acR");
+                for(c=0;c<ret;c++){
+                    uart_putc(packet[c]);
+                    if(packet[c] == 'a'){
+                        uart_putc(packet[c]);
+                    }
+                }
+                uart_puts("ab");   
+                rf12_rxstart();
+            }
+            if(ret == 0){
+                uart_puts("accrcab");
+            }
+        }
         if((c = readline())> 0){
             if(buffer[0] == 'P'){
                 rf12packet_send(buffer[1],(unsigned char *)buffer+2,c-2);
@@ -86,7 +111,22 @@ int main(void)
                 rf12packet_init(buffer[1]);
             }else if(buffer[0] == 'S'){
                 rf12packet_sniff = buffer[1];
+            }else if(buffer[0] == 'R'){
+                if(buffer[1]){
+                    raw = 1;
+                    rf12_checkcrc = 0;
+                }else{
+                    raw = 0;
+                    rf12_checkcrc = 1;
+                }
+                uart_puts("acDRaaw Doneab");
+            }else if(buffer[0] == 'r'){
+               rf12_allstop();
+               rf12_txstart(buffer+1,c-1);
+               //uart_puts("acDDoneab");
+               intransit = 1;
             }
+
             //sprintf((char *)buf,"P3=%u\n",c);
             //rf12packet_send(1,buf,strlen((char*)buf));
         }
