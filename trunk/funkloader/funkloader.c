@@ -54,7 +54,7 @@ timer_init (void)
   /* enable overflow interrupt of Timer 1 */
   TIMSK = _BV (TOIE1);
 
-//  sei ();
+  sei ();
 }
 
 static void
@@ -72,8 +72,9 @@ spi_init (void)
   SPI_CS_RFM12_PORT |= _BV(SPI_CS_RFM12);
 
   /* enable spi, set master and clock modes (f/2) */
-  SPCR = _BV(SPE) | _BV(MSTR);
-  SPSR = _BV(SPI2X);
+  //SPCR = _BV(SPE) | _BV(MSTR);
+  SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
+  //SPSR = _BV(SPI2X);
 }
 
 void rf12_setbandwidth(unsigned char bandwidth, unsigned char gain, unsigned char drssi)
@@ -91,8 +92,8 @@ rfm12_init (void)
 {
   /* Wait for POR to finish. */
   while (INT_PORT & _BV (INT_PIN));
-
-  rfm12_trans (0xC0E0);		/* AVR CLK: 10MHz */
+  rfm12_trans (0xCA81);
+  //rfm12_trans (0xC0E0);		/* AVR CLK: 10MHz */
   rfm12_trans (0x80D7);		/* Enable FIFO */
   rfm12_trans (0xC2AB);		/* Data Filter: internal */
   rfm12_trans (0xCA81);		/* Set FIFO mode */
@@ -212,25 +213,37 @@ crc_check (void)
 naked void
 funkloader_main (void)
 {
-  timer_init ();
-  spi_init ();
-  rfm12_init ();
-
+  volatile unsigned long i;
+  DDRA |= (1<<PA3);
 #ifdef STATUS_LED_RX
   STATUS_LED_DDR |= _BV (STATUS_LED_RX);
 #endif
-
 #ifdef STATUS_LED_TX
   STATUS_LED_DDR |= _BV (STATUS_LED_TX);
 #endif
-STATUS_LED_PORT &= ~_BV (STATUS_LED_RX);
-STATUS_LED_PORT &= ~_BV (STATUS_LED_TX);
+  STATUS_LED_PORT |= _BV (STATUS_LED_RX);
+  STATUS_LED_PORT &= ~_BV (STATUS_LED_TX);
+  spi_init ();
 
+//  PORTA |= (1<<PA3);
+//  for(i=0;i<100000;i++);
+  PORTA &= ~(1<<PA3);
+  for(i=0;i<100000;i++);
+  PORTA |= (1<<PA3);
+  for(i=0;i<100000;i++); 
+  timer_init ();
+  STATUS_LED_PORT &= ~_BV (STATUS_LED_RX);
+  //while(1);
+  rfm12_init ();
+  //while(1);
+
+//while(1);
 //funkloader_buf[0] = MAGIC_LAUNCH_APP;
 funkloader_buf[0] = 'H';
 __asm volatile ("eor     r23, r23");
 funkloader_tx_reply ();
 
+//while(1);
   for (;;) 
     {
       /* try to receive a packet */
