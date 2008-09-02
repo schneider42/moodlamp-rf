@@ -149,7 +149,7 @@
 
 /* include uart support per default */
 #ifndef SERIAL_UART
-#define SERIAL_UART 1
+#define SERIAL_UART 0
 #endif
 
 /* disable at keyboard decoder per default (EXPERIMENTAL) */
@@ -183,7 +183,7 @@
 #endif
 
 /* fifo size must be a power of 2 and below 128 */
-#define UART_FIFO_SIZE 32
+//#define UART_FIFO_SIZE 32
 #define UART_BAUDRATE 19200
 
 

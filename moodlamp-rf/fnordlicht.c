@@ -38,11 +38,12 @@
 #include <avr/pgmspace.h>
 #include <stdio.h>
 #include <string.h>
+#include <avr/wdt.h>
 
 #include "common.h"
 #include "fnordlicht.h"
 #include "pwm.h"
-#include "uart.h"
+#include "lib/uart.h"
 #include "i2c.h"
 
 #if RC5_DECODER
@@ -59,8 +60,10 @@
 #endif
 
 #include "settings.h"
+#if SERIAL_UART
 int uart_putc_file(char c, FILE *stream);
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_file, NULL, _FDEV_SETUP_WRITE);
+#endif
 
 /* structs */
 volatile struct global_t global = {{0, 0}};
@@ -73,23 +76,24 @@ static inline void init_output(void);
 static inline void check_serial_input(uint8_t data);
 #endif
 
-int uart_putc_file(char c, FILE *stream)
+/*int uart_putc_file(char c, FILE *stream)
 {
     uart_putc(c);    
     return 0;
-}
+}*/
 /** init output channels */
 void init_output(void) { /* {{{ */
     /* set all channels high -> leds off */
 #if LED_PORT_INVERT
-    LED_PORT = _BV(PC0) | _BV(PC1) | _BV(PC2);
+    LED_PORT |= 7;
 #else
-    LED_PORT = 0;
+    LED_PORT &= ~7;
 #endif
     /* configure Px0-Px2 as outputs */
-    LED_PORT_DDR = _BV(PC0) | _BV(PC1) | _BV(PC2);
-    PORTD |= (1<<PD3);
-    PORTD &= ~(1<<PD6);
+    LED_PORT_DDR |= 7;
+    xRC5_PORT |= (1<<xRC5);
+
+    PORTD &= ~(1<<PD6);     //todo: remove fet
     //PORTD(1<<PD6));
     DDRD |= (1<<PD6);
     //while(1);
@@ -153,16 +157,24 @@ void check_serial_input(uint8_t data)
 /** main function
  */
 int main(void) {
+    SPCR &= ~(1<<SPE);
+    TIMSK &= ~(1<<TOIE1);
     uint32_t sleeptime=0;
     uint32_t sleeptick=0;
+    uint16_t timeoutmax = 200;
+    uint16_t timeout = 0;
+    //uint8_t uuid[16];
+
     init_output();
     init_pwm();
 
 #if SERIAL_UART
-    init_uart();
-    uart_puts("Welcome to fnordlicht");
+    //sei();
+    //init_uart();
+    uart_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
+//    uart_puts((unsigned char *) "Welcome to fnordlicht");
 #endif
-
+//while(1);
 #if RC5_DECODER
     //init_rc5();
 #if defined(__AVR_ATmega324P__) ||  defined(__AVR_ATmega644P__)
@@ -207,18 +219,23 @@ int main(void) {
 
     UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UCSZ02); /* enable receiver and transmitter */
 #endif
-
+#if SERIAL_UART
     stdout = &mystdout;
+#endif
+
     rf12_init();				// ein paar Register setzen (z.B. CLK auf 10MHz)
 #ifdef RF12DEBUGBIN
-    printf("acDThis is 3ab");
+    printf("acDThis is moodlamp-rfab");
 #endif
 //while(1);
     rf12_setfreq(RF12FREQ(434.32));		// Sende/Empfangsfrequenz auf 433,92MHz einstellen
     rf12_setbandwidth(4, 1, 4);		// 200kHz Bandbreite, -6dB Verstärkung, DRSSI threshold: -79dBm 
     rf12_setbaud(19200);			// 19200 baud
     rf12_setpower(0, 6);			// 1mW Ausgangangsleistung, 120kHz Frequenzshift
-    rf12packet_init(3);
+    rf12packet_init(0);
+    //volatile uint32_t tmp;
+    //for(tmp=0;tmp<100000;tmp++);
+
 #ifdef RF12DEBUGBIN
     printf("acDInit doneab");
 #endif
@@ -229,6 +246,7 @@ int main(void) {
 //   global_pwm.channels[2].brightness = 0;
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
+    unsigned int initadr = 1;
     while (1) {
         //if(global.flags.rfm12base){
         if(rfm12base > 32){
@@ -236,7 +254,8 @@ int main(void) {
             rfm12base = 0;
             //uart_puts("acDtab");
             rf12packet_tick();
-            if(rf12packet_status & RF12PACKET_NEWDATA){
+
+           if(rf12packet_status & RF12PACKET_NEWDATA){
                 rf12packet_status ^= RF12PACKET_NEWDATA;
 #if 0
                 uart_puts("ac");
@@ -266,6 +285,8 @@ int main(void) {
                     global_pwm.channels[0].brightness = rf12packet_data[5];
                     global_pwm.channels[1].brightness = rf12packet_data[6];
                     global_pwm.channels[2].brightness = rf12packet_data[7];
+                    timeout = timeoutmax;
+                    //global.state = STATE_PAUSE;
                 }else if(rf12packet_data[4] == 'D'){
                     global_pwm.dim = rf12packet_data[5];
                 }else if(rf12packet_data[4] == 'S'){
@@ -281,14 +302,38 @@ int main(void) {
                     rc5_handler(RC5_ADDRESS, rf12packet_data[4]);
                 }else if(rf12packet_data[4] == 's'){
                     script_threads[0].speed_adjustment = rf12packet_data[5];
+                }else if(rf12packet_data[4] == 'R'){
+                    wdt_enable(WDTO_30MS);
+                    while(1);
+                }else if(rf12packet_data[4] == 'I' && 
+                         rf12packet_data[5] == 'D' &&
+                         rf12packet_data[6] == '='){
+                    memcpy((char *)global.uuid, (char *)rf12packet_data+7,16);
+                    settings_save();
+                }else if(rf12packet_data[4] == 'A' &&
+                        rf12packet_data[5] == 'D' &&
+                        rf12packet_data[6] == 'R' &&
+                        rf12packet_data[7] == '='){
+                    if(memcmp((char *)rf12packet_data+9,
+                              (char *)global.uuid,16) == 0){
+                        rf12packet_setadr(rf12packet_data[8]);
+                        strcpy((char *)rf12packet_data,"D="__DATE__);
+                        //strcat((char *)rf12packet_data,__DATE__);
+                        rf12packet_send(sender,rf12packet_data,
+                                        strlen((char *)rf12packet_data));
+                        //initadr = 0;
+                    }
+                }else if(rf12packet_data[4] == 'O' &&
+                        rf12packet_data[5] == 'K'){
+                        initadr = 0;
                 }
             }
             
         }
 
         if(global.flags.timebase){
-            static unsigned int beacon = 30000;
-            if(beacon++ >= 3000){
+            static unsigned int beacon = 0;
+            if(initadr == 0 && beacon++ >= 500){
                 strcpy((char *)rf12packet_data,"B");
                 if(rf12packet_send(2,
                                    rf12packet_data,
@@ -296,6 +341,26 @@ int main(void) {
                     beacon = 0;
                 }
             }
+            if(initadr == 1){
+                rf12packet_setadr(0);
+                if(global.uuid[0] == 0){
+                    strcpy((char *)rf12packet_data, "ID?");
+                    if(rf12packet_send(2,rf12packet_data,3) == 0)
+                        initadr = 2;
+                }else{
+                    strcpy((char *)rf12packet_data, "ID=");
+                    memcpy(rf12packet_data+3,(char *)global.uuid,16);
+                    if(rf12packet_send(2,rf12packet_data,19) == 0)
+                        initadr = 2;
+                }
+                //initadr = 0;
+            }
+
+            if(initadr > 1 && initadr++ > 500)
+                initadr = 1;
+
+            if(timeout && --timeout == 0)
+                global.state = STATE_RUNNING;
             /* State machine covering basic functionality*/
             switch(global.state){
                 case STATE_RUNNING:

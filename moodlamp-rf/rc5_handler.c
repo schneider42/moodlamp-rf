@@ -49,7 +49,7 @@
 #include "scripts.h"
 #endif
 #if SERIAL_UART
-#include "uart.h"
+#include "lib/uart.h"
 #define DEBUG	0
 #endif
 #include "settings.h"

@@ -54,6 +54,7 @@ struct global_t {
     struct flags_t flags;
     uint8_t state;
     uint8_t oldstate;
+    uint8_t uuid[16];
 };
 
 extern volatile struct global_t global;
