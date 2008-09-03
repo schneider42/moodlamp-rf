@@ -364,7 +364,7 @@ ISR(SIG_OUTPUT_COMPARE1B)
     /* normal interrupt, output pre-calculated bitmask */
     //PORTD |= (1<<PD4);
 #if LED_PORT_INVERT
-    LED_PORT |= pwm.next_bitmaski & 0x07;
+    LED_PORT |= pwm.next_bitmask & 0x07;
 #else
     LED_PORT &= ~(pwm.next_bitmask & 0x07);
 #endif
