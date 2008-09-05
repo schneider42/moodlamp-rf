@@ -69,7 +69,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_file, NULL, _FDEV_SETUP_WRITE
 volatile struct global_t global = {{0, 0}};
 
 /* prototypes */
-void (*jump_to_bootloader)(void) = (void *)0xc00;
+//void (*jump_to_bootloader)(void) = (void *)0xc00;
 static inline void init_output(void);
 
 #if SERIAL_UART
@@ -81,6 +81,13 @@ static inline void check_serial_input(uint8_t data);
     uart_putc(c);    
     return 0;
 }*/
+
+void jump_to_bootloader(void)
+{
+    wdt_enable(WDTO_30MS);
+    while(1);
+}
+
 /** init output channels */
 void init_output(void) { /* {{{ */
     /* set all channels high -> leds off */
@@ -303,8 +310,9 @@ int main(void) {
                 }else if(rf12packet_data[4] == 's'){
                     script_threads[0].speed_adjustment = rf12packet_data[5];
                 }else if(rf12packet_data[4] == 'R'){
-                    wdt_enable(WDTO_30MS);
-                    while(1);
+                    //wdt_enable(WDTO_30MS);
+                    //while(1);
+                    jump_to_bootloader();
                 }else if(rf12packet_data[4] == 'I' && 
                          rf12packet_data[5] == 'D' &&
                          rf12packet_data[6] == '='){
@@ -457,7 +465,7 @@ if SERIAL_UART
             uint8_t data = UDR0;
             static uint8_t buffer[8];
             static uint8_t fill = 0;
-
+            uint8_t pos;
             if (UCSR0A & _BV(MPCM0) || address) { /* if MPCM mode is still active, or ninth bit set, this is an address packet */
 
                 /* check if we are ment */
@@ -467,41 +475,42 @@ if SERIAL_UART
                     UCSR0A &= ~_BV(MPCM0);
                     fill = 0;
 
-                    continue;
+               //     continue;
 
                 } else {/* turn on MPCM */
 
                     UCSR0A |= _BV(MPCM0);
-                    continue;
+             //       continue;
 
                 }
-            }
+            }else{
 
-            /* else this is a data packet, put data into buffer */
-            buffer[fill++] = data;
+                /* else this is a data packet, put data into buffer */
+                buffer[fill++] = data;
 
-            if (buffer[0] == 0x01) {  /* soft reset */
+                if (buffer[0] == 0x01) {  /* soft reset */
 
-                jump_to_bootloader();
+                    jump_to_bootloader();
 
-            } else if (buffer[0] == 0x02 && fill == 4) { /* set color */
+                } else if (buffer[0] == 0x02 && fill == 4) { /* set color */
 
-                for (uint8_t pos = 0; pos < 3; pos++) {
-                    global_pwm.channels[pos].target_brightness = buffer[pos + 1];
-                    global_pwm.channels[pos].brightness = buffer[pos + 1];
+                    for (pos = 0; pos < 3; pos++) {
+                        global_pwm.channels[pos].target_brightness = buffer[pos + 1];
+                        global_pwm.channels[pos].brightness = buffer[pos + 1];
+                    }
+
+                    UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
+
+                } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
+
+                    for (pos = 0; pos < 3; pos++) {
+                        global_pwm.channels[pos].speed_h = buffer[1];
+                        global_pwm.channels[pos].speed_l = buffer[2];
+                        global_pwm.channels[pos].target_brightness = buffer[pos + 3];
+                    }
+
+                    UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
                 }
-
-                UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
-
-            } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
-
-                for (uint8_t pos = 0; pos < 3; pos++) {
-                    global_pwm.channels[pos].speed_h = buffer[1];
-                    global_pwm.channels[pos].speed_l = buffer[2];
-                    global_pwm.channels[pos].target_brightness = buffer[pos + 3];
-                }
-
-                UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
             }
 
         }

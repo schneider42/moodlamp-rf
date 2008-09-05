@@ -194,8 +194,10 @@
 
 /* enable this if you want to control a fnordlicht via RS485 */
 #ifndef RS485_CTRL
-#define RS485_CTRL 0
+#define RS485_CTRL 1
 #endif
+
+#define RS485_ADDRESS 10
 
 #if (RS485_CTRL == 1) && (SERIAL_UART == 1)
 #error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
