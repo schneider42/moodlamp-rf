@@ -38,7 +38,7 @@ unsigned int crcUpdate(unsigned int crc, unsigned char serialData)
         }
 	return crc;
 }
-#if SERIAL_UART
+#ifdef RF12DEBUGBIN
 void putbin(unsigned short d)
 {
     unsigned char i;
