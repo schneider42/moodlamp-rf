@@ -163,6 +163,13 @@ void check_serial_input(uint8_t data)
 #endif
 /** main function
  */
+void sendUUID(void)
+{
+    strcpy((char *)rf12packet_data, "ID=");
+    memcpy(rf12packet_data+3,(char *)global.uuid,16);
+    rf12packet_send(2,rf12packet_data,19);
+}
+
 int main(void) {
     SPCR &= ~(1<<SPE);
     TIMSK &= ~(1<<TOIE1);
@@ -251,7 +258,7 @@ int main(void) {
 //    global_pwm.channels[0].brightness = 0;
 //    global_pwm.channels[1].brightness = 254;
 //   global_pwm.channels[2].brightness = 0;
-//    global.state = STATE_PAUSE;
+    global.state = STATE_RUNNING;
 //    global.flags.running = 0;
     unsigned int initadr = 1;
     while (1) {
@@ -293,7 +300,7 @@ int main(void) {
                     global_pwm.channels[1].brightness = rf12packet_data[6];
                     global_pwm.channels[2].brightness = rf12packet_data[7];
                     timeout = timeoutmax;
-                    //global.state = STATE_PAUSE;
+                    global.state = STATE_PAUSE;
                 }else if(rf12packet_data[4] == 'D'){
                     global_pwm.dim = rf12packet_data[5];
                 }else if(rf12packet_data[4] == 'S'){
@@ -318,6 +325,10 @@ int main(void) {
                          rf12packet_data[6] == '='){
                     memcpy((char *)global.uuid, (char *)rf12packet_data+7,16);
                     settings_save();
+                }else if(rf12packet_data[4] == 'I' && 
+                         rf12packet_data[5] == 'D' &&
+                         rf12packet_data[6] == '?'){
+                         sendUUID(); 
                 }else if(rf12packet_data[4] == 'A' &&
                         rf12packet_data[5] == 'D' &&
                         rf12packet_data[6] == 'R' &&
