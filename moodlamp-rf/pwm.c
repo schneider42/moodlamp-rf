@@ -326,7 +326,10 @@ ISR(SIG_OUTPUT_COMPARE1A)
 #if LED_PORT_INVERT
         LED_PORT = pwm.initial_bitmask & 0x07;
 #else
-        LED_PORT = ~(pwm.initial_bitmask & 0x07);
+        //LED_PORT |= 0x07;
+        //LED_PORT &= ~(pwm.initial_bitmask & 0x07);
+        LED_PORT &= ~0x07;
+        LED_PORT |= (~pwm.initial_bitmask)&0x07;
 #endif
         /* if next timeslot would happen too fast or has already happened, just spinlock */
         while (TCNT1 + 500 > pwm.slots[pwm.index].top)
