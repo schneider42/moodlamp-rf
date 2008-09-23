@@ -30,7 +30,7 @@
 #define IRQ		2		//only used if async mode. Had to be INT0
 					//or INT1/2 when change something in rf12.c
 */
-#define RF12_DataLength	150		//RF12 Buffer length
+#define RF12_DataLength	100		//RF12 Buffer length
 					//max length 244
 
 //#define RF12_UseBlockingCalls		//NEVER USE BOTH
