@@ -73,7 +73,7 @@ void settings_read(void)
     if(global_settings.firstboot){
         global_pwm.dim = 255;
 #if STATIC_SCRIPTS
-#if RS485_CTRL == 0
+//#if RS485_CTRL == 0
         script_threads[0].speed_adjustment = 0;
         script_threads[0].handler.execute = &memory_handler_flash;
         script_threads[0].handler.position = (uint16_t)(&colorchange_red);
@@ -82,7 +82,7 @@ void settings_read(void)
         //script_threads[2].handler.execute = &memory_handler_eeprom;
         //script_threads[2].handler.position = (uint16_t) &testscript_eeprom;
         //script_threads[2].flags.disabled = 0;
-#endif
+//#endif
 #endif
         global_pwm.channels[0].brightness = 250;
         global_pwm.channels[0].target_brightness = 250;
