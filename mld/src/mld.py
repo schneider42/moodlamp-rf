@@ -209,6 +209,9 @@ class Moodlamp:
         
     def setraw(self, mode):
         self.interface.set_raw(mode)
+        
+    def setprog(self, prog):
+        self.interface.packet( self.address, chr(prog), 0,True)
 
     def get_version(self):
         self.interface.packet( self.address, "V", 0,True)
@@ -329,6 +332,14 @@ class MLClient(asynchat.async_chat):
                         if m.address == int(s[1]):
                             found = 1
                             m.reset();
+                    if found == 0:
+                        self.push("402 No such moodlamp\r\n")
+                elif cmd == "014":
+                    found = 0
+                    for m in self.ml:
+                        if m.address == int(s[1]):
+                            found = 1
+                            m.setprog(int(s[2]))
                     if found == 0:
                         self.push("402 No such moodlamp\r\n")
                 elif cmd == "":
@@ -484,7 +495,11 @@ class MLD:
                 m.data(data,broadcast);
                 unknown = 0;
                 break
-        #if unknown == 1:
+        if unknown == 1:
+            print "resetting lamp", str(adr)
+            self.interfaces[0].packet( adr, "R", 0,True)        #force reset for unknown lamp
+                                                                #todo start rebinding
+        
         #    self.ml.append(Moodlamp(self.interfaces[0], self, adr))
         self.ml.lock.release()
         
