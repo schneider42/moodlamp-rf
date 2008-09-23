@@ -436,26 +436,6 @@ void uart_putc(unsigned char data)
 
 }/* uart_putc */
 
-int uart_putc_file(char data, FILE * stream)
-{
-    unsigned char tmphead;
-
-    
-    tmphead  = (UART_TxHead + 1) & UART_TX_BUFFER_MASK;
-    
-    while ( tmphead == UART_TxTail ){
-        ;/* wait for free space in buffer */
-    }
-    
-    UART_TxBuf[tmphead] = data;
-    UART_TxHead = tmphead;
-
-    /* enable UDRE interrupt */
-    UART0_CONTROL    |= _BV(UART0_UDRIE);
-
-    return 0;
-
-}
 /*************************************************************************
 Function: uart_puts()
 Purpose:  transmit string to UART
