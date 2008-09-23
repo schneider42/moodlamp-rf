@@ -74,14 +74,14 @@ static inline void init_output(void);
 
 #if SERIAL_UART
 static inline void check_serial_input(uint8_t data);
-#endif
 
-/*int uart_putc_file(char c, FILE *stream)
+int uart_putc_file(char c, FILE *stream)
 {
     uart_putc(c);    
     return 0;
-}*/
+}
 
+#endif
 void jump_to_bootloader(void)
 {
     wdt_enable(WDTO_30MS);
@@ -223,11 +223,14 @@ int main(void) {
 #endif
 
 #if RS485_CTRL
+    DDRD |= (1<<PD4)|(1<<PD5);
+    PORTD &= ~(1<<PD4);
+    PORTD &= ~(1<<PD5);
     /* init command bus */
     UCSR0A = _BV(MPCM0); /* enable multi-processor communication mode */
     UCSR0C = _BV(UCSZ00) | _BV(UCSZ01); /* 9 bit frame size */
 
-    #define UART_UBRR 8 /* 115200 baud at 16mhz */
+    #define UART_UBRR 6 
     UBRR0H = HIGH(UART_UBRR);
     UBRR0L = LOW(UART_UBRR);
 
@@ -259,6 +262,7 @@ int main(void) {
 //    global_pwm.channels[1].brightness = 254;
 //   global_pwm.channels[2].brightness = 0;
     global.state = STATE_RUNNING;
+//    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
     unsigned int initadr = 1;
     while (1) {
@@ -509,7 +513,8 @@ if SERIAL_UART
                         global_pwm.channels[pos].target_brightness = buffer[pos + 1];
                         global_pwm.channels[pos].brightness = buffer[pos + 1];
                     }
-
+timeout = timeoutmax;
+                    global.state = STATE_PAUSE;
                     UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
 
                 } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
