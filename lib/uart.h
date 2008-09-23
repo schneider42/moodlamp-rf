@@ -142,7 +142,7 @@ extern unsigned int uart_getc(void);
  */
 extern void uart_putc(unsigned char data);
 
-extern int uart_putc_file(char c, FILE *stream);
+//extern int uart_putc_file(char c, FILE *stream);
 
 
 /**
