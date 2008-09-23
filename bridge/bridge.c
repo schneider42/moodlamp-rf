@@ -13,6 +13,14 @@
 #include "lib/uart.h"
 
 //Rx
+
+
+int uart_putc_file(char c, FILE *stream)
+{
+    uart_putc(c);    
+    return 0;
+}
+
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_file, NULL, _FDEV_SETUP_WRITE);
 
 static char buffer[150];
