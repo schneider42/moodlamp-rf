@@ -436,7 +436,7 @@ class MLD:
         self.ml = MoodlampList()
         self.interfaces = []
         try:
-            self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",115200,2,self))
+            self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,2,self))
         except:
             self.interfaces.append(rf12interface.RF12Interface("/dev/ttyS0",115200,2,self))
         #self.ml.append(Moodlamp(3,self.interfaces[0],self))
