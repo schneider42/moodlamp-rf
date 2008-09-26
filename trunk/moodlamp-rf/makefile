@@ -81,7 +81,7 @@ OBJDIR = .
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c
+SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c rs485.c
 #lib/uart.c
 #fifo.c uart.c
 
