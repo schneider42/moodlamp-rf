@@ -6,9 +6,11 @@
 /*                      danni@specs.de                                  */
 /*                                                                      */
 /************************************************************************/
+#include "config.h"
 #include "rc5.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include "common.h"
 #include "fnordlicht.h"
 
 #define REPEAT_INIT 10
@@ -19,6 +21,7 @@
 #define PULSE_1_2	(uint8_t)(XTAL / 512 * RC5TIME * 0.8 + 0.5)
 #define PULSE_MAX	(uint8_t)(XTAL / 512 * RC5TIME * 1.2 + 0.5)
 
+#if RC5_DECODER
 
 uint8_t	    rc5_bit;				// bit value
 uint8_t	    rc5_time;				// count bit time
@@ -85,3 +88,19 @@ uint8_t checkRC5(uint16_t code)
 	return 0;
 }
 
+void rc5_init(void)
+{
+
+#if defined(__AVR_ATmega324P__) ||  defined(__AVR_ATmega644P__)
+    TCCR0B = 1<<CS02;           //divide by 256
+    TIMSK0 |= 1<<TOIE0;         //enable timer interrupt
+#else
+    TCCR0 = 1<<CS02;            //divide by 256
+//    TIMSK0 |= 1<<TOIE0;           //enable timer interrupt
+    TIMSK |= 1<<TOIE0;          //enable timer interrupt
+#endif
+
+}
+
+
+#endif
