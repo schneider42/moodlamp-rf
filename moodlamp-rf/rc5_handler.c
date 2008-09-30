@@ -44,172 +44,77 @@
 #include "rc5_handler.h"
 #endif
 
+#include "cmd_handler.h"
+
 #if STATIC_SCRIPTS
 #include "static_scripts.h"
 #include "scripts.h"
 #endif
 #if SERIAL_UART
 #include "lib/uart.h"
-#define DEBUG	0
 #endif
 #include "settings.h"
 
+#define NULL (void*) 0
+
 #if RC5_DECODER
 
-#if DEBUG
-void printbyte(uint8_t c)
+uint8_t rc5_handler(void)
 {
-    uint8_t i = c/100;
-    uart_putc(i+'0');
-    c-=i*100;
-    i=c/10;
-    uart_putc(i+'0');
-    c-=i*10;
-    uart_putc(c+'0');
-}
-#endif
+    cli();
+    int16_t rc5d =  rc5_data;
+    rc5_data = 0;
+    sei();
 
-void dark(void)
-{
-    global_pwm.channels[0].brightness =  global_pwm.channels[0].target_brightness = 0;
-    global_pwm.channels[1].brightness =  global_pwm.channels[1].target_brightness = 0;
-    global_pwm.channels[2].brightness =  global_pwm.channels[2].target_brightness = 0;
-}
+    if(!rc5_checkRC5(rc5d))
+        return 1;
+    uint8_t rc5adr = rc5d >> 6 & 0x1F;
+    uint8_t rc5cmd = (rc5d & 0x3F) | (~rc5d >> 7 & 0x40);
 
-void rc5_setscript(void (*execute)(struct thread_t *current_thread), uint16_t position)
-{
-    script_threads[0].handler.execute = execute;
-    script_threads[0].handler.position = position;
-    script_threads[0].flags.disabled = 0;
-    script_threads[0].handler_stack_offset = 0;
-    dark(); 
-}
+    if(global.state == STATE_STANDBY && rc5cmd != RC5_POWER && rc5cmd != RC5_RECORD)
+        return 1;
 
-uint8_t rc5_handler(uint8_t rc5adr, uint8_t rc5cmd)
-{
 #ifndef RC5_USEANY
     if(rc5adr != RC5_ADDRESS)
         return 1;
 #endif
-    if(rc5cmd == KEY_BRIGHTNESS_DOWN){
-        if(global_pwm.dim > 0){
-            global_pwm.dim--;
-#if DEBUG
-            uart_puts("dim=");
-            printbyte(global_pwm.dim);
-            uart_puts("\r\n");
-#endif
-        }
-    }else if(rc5cmd == KEY_BRIGHTNESS_UP){
-        if(global_pwm.dim < 255){
-            global_pwm.dim++;
-#if DEBUG
-            uart_puts("dim=");
-            printbyte(global_pwm.dim);
-            uart_puts("\r\n");
-#endif
-        }
-    }else if(rc5cmd == KEY_FULL_BRIGHTNESS){
-        global_pwm.dim=255;
-    }else if(rc5cmd == KEY_ZERO_BRIGHTNESS){
-        global_pwm.dim=0;
-    }
-    else if(rc5cmd == KEY_POWER){
-        if(global.state != STATE_STANDBY){
-            if(global.state == STATE_SLEEP)
-                global.oldstate = STATE_RUNNING;
-            else
-                global.oldstate = global.state;
-            global.state = STATE_ENTERSTANDBY;
-        }else{
-            global.state = STATE_LEAVESTANDBY;
-        }
-    }else if(rc5cmd > 0 && rc5cmd < 10){
-        if(sizeof(global_playlist)/(sizeof(struct playlist_t)) >= rc5cmd)
-                rc5_setscript(
-                    global_playlist[rc5cmd-1].execute, global_playlist[rc5cmd-1].position);
-    }/*else if(rc5cmd == KEY_SCRIPT1){
-        //script_threads[0].handler.execute = &memory_handler_flash;
-        //script_threads[0].handler.position = (uint16_t) &green_flash;
-        //script_threads[0].flags.disabled = 0;
-        //script_threads[0].handler_stack_offset = 0;
-        //dark();
-        rc5_setscript(&memory_handler_flash, (uint16_t) &green_flash);
-        if(sizeof(global_playlist)/(sizeof(struct playlist_t)) > 0)
-        rc5_setscript(global_playlist[0].execute, global_playlist[0].position);
-    }else if(rc5cmd == KEY_SCRIPT2){
-        script_threads[0].handler.execute = &memory_handler_flash;
-        script_threads[0].handler.position = (uint16_t) &blinken;
-        script_threads[0].flags.disabled = 0;
-        script_threads[0].handler_stack_offset = 0; 
-        dark();
-    }else if(rc5cmd == KEY_SCRIPT3){
-        script_threads[0].handler.execute = &memory_handler_flash;
-        script_threads[0].handler.position = (uint16_t) &colorchange_red;
-        script_threads[0].flags.disabled = 0;
-        script_threads[0].handler_stack_offset = 0;
-        dark();
-    }else if(rc5cmd == KEY_SCRIPT4){
-        script_threads[0].handler.execute = &memory_handler_flash;
-        script_threads[0].handler.position = (uint16_t) &colorchange_red_blue;
-        script_threads[0].flags.disabled = 0;
-        script_threads[0].handler_stack_offset = 0; 
-        dark();
-    }else if(rc5cmd == KEY_SCRIPT5){
-        script_threads[0].handler.execute = &memory_handler_flash;
-        script_threads[0].handler.position = (uint16_t) &green_blink;
-        script_threads[0].flags.disabled = 0;
-        script_threads[0].handler_stack_offset = 0; 
-        dark();
-    }else if(rc5cmd == KEY_SCRIPT6){
-        script_threads[0].handler.execute = &memory_handler_flash;
-        script_threads[0].handler.position = (uint16_t) &police;
-        script_threads[0].flags.disabled = 0;
-        script_threads[0].handler_stack_offset = 0; 
-        dark();
-    }*/else if(rc5cmd == KEY_FASTER){
-        if(script_threads[0].speed_adjustment < 8){
-            script_threads[0].speed_adjustment++;
-            respeed(&script_threads[0]);
-            //update_brightness();
-            //execute_script_threads();
-        }
 
+    if(rc5cmd == KEY_BRIGHTNESS_DOWN){
+        cmd_handler(CMD_BRIGHTNESS_DOWN,NULL,NULL);
+    }else if(rc5cmd == KEY_BRIGHTNESS_UP){
+        cmd_handler(CMD_BRIGHTNESS_UP,NULL,NULL);
+    }else if(rc5cmd == KEY_FULL_BRIGHTNESS){
+         cmd_handler(CMD_FULL_BRIGHTNESS,NULL,NULL);   
+    }else if(rc5cmd == KEY_ZERO_BRIGHTNESS){
+         cmd_handler(CMD_ZERO_BRIGHTNESS,NULL,NULL);
+    }else if(rc5cmd == KEY_POWER){
+         cmd_handler(CMD_POWER,NULL,NULL);
+    }else if(rc5cmd > 0 && rc5cmd < 10){
+         cmd_handler(CMD_SET_SCRIPT,&rc5cmd,NULL);
+    }else if(rc5cmd == KEY_FASTER){
+         cmd_handler(CMD_FASTER,NULL,NULL);
     }else if(rc5cmd == KEY_SLOWER){
-        if(script_threads[0].speed_adjustment > -8){
-            script_threads[0].speed_adjustment--;
-            respeed(&script_threads[0]);
-            //update_brightness();
-            //execute_script_threads();
-        }
+         cmd_handler(CMD_SLOWER,NULL,NULL);
     }else if(rc5cmd == KEY_PAUSE){
-        /*if(global.flags.running){
-            global.flags.running = 0;
-        }else{
-            global.flags.running = 1;
-        }*/
-        if(global.state != STATE_PAUSE)
-            global.state = STATE_PAUSE;
-        else
-            global.state = STATE_RUNNING;
+         cmd_handler(CMD_PAUSE,NULL,NULL);
     }else if(rc5cmd == KEY_SAVE){
-        settings_save();
+         cmd_handler(CMD_SAVE,NULL,NULL);
     }else if(rc5cmd == KEY_SLEEP){
-        global.state = STATE_ENTERSLEEP;
+         cmd_handler(CMD_SLEEP,NULL,NULL);
     }else if(rc5cmd == KEY_RED){
-        global_pwm.channel_modifier = 0;
+         cmd_handler(CMD_RED,NULL,NULL);
     }else if(rc5cmd == KEY_GREEN){
-        global_pwm.channel_modifier = 1;
+         cmd_handler(CMD_GREEN,NULL,NULL);
     }else if(rc5cmd == KEY_BLUE){
-        global_pwm.channel_modifier = 2;
+         cmd_handler(CMD_BLUE,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_UP){
-        global_pwm.channels[global_pwm.channel_modifier].brightness++;
+         cmd_handler(CMD_COLOR_UP,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_DOWN){
-        global_pwm.channels[global_pwm.channel_modifier].brightness--;
+         cmd_handler(CMD_COLOR_DOWN,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_FULL){
-        global_pwm.channels[global_pwm.channel_modifier].brightness=255;
+         cmd_handler(CMD_COLOR_FULL,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_ZERO){
-        global_pwm.channels[global_pwm.channel_modifier].brightness=0;
+         cmd_handler(CMD_COLOR_ZERO,NULL,NULL);
     }
 
     return 0;

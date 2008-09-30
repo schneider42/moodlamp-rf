@@ -128,6 +128,15 @@ inline void init_pwm(void)
     }
 
     update_pwm_timeslots();
+    /* set all channels high -> leds off */
+#if LED_PORT_INVERT
+    LED_PORT |= 7;
+#else
+    LED_PORT &= ~7;
+#endif
+
+    /* configure Px0-Px2 as outputs */
+    LED_PORT_DDR |= 7;
 }
 
 /* }}} */

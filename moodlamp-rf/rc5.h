@@ -59,6 +59,6 @@ extern volatile uint8_t rfm12base;
 #define RC5_PRESETS			49
 #define RC5_MUTE			13
 
-uint8_t checkRC5(uint16_t code);
+uint8_t rc5_checkRC5(uint16_t code);
 void rc5_init(void);
 #endif

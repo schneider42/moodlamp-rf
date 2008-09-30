@@ -25,7 +25,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
-
+#ifndef __FNORDLICHT_H_
+#define __FNORDLICHT_H_
 /* global flag(=bit) structure */
 struct flags_t {
     /* set by pwm interrupt after burst, signals the beginning of a new pwm
@@ -58,5 +59,7 @@ struct global_t {
 };
 
 extern volatile struct global_t global;
-extern uint16_t timeoutmax;
-extern uint16_t timeout;
+
+void jump_to_bootloader(void);
+
+#endif
