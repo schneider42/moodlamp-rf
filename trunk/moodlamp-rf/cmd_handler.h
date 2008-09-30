@@ -28,38 +28,29 @@
  * For more information on the GPL, please go to:
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
-#ifndef __RC5_HANDLER_H_
-#define __RC5_HANDLER_H_
+#ifndef __CMD_HANDLER_H_
+#define __CMD_HANDLER_H_
 
-#define RC5_ADDRESS			RC5_ADR_VCR
-//#define RC5_USEANY        //define this macro to ignore the RC5 address of the remote
+#define CMD_POWER               0
+#define CMD_BRIGHTNESS_UP       1
+#define CMD_BRIGHTNESS_DOWN     2
+#define CMD_FASTER              3
+#define CMD_SLOWER              4
+#define CMD_FULL_BRIGHTNESS     5
+#define CMD_ZERO_BRIGHTNESS     6
+#define CMD_PAUSE               7
+#define CMD_SAVE                8
+#define CMD_SLEEP               9
+#define CMD_COLOR_UP            10
+#define CMD_COLOR_DOWN          11
+#define CMD_RED                 12
+#define CMD_GREEN               13
+#define CMD_BLUE                14
+#define CMD_COLOR_FULL          15
+#define CMD_COLOR_ZERO          16
+#define CMD_SET_SCRIPT          17
+#define CMD_GET_VERSION         'V'
 
-#define KEY_POWER			RC5_POWER
-#define KEY_BRIGHTNESS_UP	RC5_BRIGHTNESS_UP
-#define KEY_BRIGHTNESS_DOWN	RC5_BRIGHTNESS_DOWN
-#define KEY_FASTER			RC5_VOL_UP
-#define KEY_SLOWER			RC5_VOL_DOWN
-#define KEY_FULL_BRIGHTNESS	RC5_CHAN_UP
-#define KEY_ZERO_BRIGHTNESS	RC5_CHAN_DOWN
-#define KEY_PAUSE			RC5_PAUSE
-#define KEY_SAVE			RC5_RECORD
-#define KEY_SLEEP           RC5_MEMO
-#define KEY_COLOR_UP        RC5_COLOR_UP
-#define KEY_COLOR_DOWN      RC5_COLOR_DOWN
-#define KEY_RED             RC5_RED
-#define KEY_GREEN           RC5_GREEN
-#define KEY_BLUE            RC5_BLUE
-#define KEY_COLOR_FULL      RC5_CONTRAST_UP
-#define KEY_COLOR_ZERO      RC5_CONTRAST_DOWN
-#define KEY_SCRIPT1			RC5_1
-#define KEY_SCRIPT2			RC5_2
-#define KEY_SCRIPT3			RC5_3
-#define KEY_SCRIPT4			RC5_4
-#define KEY_SCRIPT5			RC5_5
-#define KEY_SCRIPT6			RC5_6
-#define KEY_SCRIPT7			RC5_7
-#define KEY_SCRIPT8			RC5_8
-#define KEY_SCRIPT9			RC5_9
-
-uint8_t rc5_handler(void);
+uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
+uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);
 #endif

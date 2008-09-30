@@ -67,7 +67,7 @@ ISR(SIG_OVERFLOW0)
     rfm12base++;
 }
 
-uint8_t checkRC5(uint16_t code)
+uint8_t rc5_checkRC5(uint16_t code)
 {
 	uint8_t toggle = ( code >> 11 & 1);
 	static uint8_t repeats;
@@ -99,7 +99,7 @@ void rc5_init(void)
 //    TIMSK0 |= 1<<TOIE0;           //enable timer interrupt
     TIMSK |= 1<<TOIE0;          //enable timer interrupt
 #endif
-
+    xRC5_PORT |= (1<<xRC5);
 }
 
 

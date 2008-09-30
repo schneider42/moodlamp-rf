@@ -4,6 +4,7 @@
 #include "common.h"
 #include "rs485.h"
 #include "pwm.h"
+#include "control.h"
 
 #if RS485_CTRL
 
@@ -31,7 +32,7 @@ void rs485_process(void)
         uint8_t data = UDR0;
         static uint8_t buffer[8];
         static uint8_t fill = 0;
-        uint8_t pos;
+//        uint8_t pos;
         if (UCSR0A & _BV(MPCM0) || address) { /* if MPCM mode is still active, or ninth bit set, this is an address packet */
 
             /* check if we are ment */
@@ -40,14 +41,9 @@ void rs485_process(void)
                 /* remove MPCM flag and reset buffer fill counter */
                 UCSR0A &= ~_BV(MPCM0);
                 fill = 0;
-
-            //     continue;
-
             } else {/* turn on MPCM */
 
                 UCSR0A |= _BV(MPCM0);
-            //       continue;
-
             }
         }else{
 
@@ -55,31 +51,15 @@ void rs485_process(void)
             buffer[fill++] = data;
 
             if (buffer[0] == 0x01) {  /* soft reset */
-
                 jump_to_bootloader();
-
             } else if (buffer[0] == 0x02 && fill == 4) { /* set color */
-
-                for (pos = 0; pos < 3; pos++) {
-                    global_pwm.channels[pos].target_brightness = buffer[pos + 1];
-                    global_pwm.channels[pos].brightness = buffer[pos + 1];
-                }
-timeout = timeoutmax;
-                global.state = STATE_PAUSE;
+                control_setColor(buffer[1],buffer[2],buffer[3]);
                 UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
-
             } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
-
-                for (pos = 0; pos < 3; pos++) {
-                    global_pwm.channels[pos].speed_h = buffer[1];
-                    global_pwm.channels[pos].speed_l = buffer[2];
-                    global_pwm.channels[pos].target_brightness = buffer[pos + 3];
-                }
-
+                control_fade((buffer[1]<<8)+buffer[2],buffer[3],buffer[4],buffer[5]);
                 UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
             }
         }
-
     }
 }
 #endif
