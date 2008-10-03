@@ -67,8 +67,8 @@ class ReadSerial ( threading.Thread ):
         global status
         while 1:
             if self.readline():
+                #print "readline", self.ar
                 if not self.ready :
-                #print self.ar
 
                 #elif self.ar[0] == 'S':
                 #    if(self.)
@@ -198,7 +198,7 @@ class RF12Interface:
             self.rf12.write("acP%c" % remadr)
         else:
             self.rf12.write("acB%c" % remadr)
-        self.rf12.write("acP%c" % remadr)#FIXME    use a lock or a message
+#        self.rf12.write("acP%c" % remadr)#FIXME    use a lock or a message
         self.rf12.write(data.replace('a','aa'))
         self.rf12.write("ab")
         print "sent packet"
@@ -206,7 +206,7 @@ class RF12Interface:
     
     def sniff(self, sniff):
         if sniff == True:
-            print "setting to raw"
+            print "setting mode to sniffer"
             self.rf12.write("acS\x02ab") 
         else:
             self.rf12.write("acS\x00ab")
