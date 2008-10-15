@@ -42,10 +42,10 @@ unsigned char rf12packet_getstatus(void)
 
 void rf12packet_sendpacket(void)
 {
-//	cli();
+//  cli();
     rf12_allstop();
     unsigned char c = rf12_txstart(outpacket,outlen);
-//	sei();
+//  sei();
     if(c){
 #ifdef RF12DEBUG
         printf("sendpacket ret: %u\r\n", c);
