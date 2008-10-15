@@ -60,6 +60,7 @@
 #endif
 #include "settings.h"
 #include "control.h"
+#include "serial_handler.h"
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream);
@@ -71,15 +72,13 @@ volatile struct global_t global = {{0, 0}};
 /* prototypes */
 
 #if SERIAL_UART
-static inline void check_serial_input(uint8_t data);
-
 int uart_putc_file(char c, FILE *stream)
 {
-    uart_putc(c);    
+    uart1_putc(c);    
     return 0;
 }
-
 #endif
+
 void jump_to_bootloader(void)
 {
     wdt_enable(WDTO_30MS);
@@ -89,21 +88,20 @@ void jump_to_bootloader(void)
 /** main function
  */
 int main(void) {
-    SPCR &= ~(1<<SPE);
-    TIMSK &= ~(1<<TOIE1);
+//    SPCR &= ~(1<<SPE);
+//    TIMSK &= ~(1<<TOIE1);
 
     init_pwm();
 #if SERIAL_UART
-    uart_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
-//    uart_puts((unsigned char *) "Welcome to fnordlicht");
+    uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
     stdout = &mystdout;
+    uart1_puts("acSDab");
 #endif
+
 #if RC5_DECODER
     rc5_init();
 #endif
-#if I2C
-    init_i2c();
-#endif
+
 #if STATIC_SCRIPTS
     init_script_threads();
 #endif
@@ -157,6 +155,9 @@ int main(void) {
 #endif
 #if RS485_CTRL
         rs485_process();
+#endif
+#if SERIAL_UART
+        serial_process();
 #endif
     }
 }

@@ -49,20 +49,20 @@ void settings_save(void)
 {
     const void * temp;
     global_settings.firstboot = 0;
-    eeprom_write_block(&global_settings, &global_settings_record,sizeof(global_settings)); 
+    eeprom_write_block(&global_settings_record,&global_settings, sizeof(global_settings)); 
     temp =(const void *) &global_pwm;       //Just to avoid compiler warnings
     eeprom_write_block(
             //(const void *)&global_pwm,
-            temp,
             &global_pwm_record,
+            temp,
             sizeof(global_pwm)
     );
 #if STATIC_SCRIPTS
-    eeprom_write_block(script_threads,&script_threads_record,sizeof(script_threads)*MAX_THREADS);
+    eeprom_write_block(&script_threads_record,script_threads,sizeof(script_threads)*MAX_THREADS);
 #endif
-    eeprom_write_block(&pwm,&pwm_record,sizeof(pwm));
+    eeprom_write_block(&pwm_record,&pwm,sizeof(pwm));
     temp = (const void *) &global;
-    eeprom_write_block(/*(struct global_t *)&global*/temp,&global_record,sizeof(global));
+    eeprom_write_block(&global_record,/*(struct global_t *)&global*/temp,sizeof(global));
 
 }
 

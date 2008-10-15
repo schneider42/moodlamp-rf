@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <avr/interrupt.h>
 #include "config.h"
 #include "fnordlicht.h"
 #include "common.h"
@@ -7,7 +8,12 @@
 #include "pwm.h"
 #include "lib/rf12packet.h"
 
-unsigned int initadr = 1;
+#if ROLE==ROLE_MASTER
+    unsigned int initadr = 0;
+#elif ROLE==ROLE_SLAVE
+    unsigned int initadr = 1;
+#endif
+
 uint16_t timeoutmax = 200;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
@@ -15,13 +21,16 @@ uint16_t timeout = 0;
 
 void control_setColor(uint8_t r, uint8_t g, uint8_t b)
 {
+cli();
     global_pwm.channels[0].brightness = r;
 //    global_pwm.channels[0].target_brightness = r;
     global_pwm.channels[1].brightness = g;
 //    global_pwm.channels[1].target_brightness = g;
     global_pwm.channels[2].brightness = b;
 //    global_pwm.channels[2].target_brightness = b;
-    control_setTimeout();
+sei();
+control_setTimeout();
+
 }
 
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
@@ -82,7 +91,7 @@ void control_tick(void)
             }
         break;
     }
-
+#if ROLE==ROLE_SLAVE
     static unsigned int beacon = 0;
     if(initadr == 0 && beacon++ >= 500){
         strcpy((char *)rf12packet_data,"B");
@@ -108,9 +117,10 @@ void control_tick(void)
 
     if(initadr > 1 && initadr++ > 500)
         initadr = 1;
-
+#endif
     if(timeout && --timeout == 0)
         global.state = STATE_RUNNING;
+
 }
 
 void control_gotAddress(void)

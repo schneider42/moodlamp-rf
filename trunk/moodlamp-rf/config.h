@@ -28,11 +28,142 @@
 #ifndef _FNORDLICHT_CONFIG_H
 #define _FNORDLICHT_CONFIG_H
 
+#define BOARD_0_1       0       //old moodlamp design
+#define BOARD_RF_0_1    1       //proto rf board
+#define BOARD_RF_0_2    2       //current rf board
+
+#ifndef BOARD
+#define BOARD   BOARD_RF_0_2
+#endif
+
+#define ROLE_NONE       0       //just use RC5 for control(old moodlamp)
+#define ROLE_SLAVE      1       //slave lamp with RFM12 and RS485 support if supported by the board
+#define ROLE_MASTER     2       //master lamp with USB, RFM12 and RS485
+
+#ifndef ROLE
+#define ROLE    ROLE_MASTER
+//#define ROLE    ROLE_SLAVE
+#endif
+
+#ifndef F_CPU
+    #if ROLE == ROLE_SLAVE
+    #undef F_CPU
+    #define F_CPU 16000000UL
+    #endif
+
+    #if ROLE == ROLE_MASTER
+    #undef F_CPU
+    #define F_CPU 18432000UL
+    #endif
+#endif
+
+#ifndef LED_PORT
+#define LED_PORT PORTA
+#endif
+
+#ifndef LED_PORT_DDR
+#define LED_PORT_DDR DDRA
+#endif
+
+#ifndef LED_PORT_INVERT
+#define LED_PORT_INVERT 0
+#endif
+
+/* color <-> channel assignment */
+#define CHANNEL_RED     0
+#define CHANNEL_GREEN   1
+#define CHANNEL_BLUE    2
+
+#if (ROLE == ROLE_MASTER && !(BOARD == BOARD_RF_0_2))
+#error "Wrong Board for the choosen role"
+#endif
+
+#if (ROLE == ROLE_MASTER && !(defined(__AVR_ATmega644P__) || defined(__AVR_ATmega32P__) || defined(__AVR_ATmega164P__)))
+#error "Wrong MCU for the choosen role."
+#endif
+
+#if(ROLE == ROLE_SLAVE || ROLE == ROLE_MASTER)
+#define RC5_DECODER 1
+#define RS485_CTRL  1
+#define SCRIPT_SPEED_CONTROL 1
+#define STATIC_SCRIPTS 1
+#endif
+
+#if ROLE == ROLE_MASTER
+#define USB_CTRL 1
+#define UART_BAUDRATE 230400
+#define SERIAL_UART 1
+#endif
+
+/* debug defines */
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
+/* include the script intpreter per default */
+#ifndef STATIC_SCRIPTS
+#define STATIC_SCRIPTS 1
+#endif
+
+/* include uart support per default */
+#ifndef SERIAL_UART
+#define SERIAL_UART 0
+#endif
+
+/* disable at keyboard decoder per default (EXPERIMENTAL) */
+/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
+#ifndef AT_KEYBOARD
+#define AT_KEYBOARD 0
+#endif
+
+/* disable rc5-decoder per default */
+#ifndef RC5_DECODER
+#define RC5_DECODER 1
+#endif
+
+/* disable scripts speed control per default */
+#ifndef SCRIPT_SPEED_CONTROL
+#define SCRIPT_SPEED_CONTROL 1
+#endif
+
+/* disable i2c support per default (EXPERIMENTAL) */
+/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
+#ifndef I2C
+#define I2C 0
+#endif
+
+#ifndef I2C_MASTER
+#define I2C_MASTER 0
+#endif
+
+#ifndef I2C_SLAVE
+#define I2C_SLAVE 0
+#endif
+
+/* fifo size must be a power of 2 and below 128 */
+//#define UART_FIFO_SIZE 32
+#ifndef UART_BAUDRATE
+#define UART_BAUDRATE 19200
+#endif
+
+
+/* enable this if you want to control a fnordlicht via RS485 */
+#ifndef RS485_CTRL
+#define RS485_CTRL 1
+#endif
+
+#define RS485_ADDRESS 10
+
+#if (RS485_CTRL == 1) && (SERIAL_UART == 1) && !(ROLE == ROLE_MASTER)
+#error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
+#endif
+
+
 #include <avr/version.h>
 
 /* check for avr-libc version */
-#if __AVR_LIBC_VERSION__ < 10402UL
-#error newer libc version (>= 1.4.2) needed!
+#if __AVR_LIBC_VERSION__ < 10602UL
+#error newer libc version (>= 1.6.2) needed!
 #endif
 
 /* check if cpu speed is defined */
@@ -84,6 +215,8 @@
 /* {{{ */
 #define _ATMEGA16
 
+#define _EICRA MCUCR
+#define _EIMSK GICR
 #define _TIMSK_TIMER1 TIMSK
 #define _UCSRB_UART0 UCSRB
 #define _UDRIE_UART0 UDRIE
@@ -118,7 +251,8 @@
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)|| defined(__AVR_ATmega324P__) || defined(__AVR_ATmega644P__)
 /* {{{ */
 #define _ATMEGA88
-
+#define _EICRA EICRA
+#define _EIMSK EIMSK
 #define _TIMSK_TIMER1 TIMSK1
 #define _UCSRB_UART0 UCSR0B
 #define _UDRIE_UART0 UDRIE0
@@ -135,86 +269,6 @@
 #define _UDR_UART0 UDR0
 /* }}} */
 #endif
-
-
-/* debug defines */
-#ifndef DEBUG
-#define DEBUG 0
-#endif
-
-/* include the script intpreter per default */
-#ifndef STATIC_SCRIPTS
-#define STATIC_SCRIPTS 1
-#endif
-
-/* include uart support per default */
-#ifndef SERIAL_UART
-#define SERIAL_UART 0
-#endif
-
-/* disable at keyboard decoder per default (EXPERIMENTAL) */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
-#ifndef AT_KEYBOARD
-#define AT_KEYBOARD 0
-#endif
-
-/* disable rc5-decoder per default */
-#ifndef RC5_DECODER
-#define RC5_DECODER 1
-#endif
-
-/* disable scripts speed control per default */
-#ifndef SCRIPT_SPEED_CONTROL
-#define SCRIPT_SPEED_CONTROL 1
-#endif
-
-/* disable i2c support per default (EXPERIMENTAL) */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
-#ifndef I2C
-#define I2C 0
-#endif
-
-#ifndef I2C_MASTER
-#define I2C_MASTER 0
-#endif
-
-#ifndef I2C_SLAVE
-#define I2C_SLAVE 0
-#endif
-
-/* fifo size must be a power of 2 and below 128 */
-//#define UART_FIFO_SIZE 32
-#define UART_BAUDRATE 19200
-
-
-/* color <-> channel assignment */
-#define CHANNEL_RED     0
-#define CHANNEL_GREEN   1
-#define CHANNEL_BLUE    2
-
-/* enable this if you want to control a fnordlicht via RS485 */
-#ifndef RS485_CTRL
-#define RS485_CTRL 1
-#endif
-
-#define RS485_ADDRESS 10
-
-#if (RS485_CTRL == 1) && (SERIAL_UART == 1)
-#error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
-#endif
-
-#ifndef LED_PORT
-#define LED_PORT PORTA
-#endif
-
-#ifndef LED_PORT_DDR
-#define LED_PORT_DDR DDRA
-#endif
-
-#ifndef LED_PORT_INVERT
-#define LED_PORT_INVERT 0
-#endif
-
 
 
 #endif /* _FNORDLICHT_CONFIG_H */
