@@ -65,11 +65,11 @@ uint8_t rc5_handler(void)
     int16_t rc5d =  rc5_data;
     rc5_data = 0;
     sei();
-
     if(!rc5_checkRC5(rc5d))
         return 1;
     uint8_t rc5adr = rc5d >> 6 & 0x1F;
     uint8_t rc5cmd = (rc5d & 0x3F) | (~rc5d >> 7 & 0x40);
+    
 
     if(global.state == STATE_STANDBY && rc5cmd != RC5_POWER && rc5cmd != RC5_RECORD)
         return 1;

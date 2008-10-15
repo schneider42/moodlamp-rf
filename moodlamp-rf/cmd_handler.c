@@ -154,6 +154,14 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         strcpy((char *) result,"D=");
         strcat((char *) result,__DATE__);
         return strlen((char *)result);
+/*    }else if(cmd == CMD_GET_STATE){
+        result[0] = global.state;
+        result[1] = script_threads[0].speed_adjustment;
+        result[2] = global_pwm.dim;
+        retrun 3;
+    }else if(cmd == CMD_SET_SPEED){
+//        script_threads[0].speed_adjustment = 
+    */
     }
 
     return 0;

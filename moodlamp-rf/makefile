@@ -43,7 +43,11 @@
 # MCU name
 #MCU = atmega644p
 #MCU = atmega32
-MCU = atmega16
+#MCU = atmega16
+
+MASTER_MCU = atmega644p
+SLAVE_MCU = atmega16
+
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
 #     processor frequency. You can then use this symbol in your source code to 
@@ -60,10 +64,10 @@ MCU = atmega16
 #         F_CPU = 11059200
 #         F_CPU = 12000000
 #         F_CPU = 14745600
-         F_CPU = 16000000
+#         F_CPU = 16000000
 #         F_CPU = 18432000
 #         F_CPU = 20000000
-
+#F_CPU = 0
 
 
 # Output format. (can be srec, ihex, binary)
@@ -81,8 +85,7 @@ OBJDIR = .
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c rs485.c cmd_handler.c rf_handler.c control.c
-#lib/uart.c
+SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c rs485.c cmd_handler.c rf_handler.c control.c lib/uart.c serial_handler.c
 #fifo.c uart.c
 
 
@@ -129,10 +132,10 @@ CSTANDARD = -std=gnu89
 
 
 # Place -D or -U options here for C sources
-CDEFS = -DF_CPU=$(F_CPU)UL
+#CDEFS = -DF_CPU=$(F_CPU)UL
 
 # Place -D or -U options here for C++ sources
-CPPDEFS = -DF_CPU=$(F_CPU)UL
+#CPPDEFS = -DF_CPU=$(F_CPU)UL
 #CPPDEFS += -D__STDC_LIMIT_MACROS
 #CPPDEFS += -D__STDC_CONSTANT_MACROS
 
@@ -398,8 +401,24 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 # Default target.
-all: begin gccversion sizebefore build sizeafter end
+#all: config begin gccversion sizebefore build sizeafter end
+all:
+	@if test -f conf.slave; then make slave; fi
+	@if test -f conf.master; then make master; fi
+slave: CFLAGS += -DROLE=ROLE_SLAVE
+slave: MCU = atmega16
+slave: conf.slave begin gccversion sizebefore build sizeafter end
+master: CFLAGS += -DROLE=ROLE_MASTER
+master: MCU = atmega644p
+master: conf.master begin gccversion sizebefore build sizeafter end
 
+conf.slave:
+	touch conf.slave
+	@if test -f conf.master; then rm conf.master; make clean; fi
+
+conf.master:
+	@if test -f conf.slave; then rm conf.slave; make clean; fi
+	touch conf.master
 # Change the build target to build a HEX file or a library.
 build: elf hex eep lss sym
 #build: lib
@@ -452,8 +471,15 @@ fuse:
 
 # Program the device.  
 program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+	@if test -f conf.slave; then make program-slave; fi
+	@if test -f conf.master; then make program-master; fi
 
+program-master: MCU = $(MASTER_MCU)
+program-master: master
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+program-slave: MCU = $(SLAVE_MCU)
+program-slave: slave
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 # Generate avr-gdb config/init file which does the following:
 #     define the reset signal, load the target file, connect to target, and set 

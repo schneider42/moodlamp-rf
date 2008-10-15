@@ -9,7 +9,7 @@
 #define xRC5_PORT   PORTD
 #define xRC5_DDR    DDRD
 #define	xRC5_IN		PIND
-#define	xRC5		PD3			// IR input low active
+#define	xRC5		PD6			// IR input low active
 extern uint16_t	rc5_data;				// store result
 extern volatile uint8_t rfm12base;
 

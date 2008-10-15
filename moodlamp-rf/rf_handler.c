@@ -11,13 +11,13 @@
 #include "settings.h"
 #include "rf_handler.h"
 #include "control.h"
-
+#include "lib/uart.h"
 
 void rf_init(void)
 {
     volatile unsigned long l;
-    PORTD &= ~(1<<PD6);     //todo: remove fet
-    DDRD |= (1<<PD6);
+//    PORTD &= ~(1<<PD6);     //todo: remove fet
+//    DDRD |= (1<<PD6);
 
     for(l=0;l<10000;l++);
 
@@ -29,7 +29,11 @@ void rf_init(void)
     rf12_setbandwidth(4, 1, 4);     // 200kHz Bandbreite, -6dB Verstärkung, DRSSI threshold: -79dBm
     rf12_setbaud(19200);
     rf12_setpower(0, 6);            // 1mW Ausgangangsleistung, 120kHz Frequenzshift
+#if ROLE == ROLE_MASTER
+    rf12packet_init(2);
+#elif ROLE == ROLE_SLAVE
     rf12packet_init(0);
+#endif
     //volatile uint32_t tmp;
     //for(tmp=0;tmp<100000;tmp++);
 #ifdef RF12DEBUGBIN
@@ -41,11 +45,22 @@ void rf_init(void)
 void rf_tick(void){
     rf12packet_tick();
 
+#if ROLE == ROLE_SLAVE
     if(rf12packet_status & RF12PACKET_NEWDATA){
         rf12packet_status ^= RF12PACKET_NEWDATA;
         
         unsigned char sender = rf12packet_data[3];
-
+/*        printf("got packet from %d: ",sender);
+        uint8_t i;
+        for(i=0;i<rf12packet_datalen;i++){
+            if(rf12packet_data[i] < 0x20)
+                printf("0x%x ",rf12packet_data[i]);
+            else
+                printf("%c ",rf12packet_data[i]);
+        }
+        printf("\r\n");
+        return;
+*/
         /*if(rf12packet_data[4] == 'V'){
             //sprintf((char *)rf12packet_data,"F=%s T=%s D=%s",
             //    __FILE__,__TIME__,__DATE__);
@@ -69,12 +84,12 @@ void rf_tick(void){
             global_pwm.dim = rf12packet_data[5];
         }else if(rf12packet_data[4] == 'S'){
             global.state = rf12packet_data[5];
-        }else if(rf12packet_data[4] == 'G'){
+        }/*else if(rf12packet_data[4] == 'G'){
             rf12packet_data[0] = global.state;
             rf12packet_data[1] = script_threads[0].speed_adjustment;
             rf12packet_data[2] = global_pwm.dim;
             rf12packet_send(sender,rf12packet_data,3);
-        }else if(rf12packet_data[4]> 0 && rf12packet_data[4] < 10){
+        }*/else if(rf12packet_data[4]> 0 && rf12packet_data[4] < 10){
             cmd_handler(CMD_SET_SCRIPT, rf12packet_data+4, NULL);
         }else if(rf12packet_data[4] == 's'){
             script_threads[0].speed_adjustment = rf12packet_data[5];
@@ -112,6 +127,29 @@ void rf_tick(void){
             }
         }
     }
+#endif
+#if ROLE == ROLE_MASTER
+    if(rf12packet_status & RF12PACKET_NEWDATA){
+            rf12packet_status ^= RF12PACKET_NEWDATA;
+            uart1_puts("ac");
+            uint8_t c;
+            for(c=0;c<rf12packet_datalen;c++){
+                uart1_putc(rf12packet_data[c]);
+                if(rf12packet_data[c] == 'a'){
+                    uart1_putc(rf12packet_data[c]);
+              }
+            }
+            uart1_puts("ab");
+        }
+        if(rf12packet_status & RF12PACKET_TIMEOUT){
+            rf12packet_status ^= RF12PACKET_TIMEOUT;
+            uart1_puts("acSTab");
+        }
+        if(rf12packet_status & RF12PACKET_PACKETDONE){
+            rf12packet_status ^= RF12PACKET_PACKETDONE;
+            uart1_puts("acSDab");
+        }
+#endif
     
 }
 void rf_sendUUID(void)

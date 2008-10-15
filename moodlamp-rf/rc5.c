@@ -29,9 +29,9 @@ uint16_t    rc5_tmp;				// shift bits in
 uint16_t    rc5_data;				// store result
 
 volatile uint8_t rfm12base = 0;
-ISR(SIG_OVERFLOW0)
+ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
 {
-  sei();																	//don't block the PWM interrupt
+//  sei();																	//don't block the PWM interrupt
   uint16_t tmp = rc5_tmp;				// for faster access
 
   TCNT0 = -2;					// 2 * 256 = 512 cycle
@@ -101,6 +101,5 @@ void rc5_init(void)
 #endif
     xRC5_PORT |= (1<<xRC5);
 }
-
 
 #endif
