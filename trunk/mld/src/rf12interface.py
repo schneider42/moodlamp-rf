@@ -67,7 +67,7 @@ class ReadSerial ( threading.Thread ):
         global status
         while 1:
             if self.readline():
-                #print "readline", self.ar
+                print "readline", self.ar
                 if not self.ready :
 
                 #elif self.ar[0] == 'S':
@@ -169,7 +169,7 @@ class RF12Interface:
         print "ready"
         
     def packet(self, remadr, data, broadcast, wait):
-        print "send packet to "+str(remadr)+" len="+str(len(data))
+        print str(time.time())+" send packet to "+str(remadr)+" len="+str(len(data))
         print list(data)
         if self.mode == 1:
             return 0
