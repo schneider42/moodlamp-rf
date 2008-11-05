@@ -48,7 +48,8 @@
 #ifndef F_CPU
     #if ROLE == ROLE_SLAVE
     #undef F_CPU
-    #define F_CPU 16000000UL
+//    #define F_CPU 16000000UL
+    #define F_CPU 18432000UL    
     #endif
 
     #if ROLE == ROLE_MASTER
@@ -124,20 +125,6 @@
 /* disable scripts speed control per default */
 #ifndef SCRIPT_SPEED_CONTROL
 #define SCRIPT_SPEED_CONTROL 1
-#endif
-
-/* disable i2c support per default (EXPERIMENTAL) */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
-#ifndef I2C
-#define I2C 0
-#endif
-
-#ifndef I2C_MASTER
-#define I2C_MASTER 0
-#endif
-
-#ifndef I2C_SLAVE
-#define I2C_SLAVE 0
 #endif
 
 /* fifo size must be a power of 2 and below 128 */

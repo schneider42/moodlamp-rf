@@ -55,7 +55,7 @@
 #endif
 #include "settings.h"
 
-#define NULL (void*) 0
+//#define NULL (void*) 0
 
 #if RC5_DECODER
 
@@ -84,37 +84,38 @@ uint8_t rc5_handler(void)
     }else if(rc5cmd == KEY_BRIGHTNESS_UP){
         cmd_handler(CMD_BRIGHTNESS_UP,NULL,NULL);
     }else if(rc5cmd == KEY_FULL_BRIGHTNESS){
-         cmd_handler(CMD_FULL_BRIGHTNESS,NULL,NULL);   
+        cmd_handler(CMD_FULL_BRIGHTNESS,NULL,NULL);   
     }else if(rc5cmd == KEY_ZERO_BRIGHTNESS){
-         cmd_handler(CMD_ZERO_BRIGHTNESS,NULL,NULL);
+        cmd_handler(CMD_ZERO_BRIGHTNESS,NULL,NULL);
     }else if(rc5cmd == KEY_POWER){
-         cmd_handler(CMD_POWER,NULL,NULL);
+        cmd_handler(CMD_POWER,NULL,NULL);
     }else if(rc5cmd > 0 && rc5cmd < 10){
-         cmd_handler(CMD_SET_SCRIPT,&rc5cmd,NULL);
+        rc5cmd--;       //Remote starts counting by one
+        cmd_handler(CMD_SET_SCRIPT,&rc5cmd,NULL);
     }else if(rc5cmd == KEY_FASTER){
-         cmd_handler(CMD_FASTER,NULL,NULL);
+        cmd_handler(CMD_FASTER,NULL,NULL);
     }else if(rc5cmd == KEY_SLOWER){
-         cmd_handler(CMD_SLOWER,NULL,NULL);
+        cmd_handler(CMD_SLOWER,NULL,NULL);
     }else if(rc5cmd == KEY_PAUSE){
-         cmd_handler(CMD_PAUSE,NULL,NULL);
+        cmd_handler(CMD_PAUSE,NULL,NULL);
     }else if(rc5cmd == KEY_SAVE){
-         cmd_handler(CMD_SAVE,NULL,NULL);
+        cmd_handler(CMD_SAVE,NULL,NULL);
     }else if(rc5cmd == KEY_SLEEP){
-         cmd_handler(CMD_SLEEP,NULL,NULL);
+        cmd_handler(CMD_SLEEP,NULL,NULL);
     }else if(rc5cmd == KEY_RED){
-         cmd_handler(CMD_RED,NULL,NULL);
+        cmd_handler(CMD_RED,NULL,NULL);
     }else if(rc5cmd == KEY_GREEN){
-         cmd_handler(CMD_GREEN,NULL,NULL);
+        cmd_handler(CMD_GREEN,NULL,NULL);
     }else if(rc5cmd == KEY_BLUE){
-         cmd_handler(CMD_BLUE,NULL,NULL);
+        cmd_handler(CMD_BLUE,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_UP){
-         cmd_handler(CMD_COLOR_UP,NULL,NULL);
+        cmd_handler(CMD_COLOR_UP,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_DOWN){
-         cmd_handler(CMD_COLOR_DOWN,NULL,NULL);
+        cmd_handler(CMD_COLOR_DOWN,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_FULL){
-         cmd_handler(CMD_COLOR_FULL,NULL,NULL);
+        cmd_handler(CMD_COLOR_FULL,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_ZERO){
-         cmd_handler(CMD_COLOR_ZERO,NULL,NULL);
+        cmd_handler(CMD_COLOR_ZERO,NULL,NULL);
     }
 
     return 0;

@@ -46,7 +46,8 @@
 #MCU = atmega16
 
 MASTER_MCU = atmega644p
-SLAVE_MCU = atmega16
+#SLAVE_MCU = atmega16
+SLAVE_MCU = atmega644p
 
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
@@ -85,7 +86,7 @@ OBJDIR = .
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c rs485.c cmd_handler.c rf_handler.c control.c lib/uart.c serial_handler.c
+SRC = $(TARGET).c pwm.c static_scripts.c rc5.c rc5_handler.c settings.c lib/rf12.c lib/rf12packet.c rs485.c cmd_handler.c rf_handler.c control.c lib/uart.c serial_handler.c rs485_handler.c interfaces.c packet.c cache.c
 #fifo.c uart.c
 
 
@@ -406,7 +407,7 @@ all:
 	@if test -f conf.slave; then make slave; fi
 	@if test -f conf.master; then make master; fi
 slave: CFLAGS += -DROLE=ROLE_SLAVE
-slave: MCU = atmega16
+slave: MCU = $(SLAVE_MCU)
 slave: conf.slave begin gccversion sizebefore build sizeafter end
 master: CFLAGS += -DROLE=ROLE_MASTER
 master: MCU = atmega644p

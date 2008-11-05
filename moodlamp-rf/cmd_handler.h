@@ -31,25 +31,34 @@
 #ifndef __CMD_HANDLER_H_
 #define __CMD_HANDLER_H_
 
-#define CMD_POWER               0
-#define CMD_BRIGHTNESS_UP       1
-#define CMD_BRIGHTNESS_DOWN     2
-#define CMD_FASTER              3
-#define CMD_SLOWER              4
-#define CMD_FULL_BRIGHTNESS     5
-#define CMD_ZERO_BRIGHTNESS     6
-#define CMD_PAUSE               7
-#define CMD_SAVE                8
-#define CMD_SLEEP               9
-#define CMD_COLOR_UP            10
-#define CMD_COLOR_DOWN          11
-#define CMD_RED                 12
-#define CMD_GREEN               13
-#define CMD_BLUE                14
-#define CMD_COLOR_FULL          15
-#define CMD_COLOR_ZERO          16
-#define CMD_SET_SCRIPT          17
+#define CMD_POWER               0x10
+#define CMD_BRIGHTNESS_UP       0x11
+#define CMD_BRIGHTNESS_DOWN     0x12
+#define CMD_FASTER              0x13
+#define CMD_SLOWER              0x14
+#define CMD_FULL_BRIGHTNESS     0x15
+#define CMD_ZERO_BRIGHTNESS     0x16
+#define CMD_PAUSE               0x17
+#define CMD_SAVE                0x18
+#define CMD_SLEEP               0x19
+#define CMD_COLOR_UP            0x1A
+#define CMD_COLOR_DOWN          0x1B
+#define CMD_RED                 0x1C
+#define CMD_GREEN               0x1D
+#define CMD_BLUE                0x1E
+#define CMD_COLOR_FULL          0x1F
+#define CMD_COLOR_ZERO          0x20
+#define CMD_SET_SCRIPT          0x21
 #define CMD_GET_VERSION         'V'
+#define CMD_GET_STATE           'G'
+#define CMD_SET_SPEED           's'
+#define CMD_SET_BRIGHTNESS      'D'
+#define CMD_SET_STATE           'S'
+#define CMD_SET_COLOR           'C'
+#define CMD_RESET               'r'
+#define CMD_SERVER_SET          'x'
+#define CMD_SETUP_OK            'O'
+#define CMD_SET_NAME            'N'
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
 uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);
