@@ -44,8 +44,10 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "lib/uart.h"
-#include "i2c.h"
+//#include "i2c.h"
 #include "rs485.h"
+#include "rs485_handler.h"
+
 #include "cmd_handler.h"
 #include "control.h"
 #if RC5_DECODER
@@ -61,6 +63,7 @@
 #include "settings.h"
 #include "control.h"
 #include "serial_handler.h"
+#include "packet.h"
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream);
@@ -81,6 +84,8 @@ int uart_putc_file(char c, FILE *stream)
 
 void jump_to_bootloader(void)
 {
+    //uart1_puts("acDRab");
+    //cli();
     wdt_enable(WDTO_30MS);
     while(1);
 }
@@ -90,12 +95,19 @@ void jump_to_bootloader(void)
 int main(void) {
 //    SPCR &= ~(1<<SPE);
 //    TIMSK &= ~(1<<TOIE1);
+    wdt_disable();
+    /* Clear WDRF in MCUSR */
+    MCUSR &= ~(1<<WDRF);
+    /* Write logical one to WDCE and WDE */
+    /* Keep old prescaler setting to prevent unintentional time-out */
+    WDTCSR |= (1<<WDCE) | (1<<WDE);
+    /* Turn off WDT */
+    WDTCSR = 0x00;
 
     init_pwm();
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
     stdout = &mystdout;
-    uart1_puts("acSDab");
 #endif
 
 #if RC5_DECODER
@@ -110,7 +122,7 @@ int main(void) {
     rs485_init();
 #endif
     rf_init();
-
+    packet_init(0,0);
     /* enable interrupts globally */
     sei();
     global.state = STATE_RUNNING;
@@ -118,11 +130,11 @@ int main(void) {
 //    global.flags.running = 0;
     while (1) {
         //if(global.flags.rfm12base){
-        if(rfm12base > 32){
+        if(packetbase > 32){
             //global.flags.rfm12base = 0;
-            rfm12base = 0;
-            rf_tick();
-            
+            packetbase = 0;
+    //        rf_tick();
+            packet_tick();
         }
 
         if(global.flags.timebase){
@@ -154,7 +166,7 @@ int main(void) {
         rc5_handler();
 #endif
 #if RS485_CTRL
-        rs485_process();
+        rs485handler_process();
 #endif
 #if SERIAL_UART
         serial_process();

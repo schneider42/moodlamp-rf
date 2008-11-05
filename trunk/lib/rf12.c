@@ -111,11 +111,11 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
 void spi_init(void)
 {
     //DDR_SPI |= (1<<BIT_MOSI) | (1<<BIT_SCK) | (1<<BIT_SPI_SS);
-#if F_CPU > 16000000UL
+//#if F_CPU > 16000000UL
     SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR1);//SPI Master, clk/64
-#else
-    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
-#endif
+//#else
+//    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
+//#endif
 }
 
 unsigned short rf12_trans(unsigned short d)
@@ -153,7 +153,7 @@ void rf12_init(void)
     volatile unsigned long j;
     RESET_PORT |= (1<<RESET);
     RESET_PORT &= ~(1<<RESET);
-    for(j=0;j<500000;j++);
+    for(j=0;j<900000;j++);
     RESET_PORT |= (1<<RESET);
 #endif
     for (i=0; i<100; i++)

@@ -154,14 +154,37 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         strcpy((char *) result,"D=");
         strcat((char *) result,__DATE__);
         return strlen((char *)result);
-/*    }else if(cmd == CMD_GET_STATE){
+    }else if(cmd == CMD_GET_STATE){
         result[0] = global.state;
         result[1] = script_threads[0].speed_adjustment;
         result[2] = global_pwm.dim;
-        retrun 3;
+        return 3;
     }else if(cmd == CMD_SET_SPEED){
-//        script_threads[0].speed_adjustment = 
-    */
+        script_threads[0].speed_adjustment = param[0]; 
+    }else if(cmd == CMD_SET_STATE){
+        global.state = param[0];
+    }else if(cmd == CMD_SET_BRIGHTNESS){
+        global_pwm.dim = param[0];
+    }else if(cmd == CMD_SET_COLOR){
+        //uart1_puts("acDsab");
+        control_setColor(param[0],param[1],param[2]);
+    }else if(cmd == CMD_RESET){
+        jump_to_bootloader();
+    }else if(cmd == CMD_SERVER_SET){
+        if(settings_compareid(param)){
+            uint8_t pos = strlen(param);
+            packet_setAddress(param[pos+1],param[pos+2]);
+            control_setServer(param[pos+3]);
+            //result[0] = 'G';
+            //settings_readid(result+1);
+            //return 1;
+        }
+    }else if(cmd == CMD_SETUP_OK){
+        control_setupOK();
+    }else if(cmd == CMD_SET_NAME){
+        settings_setid(param);
+        settings_readid(result+1);
+        return strlen(result);
     }
 
     return 0;

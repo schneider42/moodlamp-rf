@@ -7,17 +7,25 @@
 #include "control.h"
 #include "pwm.h"
 #include "lib/rf12packet.h"
-
-#if ROLE==ROLE_MASTER
-    unsigned int initadr = 0;
-#elif ROLE==ROLE_SLAVE
-    unsigned int initadr = 1;
-#endif
+#include "packet.h"
+#include "settings.h"
+#include <string.h>
 
 uint16_t timeoutmax = 200;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint16_t timeout = 0;
+uint8_t serveradr = 0;
+
+#define CONTROL_SEARCHMASTER         1
+#define CONTROL_IDENTIFY             2
+#define CONTROL_SETUPOK              3
+uint8_t control_state = CONTROL_SEARCHMASTER;
+
+void control_init(void)
+{
+    control_state = CONTROL_SEARCHMASTER;
+}
 
 void control_setColor(uint8_t r, uint8_t g, uint8_t b)
 {
@@ -46,10 +54,27 @@ void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
     control_setTimeout();
 
 }
+
 void control_setTimeout(void)
 {
-    timeout = timeoutmax;
-    global.state = STATE_PAUSE;
+    if(timeout)
+        timeout = timeoutmax;
+    if(global.state != STATE_PAUSE){
+        global.oldstate = global.state;
+        global.state = STATE_PAUSE;
+     }
+
+}
+
+void control_setServer(uint8_t s)
+{
+    serveradr = s;
+    control_state = CONTROL_IDENTIFY;
+}
+
+void control_setupOK(void)
+{
+    control_state = CONTROL_SETUPOK;
 }
 
 void control_tick(void)
@@ -91,39 +116,36 @@ void control_tick(void)
             }
         break;
     }
-#if ROLE==ROLE_SLAVE
-    static unsigned int beacon = 0;
-    if(initadr == 0 && beacon++ >= 500){
-        strcpy((char *)rf12packet_data,"B");
-        if(rf12packet_send(2,
-                            rf12packet_data,
-                            strlen((char *)rf12packet_data)) == 0){
-            beacon = 0;
-        }
-    }
-    if(initadr == 1){
-        rf12packet_setadr(0);
-        if(global.uuid[0] == 0){
-            strcpy((char *)rf12packet_data, "ID?");
-            if(rf12packet_send(2,rf12packet_data,3) == 0)
-                initadr = 2;
+    
+    static unsigned int control_beacon = 0;
+    if(control_beacon++ >= 500){
+        if(control_state == CONTROL_SEARCHMASTER){
+            p.flags = PACKET_BROADCAST;//don't know server yet
         }else{
-            strcpy((char *)rf12packet_data, "ID=");
-            memcpy(rf12packet_data+3,(char *)global.uuid,16);
-            if(rf12packet_send(2,rf12packet_data,19) == 0)
-                initadr = 2;
+            p.flags = 0;
         }
+        p.dest = serveradr;     //0 if unknown
+        p.src = packet_getAddress();        //put local address into src
+        p.lasthop = packet_getAddress();
+        if(control_state == CONTROL_SEARCHMASTER){  //request server adr
+            p.data[0] = 'R';
+            settings_readid(p.data+1);
+            p.len = strlen((char*)p.data);
+        }else if(control_state == CONTROL_IDENTIFY){
+            p.data[0] = 'I';
+            settings_readid(p.data+1);
+            p.len = strlen((char*)p.data);
+        }else{
+            p.len = 1;
+            p.data[0] = 'B';
+        }
+
+        packet_packetOut(&p);        
+        control_beacon = 0;
     }
 
-    if(initadr > 1 && initadr++ > 500)
-        initadr = 1;
-#endif
     if(timeout && --timeout == 0)
-        global.state = STATE_RUNNING;
+        global.state = global.oldstate;
 
 }
 
-void control_gotAddress(void)
-{
-    initadr = 0;
-}

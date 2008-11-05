@@ -12,18 +12,19 @@
 #include "rf_handler.h"
 #include "control.h"
 #include "lib/uart.h"
+#include "rf12config.h"
+#include "avr/interrupt.h"
+#include "packet.h"
 
 void rf_init(void)
 {
     volatile unsigned long l;
-//    PORTD &= ~(1<<PD6);     //todo: remove fet
-//    DDRD |= (1<<PD6);
 
     for(l=0;l<10000;l++);
-
-#ifdef RF12DEBUGBIN
-    printf("acDThis is moodlamp-rfab");
-#endif
+/*#ifdef RF12DEBUGBIN
+    sei();
+    printf("acDinit rfab");
+#endif*/
     rf12_init();
     rf12_setfreq(RF12FREQ(434.32));
     rf12_setbandwidth(4, 1, 4);     // 200kHz Bandbreite, -6dB Verstärkung, DRSSI threshold: -79dBm
@@ -36,15 +37,37 @@ void rf_init(void)
 #endif
     //volatile uint32_t tmp;
     //for(tmp=0;tmp<100000;tmp++);
-#ifdef RF12DEBUGBIN
+/*#ifdef RF12DEBUGBIN
     printf("acDInit doneab");
-#endif
+#endif*/
 
 }
 
-void rf_tick(void){
-    rf12packet_tick();
+/*uint8_t rf_packetOut(struct packet * p)
+{
+//    memcpy(rf12packet_data,p->data,p->len);
+//    rf12packet_send(p->nexthop,rf12packet_data,p->len);
+    
+}
 
+uint8_t rf_packetIn(struct packet * p)
+{
+
+}
+
+uint8_t rf_nextHeader(struct packet * p)
+{
+
+}
+
+uint8_t rf_ready(void)
+{
+
+}*/
+
+void rf_tick(void){
+//    rf12packet_tick();
+#if 0
 #if ROLE == ROLE_SLAVE
     if(rf12packet_status & RF12PACKET_NEWDATA){
         rf12packet_status ^= RF12PACKET_NEWDATA;
@@ -74,28 +97,28 @@ void rf_tick(void){
             strcat((char *)rf12packet_data,__DATE__);
             rf12packet_send(sender,rf12packet_data,
                             strlen((char *)rf12packet_data));
-        }else*/ if(rf12packet_data[4] == 'C'){
-            /*global_pwm.channels[0].brightness = rf12packet_data[5];
-            global_pwm.channels[1].brightness = rf12packet_data[6];
-            global_pwm.channels[2].brightness = rf12packet_data[7];
-            control_setTimeout();*/
+        }else if(rf12packet_data[4] == 'C'){
+            //global_pwm.channels[0].brightness = rf12packet_data[5];
+            //global_pwm.channels[1].brightness = rf12packet_data[6];
+            //global_pwm.channels[2].brightness = rf12packet_data[7];
+            //control_setTimeout();
             control_setColor(rf12packet_data[5],rf12packet_data[6],rf12packet_data[7]);
         }else if(rf12packet_data[4] == 'D'){
             global_pwm.dim = rf12packet_data[5];
         }else if(rf12packet_data[4] == 'S'){
             global.state = rf12packet_data[5];
-        }/*else if(rf12packet_data[4] == 'G'){
+        }else if(rf12packet_data[4] == 'G'){
             rf12packet_data[0] = global.state;
             rf12packet_data[1] = script_threads[0].speed_adjustment;
             rf12packet_data[2] = global_pwm.dim;
             rf12packet_send(sender,rf12packet_data,3);
-        }*/else if(rf12packet_data[4]> 0 && rf12packet_data[4] < 10){
+        }else*/ if(rf12packet_data[4]> 0 && rf12packet_data[4] < 10){
             cmd_handler(CMD_SET_SCRIPT, rf12packet_data+4, NULL);
-        }else if(rf12packet_data[4] == 's'){
+        }/*else if(rf12packet_data[4] == 's'){
             script_threads[0].speed_adjustment = rf12packet_data[5];
         }else if(rf12packet_data[4] == 'R'){
             jump_to_bootloader();
-        }else if(rf12packet_data[4] == 'I' && 
+        }*//*else if(rf12packet_data[4] == 'I' && 
                     rf12packet_data[5] == 'D' &&
                     rf12packet_data[6] == '='){
             memcpy((char *)global.uuid, (char *)rf12packet_data+7,16);
@@ -125,7 +148,7 @@ void rf_tick(void){
             if(r){
                 rf12packet_send(sender,rf12packet_data,r);
             }
-        }
+        }*/
     }
 #endif
 #if ROLE == ROLE_MASTER
@@ -150,11 +173,11 @@ void rf_tick(void){
             uart1_puts("acSDab");
         }
 #endif
-    
+#endif    
 }
-void rf_sendUUID(void)
+/*void rf_sendUUID(void)
 {
     strcpy((char *)rf12packet_data, "ID=");
     memcpy(rf12packet_data+3,(char *)global.uuid,16);
     rf12packet_send(2,rf12packet_data,19);
-}
+}*/

@@ -28,7 +28,7 @@ uint8_t	    rc5_time;				// count bit time
 uint16_t    rc5_tmp;				// shift bits in
 uint16_t    rc5_data;				// store result
 
-volatile uint8_t rfm12base = 0;
+volatile uint8_t packetbase = 0;
 ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
 {
 //  sei();																	//don't block the PWM interrupt
@@ -64,7 +64,7 @@ ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
     global.flags.rfm12base = 0;
   }
 */
-    rfm12base++;
+    packetbase++;
 }
 
 uint8_t rc5_checkRC5(uint16_t code)

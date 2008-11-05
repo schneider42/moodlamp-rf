@@ -11,7 +11,7 @@
 #define	xRC5_IN		PIND
 #define	xRC5		PD6			// IR input low active
 extern uint16_t	rc5_data;				// store result
-extern volatile uint8_t rfm12base;
+extern volatile uint8_t packetbase;
 
 //See http://www.armory.com/~spcecdt/remote/RC5codes.html
 #define RC5_ADR_TV		0

@@ -43,7 +43,33 @@ struct thread_t script_threads_record[MAX_THREADS] EEMEM;
 struct timeslots_t pwm_record EEMEM;
 struct global_t global_record EEMEM;
 struct settings_record_t global_settings;
+char id[50] EEMEM = "master4.lamp.blinkenlichts.net";
+uint8_t idbuf[60];
 
+void settings_readid(uint8_t * buf)
+{
+    eeprom_read_block(buf,&id,sizeof(id));
+    //uint8_t i=0;
+    //while((*buf++ = eeprom_read_byte((&id)+(i++)))!=0);
+}
+
+uint8_t settings_compareid(uint8_t * buf)
+{
+    if(strcmp(idbuf,buf) == 0)
+        return 1;
+    return 0;
+}
+
+void settings_setid(uint8_t * buf)
+{
+    uint8_t len = strlen(buf);
+    if(len > (sizeof(id)-1)){
+        len = sizeof(id)-1;
+        buf[len] = 0;
+    }
+    eeprom_write_block(&id,buf,len+1);
+    
+}
 
 void settings_save(void)
 {
@@ -99,5 +125,6 @@ void settings_read(void)
         temp = (void *) &global;
         eeprom_read_block(/*(struct global_t *)&global*/temp,&global_record,sizeof(global));
     }
+    eeprom_read_block(idbuf,&id,sizeof(id));
 }
 

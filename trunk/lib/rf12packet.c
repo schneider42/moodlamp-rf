@@ -1,50 +1,49 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "avr/io.h"
-#include "avr/interrupt.h"
 #include "rf12config.h"
 #include "rf12.h"
 #include "rf12packet.h"
+#include "packet.h"
+
 //#include "uart.h"
 
-unsigned char state = STATE_IDLE;
-unsigned char rf12packet_status = 0;
-unsigned char count = 0;
-unsigned char retries = 0;
-unsigned char outpacket[50];
-unsigned char outlen = 0;
-unsigned char inpacket[50];
-unsigned char acked = 0;
-unsigned char seq = 0;
-unsigned char ismulticast = 0;
-unsigned char localadr = 23;
-unsigned char rf12packet_data[50];
-unsigned char rf12packet_datalen = 0;
-unsigned char rf12packet_sniff = 0;
+uint8_t state = STATE_IDLE;
+uint8_t rf12packet_status = 0;
+uint8_t count = 0;
+uint8_t retries = 0;
+uint8_t outlen = 0;
+uint8_t acked = 0;
+uint8_t seq = 0;
+uint8_t isbroadcast = 0;
+uint8_t rf12packet_sniff = 0;
+uint8_t doreply = 0;
 
-unsigned char multiadr = 1;
+struct packet_t rf12packet;
+struct rf12ack_t    expectedack;
+struct rf12packet_t outpacket;
+struct rf12packet_t inpacket;
 
 void rf12packet_init(unsigned char adr)
 {
-    localadr = adr;
+//    localadr = adr;
 }
 
-void rf12packet_setadr(unsigned char adr)
+/*void rf12packet_setadr(unsigned char adr)
 {
-    localadr = adr;
-}
+//    localadr = adr;
+}*/
 
-unsigned char rf12packet_getstatus(void)
+/*unsigned char rf12packet_getstatus(void)
 {
     return rf12packet_status;
-}
+}*/
 
 void rf12packet_sendpacket(void)
 {
 //  cli();
     rf12_allstop();
-    unsigned char c = rf12_txstart(outpacket,outlen);
+    unsigned char c = rf12_txstart((uint8_t *)&outpacket,outlen);
 //  sei();
     if(c){
 #ifdef RF12DEBUG
@@ -59,9 +58,9 @@ void rf12packet_sendpacket(void)
 void rf12packet_tick(void)      //every 1ms ~ 2bytes
 {
 //    EIMSK &= ~(1<<INT0);
-    unsigned char ret = rf12_rxfinish(inpacket);
+    unsigned char ret = rf12_rxfinish((uint8_t *)&inpacket);
     if(ret != 255 && ret != 254 && ret != 0){
-        rf12packet_process(inpacket,ret);
+        rf12packet_process(&inpacket,ret);
     }else{                                  //len== 0 || no new data ||
                                             //rx not finished || crc error
 #ifdef RF12DEBUGBIN
@@ -84,9 +83,9 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
             rf12_rxstart();         //aborts if already receiving
         break;
         case STATE_SENDPACKET:
-            if(retries--)
+            if(retries--){
                 state = STATE_WAITFREE;
-            else{
+            }else{
                 rf12packet_status |= RF12PACKET_TIMEOUT;
                 state = STATE_IDLE;
             }
@@ -140,9 +139,11 @@ void rf12packet_tick(void)      //every 1ms ~ 2bytes
                     state = STATE_WAITACK;
                 else
                     state = STATE_IDLE;*/
-                if(ismulticast){
+                if(isbroadcast){
                     rf12packet_status |= RF12PACKET_PACKETDONE;
-                    //rf12_rxstart();
+#ifdef RF12DEBUGBIN
+                    uart1_puts("acDBDoneab");
+#endif
                     state = STATE_IDLE;
                 }else{
                     state = STATE_WAITACK;
@@ -194,46 +195,66 @@ unsigned char checkseq(unsigned char host, unsigned char seq)
     return 1;
 }
 
-void rf12packet_process(unsigned char * packet, unsigned char len)
+void rf12packet_process(struct rf12packet_t  * inpacket, unsigned char len)
 {
-    unsigned char buf[10];
-    if(packet[0] == 'A' && packet[1] == (unsigned char)(seq+1) && 
-                           packet[2] == localadr){          //check for our ack
-        acked = 1;
-        seq++;
+    //unsigned char buf[10];
+    struct rf12ack_t ack;
+    struct packet_t * packet = &(inpacket->packet);
+    uint8_t i;
+/*    uart1_puts("acDNP");
+    serial_putenc(inpacket,len);
+    uart1_puts("ab");*/
+    //uart1_puts("acDNPab");
+    if(inpacket->type == 'A' && inpacket->seq == (unsigned char)(seq+1) ){
+        /*if(packet_isOwnAddress(packet)){   //check for our ack
+            acked = 1;
+            seq++;
+        }*/
+        if(expectedack.src  == ((struct rf12ack_t *)inpacket)->src &&
+           expectedack.dest == ((struct rf12ack_t *)inpacket)->dest){
+            acked = 1;
+            seq++;
+           }
         //printf("acked\r\n");
     }
-    if(packet[0] == 'M' && (packet[2] == multiadr ||    //this is a multicast
-                            packet[2] == 255 ||         // do our domain
-                            rf12packet_sniff)){
-        //if(checkseq(packet[3],packet[1]) || rf12packet_sniff){  //check seq
-            memcpy(rf12packet_data,packet,len);
-            rf12packet_datalen = len;
+    if(inpacket->type == 'B'){
+        if(packet_isOwnBroadcast(packet) || rf12packet_sniff){    //this is a broadcast for us
+            /*if((len-RF12PACKET_HEADERLEN) > sizeof(rf12packet))
+                len = sizeof(rf12packet);
+            else
+                len -= RF12PACKET_HEADERLEN;
+            memcpy(&rf12packet,packet+RF12PACKET_HEADERLEN,len);*/
+
+//            uart1_puts("acDNB");
+            memcpy(&rf12packet,packet,packet->len+PACKET_HEADERLEN);
+//            serial_putenc(&rf12packet,packet->len+PACKET_HEADERLEN);
+//            uart1_puts("ab");
             rf12packet_status |= RF12PACKET_NEWDATA;
-        //}
+        }
     }
 
-    if(packet[0] == 'P' && (packet[2] == localadr ||    //packet or broadcast
-                            packet[2] == 255 ||
-                            rf12packet_sniff)){
-        if(packet[2] == localadr){          //is packet is for us ack it
-            buf[0]='A';
-            buf[1]=packet[1]+1;
-            buf[2]=packet[3];
-            buf[3]=localadr;
+    if(inpacket->type == 'P'){
+        if(packet_isOwnAddress(packet) || rf12packet_sniff){
+//            uart_puts("acDAab");
+            ack.type='A';
+            ack.seq=inpacket->seq+1;
+            //buf[2]=inpacket[3];
+            ack.dest = packet->lasthop;
+            //buf[3]=localadr;
+            //buf[3]=inpacket[2];
+            ack.src = packet->nexthop;
 #ifdef RF12DEBUGBIN
 //            printf("acDaacking\r\nab");
 #endif
             rf12_allstop();                 //propably in rx ;)
-            rf12_txstart(buf,4);
+            rf12_txstart((uint8_t *)&ack,sizeof(ack));
         }
-        if(checkseq(packet[3],packet[1]) || rf12packet_sniff){
-            memcpy(rf12packet_data,packet,len);
-            rf12packet_datalen = len;
+        if(checkseq(packet->lasthop,inpacket->seq) || rf12packet_sniff){
+//            uart_puts("acDPPab");
+            memcpy(&rf12packet,packet,packet->len+PACKET_HEADERLEN);
             rf12packet_status |= RF12PACKET_NEWDATA;
         }
     }
-    return;
 }
 
 unsigned char rf12packet_incrseq(void)      //used for not mc and bc packets
@@ -242,40 +263,89 @@ unsigned char rf12packet_incrseq(void)      //used for not mc and bc packets
     return seq;
 }
 
-
-unsigned char rf12packet_send(unsigned char adr, unsigned char * packet, unsigned char len)
+uint8_t rf12packet_packetOut(struct packet_t * p)
 {
     if(state != STATE_IDLE)
         return 1;
+//    uart1_puts("acDPoab");
     state = STATE_SENDPACKET;
-    outpacket[0] = 'P';
-    outpacket[1] = seq;
-    outpacket[2] = adr;
-    outpacket[3] = localadr;
-    memcpy(outpacket+4,packet,len);
-    outlen = len+4;
-    retries = 10;
-    ismulticast = 0;
+    if(p->flags & PACKET_BROADCAST){
+        outpacket.type = 'B';
+        isbroadcast = 1;
+        retries = 1;
+    }else{
+        outpacket.type = 'P';
+        isbroadcast = 0;
+        retries = 10;
+        expectedack.src = p->nexthop;
+        expectedack.dest = p->lasthop;
+    }
+    if(p->flags & PACKET_REPLYDONE){
+        doreply = 1;
+        p->flags ^= PACKET_REPLYDONE;
+    }
+
+    outpacket.seq = seq;
+    memcpy(&(outpacket.packet),p,p->len+PACKET_HEADERLEN);
+    outlen = p->len+PACKET_HEADERLEN+RF12PACKET_HEADERLEN;
+    rf12packet_status &= ~RF12PACKET_PACKETDONE;
     return 0;
 }
 
-unsigned char rf12packet_isidle(void)
+uint8_t rf12packet_nextHeader(struct packet_t * p)
+{
+    struct packet_t * packet = &(outpacket.packet);
+    if(doreply && 
+        (rf12packet_status & RF12PACKET_PACKETDONE ||
+         rf12packet_status & RF12PACKET_TIMEOUT)){
+        p->len = 0;
+        p->dest = packet->src;
+        p->src = packet_getAddress();
+        p->lasthop =  packet_getAddress();
+        p->nexthop = packet_getAddress();
+        
+        if(rf12packet_status & RF12PACKET_TIMEOUT){
+            p->flags = PACKET_TIMEOUT;
+        }else{
+            p->flags = PACKET_DONE;
+        }
+        return 1;
+    }
+    if(rf12packet_status & RF12PACKET_NEWDATA){
+        memcpy(p,&rf12packet,PACKET_HEADERLEN);
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t rf12packet_packetIn(struct packet_t * p)
+{
+    struct packet_t * packet = &(outpacket.packet);
+    if(doreply &&
+        (rf12packet_status & RF12PACKET_PACKETDONE ||
+         rf12packet_status & RF12PACKET_TIMEOUT)){
+            rf12packet_nextHeader(p);
+            rf12packet_status &= ~( RF12PACKET_PACKETDONE | RF12PACKET_TIMEOUT);
+            doreply = 0;
+/*            uart1_puts("acDdoingreply");
+            serial_putenc(p,PACKET_HEADERLEN);
+            uart1_puts("ab");*/
+            return 0;
+    }
+    if(!(rf12packet_status & RF12PACKET_NEWDATA))
+        return 1;
+    memcpy(p,&rf12packet,rf12packet.len + PACKET_HEADERLEN);
+    rf12packet_status ^= RF12PACKET_NEWDATA;
+    return 0;
+}
+
+/*unsigned char rf12packet_isidle(void)
+{
+    return state==STATE_IDLE?1:0;
+}*/
+
+uint8_t rf12packet_ready(void)
 {
     return state==STATE_IDLE?1:0;
 }
 
-unsigned char rf12packet_sendmc(unsigned char adr, unsigned char * packet, unsigned char len)
-{
-    if(state != STATE_IDLE)
-        return 1;
-    state = STATE_SENDPACKET;
-    outpacket[0] = 'M';
-    outpacket[1] = seq;
-    outpacket[2] = adr;
-    outpacket[3] = localadr;
-    memcpy(outpacket+4,packet,len);
-    outlen = len+4;
-    retries = 1;
-    ismulticast = 1;
-    return 0;
-}
