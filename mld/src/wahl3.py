@@ -37,11 +37,13 @@ class CNN(object):
           if candidate['party'] == 'D':
             d = candidate['votes'], candidate['evotes']
             if candidate['winner']:
-              raise ElectionWon("D")
+              #raise ElectionWon("D")
+              pass
           elif candidate['party'] == 'R':
             r = candidate['votes'], candidate['evotes']
             if candidate['winner']:
-              raise ElectionWon("R")
+              #raise ElectionWon("R")
+              pass
 
     return d,r
 
