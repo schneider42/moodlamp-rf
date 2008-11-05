@@ -75,9 +75,9 @@ class ReadSerial ( threading.Thread ):
                  
                 #self.callback.new_packet(''.join(self.ar))
                     print "Ignoring:", str(self.ar)
-                elif len(self.ar) > 3 and self.ar[0] == 'P':    
+                elif len(self.ar) > 3 and (self.ar[0] == 'P' or self.ar[0] == 'B'):    
                     #print                  #received packet
-                    print "%s Sender=%d Rec=%d Seq=%d Data:" % (time.time(),ord(self.ar[3]),ord(self.ar[2]),ord(self.ar[1]))
+                    print "%s Sender=%d Rec=%d Data:" % (time.time(),ord(self.ar[3]),ord(self.ar[2]))
                     print self.ar[4:]
                 elif len(self.ar) > 1 and self.ar[0] == 'D':                        #debug info
                     #if ar[1] != 'f':
@@ -104,7 +104,7 @@ class ReadSerial ( threading.Thread ):
                     self.owner.rawdata(self.ar)
                     continue
                     
-                if not self.ready :
+                if not self.ready or len(self.ar) == 0 :
                     pass    
                 elif self.ar[0] == 'P' or self.ar[0] == 'B':
                     if self.ar[0] == 'P':
@@ -123,16 +123,20 @@ class ReadSerial ( threading.Thread ):
                     self.owner.packet_done()
                 elif len(self.ar) > 1 and self.ar[0] == 'S' and self.ar[1] == 'T':
                     self.owner.packet_done()
+                elif self.ar[0] == 'I':
+                    self.owner.initinterface()
                     
 
 class RF12Interface:
     done = True
     broadcast = 0
-    def __init__ ( self, port, baud, adr, callback):
+    
+    def __init__ ( self, port, baud, ownadr, remadr, callback):
         self.rf12 = serial.Serial(port, baud)#, timeout=1)
         self.rf12.flushInput()
         self.rf12.flushOutput()
-        self.adr = adr
+        self.adr = ownadr
+        self.remadr = remadr
         self.queue = Queue.Queue()
         #self.rf12.setTimeout(1)
         #while rf12.read(): pass
@@ -145,7 +149,8 @@ class RF12Interface:
         time.sleep(1)
         self.readthread.ready = True
         print "ready"
-        self.rf12.write("acA%cab" % adr)
+        #self.rf12.write("acA%cab" % adr)
+        self.write("I%c%c%c"%(ownadr,remadr,remadr))
         self.free = threading.BoundedSemaphore()
         #self.rf12.write("acR%cab" % 0)
         self.callback = callback
@@ -155,10 +160,24 @@ class RF12Interface:
         #self.free = threading.Event()
         #self.free.set()
         self.done = True
+    
+    def initinterface(self):
+        self.write("I%c%c%c"%(self.adr,self.remadr,0))
+        #self.free = threading.BoundedSemaphore()
+        self.free.acquire(False);
+        self.free.release();
+        #if self.free.
+        self.set_raw(False)
+        self.done = True
+        
+    def write(self,data):
+        #print "write"
+        self.rf12.write("ac" + data.replace('a','aa') + "ab")
         
     def packet_done(self):
         self.done = True
         print "release"
+        self.free.acquire(False);
         self.free.release()
         self.callback.packet_done(self.broadcast, self.remadr)    #Todo use a queue or something to prevent blocking
         
@@ -209,6 +228,7 @@ class RF12Interface:
             print "setting mode to sniffer"
             self.rf12.write("acS\x02ab") 
         else:
+            print "sniffer off"
             self.rf12.write("acS\x00ab")
             
     def set_raw(self, mode):
@@ -220,6 +240,7 @@ class RF12Interface:
         else:
             self.mode = 0
             #self.done = True
+        print "setting raw"
         self.rf12.write("acR%cab" % self.mode)            #raw mode = 1
         self.free.release()
     
@@ -233,6 +254,7 @@ class RF12Interface:
                 pass
     
     def start_app(self):
+        print "start app"
         self.rf12.write("acr")
         self.rf12.write("%c%c"%(0x42,0));
         self.rf12.write("ab")
