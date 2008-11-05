@@ -25,7 +25,8 @@ load: funkloader.hex
 	$(AVRDUDE) -p m16 -U flash:w:$<
 
 fuse:
-	$(AVRDUDE) -p m16 -U lfuse:w:0xbf:m
+#	$(AVRDUDE) -p m16 -U lfuse:w:0xbf:m
+	$(AVRDUDE) -p m16 -U lfuse:w:0x3f:m
 	$(AVRDUDE) -p m16 -U hfuse:w:0xc0:m
 
 funkloader.o: funkloader.c pinconfig.h
