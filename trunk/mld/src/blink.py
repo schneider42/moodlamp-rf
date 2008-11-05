@@ -1,7 +1,7 @@
+import getopt
 import sys
 import telnetlib
 import time
-import getopt
 
 port = 2324
 host = "localhost"
@@ -28,7 +28,7 @@ if lamp == -1:
     sys.exit(2)
     
 
-con = telnetlib.Telnet(host,port)
+con = telnetlib.Telnet(host, port)
 con.write("001\r\n")
 s = con.read_until(">100", 10)
 if s.endswith("100"):
@@ -37,9 +37,10 @@ if s.endswith("100"):
     g = 70
     b = 35
     while True:
-        r = 255
-        b = 200
+        r = 220
         g = 255
+        b = 220
+
         s = "003 "+str(lamp)+" "+hex(r)[2:]+" "+hex(g)[2:]+" "+hex(b)[2:]+"\r\n"
         con.write(s)
         time.sleep(0.5)

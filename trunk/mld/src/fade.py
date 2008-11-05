@@ -37,6 +37,9 @@ if s.endswith("100"):
     g = 0
     b = 0
     while True:
+        if r == 255 and g == 0 and b == 0:
+            print "Mark "+str(time.time())
+
         if r == 0 and not g == 255:
             b -= 1
             g += 1

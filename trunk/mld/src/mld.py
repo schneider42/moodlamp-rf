@@ -20,6 +20,21 @@ class Timer ( threading.Thread ):
 class MoodlampList(list):
     lock = threading.RLock()
     
+    def getLamp(self, lamp):
+        found = False
+        try:
+            lamp = int(lamp)
+            for l in self:
+                if l.address == lamp:
+                    found = True
+        except ValueError:
+            for l in self:
+                if l.name == lamp:
+                    found = True
+        if not found:
+            raise NotFound()
+        return l
+
 class UUID:
     def getUUID(self):
         u = []
@@ -110,6 +125,15 @@ class Moodlamp:
             self.uuid = 0
         #self.get_version()
         #self.setup(data)
+        
+    def __init__(self, interface, mld, adr, name):
+        self.interface = interface
+        self.mld = mld
+        self.timer = 60
+        self.address = adr
+        self.get_version()
+        self.state = 2
+        self.name = name;
     
     def timer(self):
         self.tick(2, [], False)
@@ -144,14 +168,14 @@ class Moodlamp:
     def set_address(self, oldadr, newadr):
         self.mld.remove_lamp(newadr)
         self.address = newadr
-        self.interface.packet(oldadr, "ADR="+chr(newadr)+"".join(self.uuid), 0, True)
+        self.interface.packet(oldadr, "ADR="+chr(newadr)+self.name, 0, True)
     
     def setcolor(self, color):
         self.color = color
         self.interface.packet( self.address, "C%c%c%c" % (color[0],color[1],color[2]),0,True)
         
     def pause(self, pause):
-        self.interface.packet( self.address, "S\x02", 0,True)
+        self.interface.packet( self.address, "\x17", 0,True)
         
     def updatefirmware(self, firmware):
         self.interface.packet( self.address,"R",0,True);
@@ -187,10 +211,13 @@ class Moodlamp:
                     if data[0:2] == "D=":
                         print "processing date"
                         self.version = data[2:]
-                        self.interface.packet( self.address, "OK", 0,True)
+                        self.interface.packet( self.address, "O", 0,True)
                         self.mld.new_lamp(self)
                         self.state = 3
         elif self.state == 3:
+            if len(data) > 1:
+                if data[0] == 'N':
+                    self.name = "".join(data[1:])
             pass
         
     def data(self, data, broadcast):
@@ -212,16 +239,27 @@ class Moodlamp:
         
     def setprog(self, prog):
         self.interface.packet( self.address, chr(prog), 0,True)
+    
+    def setname(self, name):
+        self.interface.packet( self.address, "N"+name+"\x00", 0,True)
 
     def get_version(self):
         self.interface.packet( self.address, "V", 0,True)
 
     def reset(self):
-        self.interface.packet( self.address, "R", 0,True)
+        self.interface.packet( self.address, "r", 0,True)
 
-        
+class NotFound(Exception):
+    pass
+
 class MLClient(asynchat.async_chat):
     lock = threading.Lock()
+    
+    def sendLampNotFound(self):
+        self.push("402 No such moodlamp\r\n")
+    def sendOK(self):
+        self.push("106 OK\r\n")
+        
     
     def formatExceptionInfo(self, maxTBlevel=5):
          cla, exc, trbk = sys.exc_info()
@@ -265,7 +303,7 @@ class MLClient(asynchat.async_chat):
                     self.push("100 Hello World\r\n")
                 elif cmd == "002":
                     for m in self.ml:
-                        self.push("101 moodlamp at %d version %s uuid %s\r\n" % (m.address, m.version,str(m.uuid)))
+                        self.push("101 moodlamp at %d version %s name %s\r\n" % (m.address, m.version,m.name))
                     if len(self.ml)==0:
                         self.push("403 No moodlamps detected\r\n")
                     else:
@@ -342,6 +380,17 @@ class MLClient(asynchat.async_chat):
                             m.setprog(int(s[2]))
                     if found == 0:
                         self.push("402 No such moodlamp\r\n")
+                elif cmd == "015":
+                    found = 0
+                    for m in self.ml:
+                        if m.address == int(s[1]):
+                            found = 1
+                            m.setname("".join(s[2:]))
+                    if found == 0:
+                        self.push("402 No such moodlamp\r\n")
+                elif cmd == "016":
+                    m = self.ml.getLamp(s[1])
+                    
                 elif cmd == "":
                     pass
                 else:
@@ -361,6 +410,8 @@ class MLClient(asynchat.async_chat):
             print err
             print err.args
             print self.formatExceptionInfo()
+        except NotFound, err:
+            self.sendLampNotFound()
         if self.state == 0:
             self.push(">")
         self.data = ""
@@ -436,7 +487,9 @@ class MLD:
         self.ml = MoodlampList()
         self.interfaces = []
         #try:
-        self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,2,self))
+        self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,1,2,self))
+        #lamp = Moodlamp(self.interfaces[0], self,2);
+        #self.ml.append(lamp)
         #except:
         #    self.interfaces.append(rf12interface.RF12Interface("/dev/ttyS0",115200,2,self))
         #self.ml.append(Moodlamp(3,self.interfaces[0],self))
@@ -477,10 +530,44 @@ class MLD:
             if m.address == lamp:
                 self.ml.remove(m)
         self.ml.lock.release() 
-
+    
+    def isinlist(self, adr):
+        for m in self.ml:
+            if m.address == adr:
+                return True
+        return False
+    
+    def getNewAddress(self):
+        adr = 10
+        while self.isinlist(adr):
+            adr+=1
+        if adr > 255:
+            adr = 255    
+        return adr
+    
     def new_packet(self, adr, data, broadcast):
         self.ml.lock.acquire()
-        if adr == 0:# and broadcast == True:
+        if data[0] == 'R':
+            if adr == 0:
+                adr = self.getNewAddress()
+            reply = "x"+"".join(data[1:])+("\x00%c%c\x01" %(adr,0))
+
+            if broadcast == True:
+                adr = 0
+            self.interfaces[0].packet( adr, reply, broadcast ,True)
+            self.ml.lock.release()
+            return
+        
+        if data[0] == 'I':
+            self.remove_lamp(adr)
+            name = "".join(data[1:])
+            lamp = Moodlamp(self.interfaces[0], self, adr, name)
+            self.ml.append(lamp)
+            print "len ml:"+str(len(self.ml))
+            self.ml.lock.release()
+            return;
+        
+        """if adr == 0:# and broadcast == True:
             lamp = Moodlamp(self.interfaces[0], self);
             if lamp.setup(data):
                 print "setup ok"
@@ -488,7 +575,7 @@ class MLD:
                 print "len ml:"+str(len(self.ml))
             self.ml.lock.release()
             return
-        
+        """
         unknown = 1
         for m in self.ml:
             if m.address == adr:
@@ -497,7 +584,7 @@ class MLD:
                 break
         if unknown == 1:
             print "resetting lamp", str(adr)
-            self.interfaces[0].packet( adr, "R", 0,True)        #force reset for unknown lamp
+            self.interfaces[0].packet( adr, "r", 0,True)        #force reset for unknown lamp
                                                                 #todo start rebinding
         
         #    self.ml.append(Moodlamp(self.interfaces[0], self, adr))
@@ -531,27 +618,5 @@ class MLD:
         self.ml.lock.release()
         return r
         #self.interface.
-
-hx = IHexFile();
-if not hx.parseLine(":10010000214601360121470136007EFE09D2190140"):
-    print "parse 1 failed"
-
-if not hx.parseLine(":100110002146017EB7C20001FF5F16002148011988"):
-    print "parse 2 failed"
-    
-if not hx.parseLine(":10012000194E79234623965778239EDA3F01B2CAA7"):
-    print "parse 3 failed"
-
-if not hx.parseLine(":00000001FF"):
-    print "parse 4 failed"
-    
-if hx.isDone():
-    #print hx.data
-    
-    if len(hx.data) != 0x30:
-        print "false len", hex(len(hx.data))
-    
-    if hx.adr != 0x100:
-        print "false offset", hx.adr
     
 MLD().serve()
