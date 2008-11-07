@@ -49,6 +49,8 @@
 #endif
 #include "settings.h"
 
+#include "control.h"
+#include "packet.h"
 
 #if 0
 void printbyte(uint8_t c)
@@ -172,7 +174,7 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         jump_to_bootloader();
     }else if(cmd == CMD_SERVER_SET){
         if(settings_compareid(param)){
-            uint8_t pos = strlen(param);
+            uint8_t pos = strlen((char*)param);
             packet_setAddress(param[pos+1],param[pos+2]);
             control_setServer(param[pos+3]);
             //result[0] = 'G';
@@ -184,7 +186,7 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
     }else if(cmd == CMD_SET_NAME){
         settings_setid(param);
         settings_readid(result+1);
-        return strlen(result);
+        return strlen((char*)result);
     }
 
     return 0;

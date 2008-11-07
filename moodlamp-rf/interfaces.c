@@ -80,8 +80,8 @@ uint8_t interfaces_broadcast(uint8_t originid, struct packet_t * p, uint8_t forc
     //            do{    
     //                uart1_puts("acDW");uart1_putc(i);uart1_putc(state);uart1_puts("ab");
     //            }while(!ifaces[i].isReady());
-                if(!(ifaces[i].isReady()))
-                    uart1_puts("acNRab");
+                //if(!(ifaces[i].isReady()))
+                //    uart1_puts("acNRab");
                 //if(ifaces[i].packetOut(p))
                 //    return 1;
                 ifaces[i].packetOut(p);
@@ -93,6 +93,7 @@ uint8_t interfaces_broadcast(uint8_t originid, struct packet_t * p, uint8_t forc
         if(originid != ifaces[i].id && ifaces[i].getbroadcast)
             ifaces[i].packetOut(p);
     }
+    return 0;
 }
 
 

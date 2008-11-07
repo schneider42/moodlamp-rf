@@ -200,7 +200,7 @@ void rf12packet_process(struct rf12packet_t  * inpacket, unsigned char len)
     //unsigned char buf[10];
     struct rf12ack_t ack;
     struct packet_t * packet = &(inpacket->packet);
-    uint8_t i;
+    //uint8_t i;
 /*    uart1_puts("acDNP");
     serial_putenc(inpacket,len);
     uart1_puts("ab");*/
@@ -320,7 +320,7 @@ uint8_t rf12packet_nextHeader(struct packet_t * p)
 
 uint8_t rf12packet_packetIn(struct packet_t * p)
 {
-    struct packet_t * packet = &(outpacket.packet);
+    //struct packet_t * packet = &(outpacket.packet);
     if(doreply &&
         (rf12packet_status & RF12PACKET_PACKETDONE ||
          rf12packet_status & RF12PACKET_TIMEOUT)){
