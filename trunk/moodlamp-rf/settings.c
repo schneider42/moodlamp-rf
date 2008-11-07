@@ -29,12 +29,13 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 #include <avr/eeprom.h>
+#include <string.h>
+
 #include "fnordlicht.h"
 #include "settings.h"
 #include "scripts.h"
 #include "static_scripts.h"
 #include "pwm.h"
-
 struct settings_record_t global_settings_record EEMEM = {1,1};
 struct global_pwm_t global_pwm_record EEMEM;
 #if STATIC_SCRIPTS
@@ -55,14 +56,14 @@ void settings_readid(uint8_t * buf)
 
 uint8_t settings_compareid(uint8_t * buf)
 {
-    if(strcmp(idbuf,buf) == 0)
+    if(strcmp((char*)idbuf,(char*)buf) == 0)
         return 1;
     return 0;
 }
 
 void settings_setid(uint8_t * buf)
 {
-    uint8_t len = strlen(buf);
+    uint8_t len = strlen((char*)buf);
     if(len > (sizeof(id)-1)){
         len = sizeof(id)-1;
         buf[len] = 0;

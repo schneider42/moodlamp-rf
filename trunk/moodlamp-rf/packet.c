@@ -122,7 +122,8 @@ void packet_packetOut(struct packet_t * p)
 /*      uart1_puts("acDB");
         uart1_putc(iface);
         serial_putenc(p,p->len+PACKET_HEADERLEN);
-*/            uart1_puts("ab");
+            uart1_puts("ab");
+*/
         if(p->src == locladr)
             interfaces_broadcast(iface,p,1);            //force
         else

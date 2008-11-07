@@ -133,7 +133,6 @@ int main(void) {
         if(packetbase > 32){
             //global.flags.rfm12base = 0;
             packetbase = 0;
-    //        rf_tick();
             packet_tick();
         }
 
