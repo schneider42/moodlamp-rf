@@ -36,26 +36,8 @@
 #define BOARD   BOARD_RF_0_2
 #endif
 
-#define ROLE_NONE       0       //just use RC5 for control(old moodlamp)
-#define ROLE_SLAVE      1       //slave lamp with RFM12 and RS485 support if supported by the board
-#define ROLE_MASTER     2       //master lamp with USB, RFM12 and RS485
-
-#ifndef ROLE
-#define ROLE    ROLE_MASTER
-//#define ROLE    ROLE_SLAVE
-#endif
-
 #ifndef F_CPU
-    #if ROLE == ROLE_SLAVE
-    #undef F_CPU
-//    #define F_CPU 16000000UL
-    #define F_CPU 18432000UL    
-    #endif
-
-    #if ROLE == ROLE_MASTER
-    #undef F_CPU
     #define F_CPU 18432000UL
-    #endif
 #endif
 
 #ifndef LED_PORT
@@ -75,26 +57,13 @@
 #define CHANNEL_GREEN   1
 #define CHANNEL_BLUE    2
 
-#if (ROLE == ROLE_MASTER && !(BOARD == BOARD_RF_0_2))
-#error "Wrong Board for the choosen role"
-#endif
-
-#if (ROLE == ROLE_MASTER && !(defined(__AVR_ATmega644P__) || defined(__AVR_ATmega32P__) || defined(__AVR_ATmega164P__)))
-#error "Wrong MCU for the choosen role."
-#endif
-
-#if(ROLE == ROLE_SLAVE || ROLE == ROLE_MASTER)
 #define RC5_DECODER 1
 #define RS485_CTRL  1
 #define SCRIPT_SPEED_CONTROL 1
 #define STATIC_SCRIPTS 1
-#endif
-
-#if ROLE == ROLE_MASTER
 #define USB_CTRL 1
 #define UART_BAUDRATE 230400
 #define SERIAL_UART 1
-#endif
 
 /* debug defines */
 #ifndef DEBUG
@@ -141,9 +110,9 @@
 
 #define RS485_ADDRESS 10
 
-#if (RS485_CTRL == 1) && (SERIAL_UART == 1) && !(ROLE == ROLE_MASTER)
+/*#if (RS485_CTRL == 1) && (SERIAL_UART == 1) && !(ROLE == ROLE_MASTER)
 #error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
-#endif
+#endif*/
 
 
 #include <avr/version.h>
