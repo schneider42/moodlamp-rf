@@ -259,7 +259,14 @@ class MLClient(asynchat.async_chat):
         self.push("402 No such moodlamp\r\n")
     def sendOK(self):
         self.push("106 OK\r\n")
-        
+    def sendNoLampsDetected(self):
+        self.push("403 No moodlamps detected\r\n")
+    def sendLamp(self, l):
+        self.push("101 moodlamp at %d version %s name %s\r\n" % (l.address, l.version,l.name))
+    def sendNoSuchInterface(self):
+        self.push("405 no such interface")
+    def sendInterface(self,i,pos):
+        self.push("107 interface %s at %d\r\n" %(i,pos))
     
     def formatExceptionInfo(self, maxTBlevel=5):
          cla, exc, trbk = sys.exc_info()
@@ -298,43 +305,31 @@ class MLClient(asynchat.async_chat):
             if self.state == 0:
                 cmd = s[0]
                 print "cmd=",cmd
+                ok = True
                 
                 if cmd == "001":
                     self.push("100 Hello World\r\n")
+                    ok = False
                 elif cmd == "002":
                     for m in self.ml:
-                        self.push("101 moodlamp at %d version %s name %s\r\n" % (m.address, m.version,m.name))
+                        self.sendLamp(m)
                     if len(self.ml)==0:
-                        self.push("403 No moodlamps detected\r\n")
-                    else:
-                        self.push("106 OK\r\n")
+                        self.sendNoLampsDetected()
+                        ok = False
                 elif cmd == "003":
-                    found = 0
-                    for m in self.ml:
-                        if m.address == int(s[1]):
-                            found = 1
-                            m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
-                    if found == 0:
-                        self.push("402 No such moodlamp\r\n")
-                    self.push("106 OK\r\n")
+                    m = self.ml.getLamp(s[1])
+                    m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
                 elif cmd == "004":
-                    found = 0
-                    for m in self.ml:
-                        if m.address == int(s[1]):
-                            found = 1
-                            m.pause(True);
-                    if found == 0:
-                        self.push("402 No such moodlamp\r\n")
+                    m = self.ml.getLamp(s[1])
+                    m.pause(True);
                 elif cmd == "005":
                     pass
                 elif cmd == "006":
                     for m in self.interfaces:
                         m.set_raw(True)
-                    self.push("106 OK\r\n")
                 elif cmd == "007":
                     self.firmware = IHexFile()
                     self.state = 1
-                    self.push("106 OK\r\n")
                 elif cmd == "008":
                    self.push("007 start 0X%X len 0X%X\r\n" % (self.firmware.adr, len(self.firmware.data) ))
                 elif cmd == "009":
@@ -344,64 +339,47 @@ class MLClient(asynchat.async_chat):
                         self.push( "108 flashing on interface %s 0x%X bytes from adr 0x%X\r\n" % 
                                    (interface, len(self.firmware.data), self.firmware.adr))
                         r = interface.flash(self.firmware)
-                        if r == 0:
-                            self.push("106 OK\r\n")
-                        else:
+                        if r:
                             self.push("404 error while flashing")
+                            ok = False
                     else:
-                        self.push("405 no such interface")
+                        self.sendNoSuchInterface()
+                        ok = False
                 elif cmd == "010":
                     pos = 0
                     for i in self.interfaces:
-                        self.push("107 interface %s at %d\r\n" %(i,pos))
+                        self.sendInterface(i, pos)
                         pos+=1
-                    self.push("106 OK\r\n")
                 elif cmd == "011":
                     for i in self.interfaces:
                         i.set_raw(False)
-                    self.push("106 OK\r\n")
                 elif cmd == "012":
                     for i in self.interfaces:
                         i.start_app()
-                    self.push("106 OK\r\n")
                 elif cmd == "013":
-                    found = 0
-                    for m in self.ml:
-                        if m.address == int(s[1]):
-                            found = 1
-                            m.reset();
-                    if found == 0:
-                        self.push("402 No such moodlamp\r\n")
+                    m = self.ml.getLamp(s[1])
+                    m.reset();
                 elif cmd == "014":
-                    found = 0
-                    for m in self.ml:
-                        if m.address == int(s[1]):
-                            found = 1
-                            m.setprog(int(s[2]))
-                    if found == 0:
-                        self.push("402 No such moodlamp\r\n")
+                    m = self.ml.getLamp(s[1])
+                    m.setprog(int(s[2]))
                 elif cmd == "015":
-                    found = 0
-                    for m in self.ml:
-                        if m.address == int(s[1]):
-                            found = 1
-                            m.setname("".join(s[2:]))
-                    if found == 0:
-                        self.push("402 No such moodlamp\r\n")
+                    m = self.ml.getLamp(s[1])
+                    m.setname("".join(s[2:]))
                 elif cmd == "016":
                     m = self.ml.getLamp(s[1])
-                    
                 elif cmd == "":
                     pass
                 else:
                     self.push("401 unknown command\r\n")
+                if ok:
+                    self.sendOK()
             elif self.state == 1:
                 r = self.firmware.parseLine(self.data)
                 if self.firmware.isDone():
                     self.push("105 done\r\n")
                     self.state = 0
                 elif r:
-                    self.push("106 OK\r\n")
+                    self.sendOK()
                 else:
                     self.push("403 parse failed\r\n")
                     self.state = 0
@@ -476,8 +454,8 @@ class MLD:
             self.map = pickle.load(mapfile)
             print "loaded moodmap:"
             #print self.map
-            for key in self.map.keys():
-                print "uuid:"+str(key)+" adr:"+str(self.map[key])
+            #for key in self.map.keys():
+            #    print "uuid:"+str(key)+" adr:"+str(self.map[key])
                 
         except IOError:
             self.map = {}
