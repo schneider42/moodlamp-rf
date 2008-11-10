@@ -26,14 +26,12 @@ class MoodlampList(list):
             lamp = int(lamp)
             for l in self:
                 if l.address == lamp:
-                    found = True
+                    return l
         except ValueError:
             for l in self:
                 if l.name == lamp:
-                    found = True
-        if not found:
-            raise NotFound()
-        return l
+                    return l
+        raise NotFound()
 
 class UUID:
     def getUUID(self):
