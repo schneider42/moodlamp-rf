@@ -33,13 +33,6 @@ class MoodlampList(list):
                     return l
         raise NotFound()
 
-class UUID:
-    def getUUID(self):
-        u = []
-        for i in range(0,16):
-            u.append(chr(random.randint(0,255)))
-        return tuple(u)
-
 class IHexFile:
     def __init__(self):
         self.data = []
@@ -100,29 +93,6 @@ class Moodlamp:
     version = ''
     color = [0xff,0,0]
     done = True
-    
-    def __init__(self, addr, interface, mld):
-        self.interface = interface
-        self.address = addr
-        self.mld = mld
-        self.get_version()
-        #self.setup()
-        self.timer = 60
-        Timer(0.1,self).start()
-        
-    def __init__(self, interface, mld, adr = None):
-        self.interface = interface
-        self.mld = mld
-        self.timer = 60
-        if adr is None:
-            self.address = 0
-        else:
-            self.address = adr
-            self.get_version()
-            self.state = 2
-            self.uuid = 0
-        #self.get_version()
-        #self.setup(data)
         
     def __init__(self, interface, mld, adr, name):
         self.interface = interface
@@ -136,32 +106,8 @@ class Moodlamp:
     def timer(self):
         self.tick(2, [], False)
         
-    def setup(self,data):
-        self.uuid = []
-        if len(data) == 3+16:
-            if data[0:3] == "ID=":
-                self.uuid = tuple(data[3:])
-                adr = self.mld.map_UUID(self.uuid)
-                if adr != -1:
-                    self.newadr = adr
-                    #self.set_address(self.newadr)
-                    self.set_address(0,self.newadr)
-                    #self.state = 1
-                    self.state = 2
-                    return True
-        elif len(data) == 3:
-            if data == "ID?":
-                self.uuid = self.mld.get_UUID()
-                self.interface.packet(0, "ID="+"".join(self.uuid), 0, True)
-                self.state = 0
-                return True
-        return False
-        
     def get_address(self):
         pass
-    
-    #def set_address(self, adr):
-    #    self.interface.packet(0, "ADR="+chr(adr)+"".join(self.uuid), 0, True)
         
     def set_address(self, oldadr, newadr):
         self.mld.remove_lamp(newadr)
@@ -189,21 +135,7 @@ class Moodlamp:
     def tick(self, type, data, broadcast):
         print "ml tick"
         print list(data)
-        
-        if self.state == 0:
-            if type == 0:
-                self.newadr= self.mld.map_UUID(self.uuid)
-                #self.mld.remove_lamp(self.newadr)
-                #self.set_address(self.newadr)
-                #self.state = 1
-                self.set_address(0,self.newadr)
-                self.state = 2
-        elif self.state == 1:
-            if type == 0:
-                self.address = self.newadr
-                self.get_version()
-                self.state = 2
-        elif self.state == 2:
+        if self.state == 2:
             if type == 1:
                 if len(data) > 2 :
                     if data[0:2] == "D=":
@@ -220,15 +152,10 @@ class Moodlamp:
         
     def data(self, data, broadcast):
         #print "ml data:",data
-        #if len(data) > 2 :
-        #    if data[0:2] == "D=":
-        #        self.version = data[2:]
-        #        self.mld.new_lamp(self)
         self.tick(1, data, broadcast)
         self.timer = 60
     
     def packet_done(self, broadcast):
-        #self.done = True
         #print "ml done"
         self.tick(0, [], broadcast)
         
@@ -332,7 +259,6 @@ class MLClient(asynchat.async_chat):
                    self.push("007 start 0X%X len 0X%X\r\n" % (self.firmware.adr, len(self.firmware.data) ))
                 elif cmd == "009":
                     if len(self.interfaces) > int(s[1]):
-                        #r = self.mld.flash(self.interfaces[int(s[1])], self.firmware)
                         interface = self.interfaces[int(s[1])]
                         self.push( "108 flashing on interface %s 0x%X bytes from adr 0x%X\r\n" % 
                                    (interface, len(self.firmware.data), self.firmware.adr))
@@ -444,58 +370,19 @@ class ClientServer(asyncore.dispatcher):
             c.lamp_removed(lamp)
             
 class MLD:
-    #lock = threading.RLock()
     def serve(self, port=2324):
-        #self.ml=[]
-        try:
-            mapfile = open("moodmap")
-            self.map = pickle.load(mapfile)
-            print "loaded moodmap:"
-            #print self.map
-            #for key in self.map.keys():
-            #    print "uuid:"+str(key)+" adr:"+str(self.map[key])
-                
-        except IOError:
-            self.map = {}
-            print "NO MOODMAP FOUND"
-        
-        #pickle.load(file)
         self.ml = MoodlampList()
         self.interfaces = []
-        #try:
-        self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,1,2,self))
-        #lamp = Moodlamp(self.interfaces[0], self,2);
-        #self.ml.append(lamp)
-        #except:
-        #    self.interfaces.append(rf12interface.RF12Interface("/dev/ttyS0",115200,2,self))
-        #self.ml.append(Moodlamp(3,self.interfaces[0],self))
+        try:
+            self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,1,2,self))
+        except:
+            self.interfaces.append(rf12interface.RF12Interface("/dev/ttyS0",115200,2,self))
         self.server = ClientServer(port,self.ml,self.interfaces, self)
         #self.interfaces[0].start()
         Timer(1,self).start()
         
         asyncore.loop()
-        
-    def get_UUID(self):
-        u = UUID()
-        id = u.getUUID()
-        while ord(id[0]) == 0:
-             id = u.getUUID()
-        return id
-    
-    def map_UUID(self, uuid):
-        if self.map.has_key(uuid):
-            return self.map[uuid]
-        else:
-            j=14
-            for i in self.map.values():
-                if i > j:
-                    j = i
-            self.map[uuid] = j+1
-            mapfile = open("moodmap",'w')
-            pickle.dump(self.map, mapfile)
-            return j+1
-        #return 8                #the debian way
-    
+
     def new_lamp(self, lamp):
         self.server.new_lamp_detected(lamp)
         
@@ -562,8 +449,6 @@ class MLD:
             print "resetting lamp", str(adr)
             self.interfaces[0].packet( adr, "r", 0,True)        #force reset for unknown lamp
                                                                 #todo start rebinding
-        
-        #    self.ml.append(Moodlamp(self.interfaces[0], self, adr))
         self.ml.lock.release()
         
     def packet_done(self, adr, broadcast):
@@ -593,6 +478,5 @@ class MLD:
 
         self.ml.lock.release()
         return r
-        #self.interface.
     
 MLD().serve()
