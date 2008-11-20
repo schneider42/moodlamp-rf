@@ -274,8 +274,7 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 # Type: avrdude -c ?
 # to get a full listing.
 #
-#AVRDUDE_PROGRAMMER = avrispv2
-AVRDUDE_PROGRAMMER = usbasp 
+#AVRDUDE_PROGRAMMER = usbasp 
 #AVRDUDE_PROGRAMMER = avr910
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = /dev/ttyUSB0
@@ -297,15 +296,19 @@ AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 # reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
+AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) 
 
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
+ifdef AVRDUDE_PROGRAMMER
+AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
+endif
+
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
-AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xc1:m
-AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xbf:m
-
+AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd7:m
+AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xd1:m
+AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfc:m
 
 #---------------- Debugging Options ----------------
 
@@ -448,6 +451,7 @@ gccversion :
 fuse:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_HFUSE_FLAGS)
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_LFUSE_FLAGS)
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_EFUSE_FLAGS)
 
 
 # Program the device.  
