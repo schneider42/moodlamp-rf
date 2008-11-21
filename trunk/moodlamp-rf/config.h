@@ -105,7 +105,18 @@
 
 /* enable this if you want to control a fnordlicht via RS485 */
 #ifndef RS485_CTRL
-#define RS485_CTRL 1
+#define RS485_CTRL 0
+#endif
+
+#if RS485_CTRL
+#define RS485_TX_DDR    DDRD
+#define RS485_RX_DDR    DDRD
+#define RS485_RX_PORT   PORTD
+#define RS485_TX_PORT   PORTD
+
+#define RS485_TX_PIN    PD4
+#define RS485_NRX_PIN   PD5
+
 #endif
 
 #define RS485_ADDRESS 10
