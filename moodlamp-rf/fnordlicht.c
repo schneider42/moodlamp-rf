@@ -165,7 +165,7 @@ int main(void) {
         rc5_handler();
 #endif
 #if RS485_CTRL
-        rs485handler_process();
+        rs485_process();
 #endif
 #if SERIAL_UART
         serial_process();
