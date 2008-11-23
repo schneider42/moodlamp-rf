@@ -10,7 +10,7 @@
 #include "packet.h"
 #include "settings.h"
 #include <string.h>
-
+#include "interfaces.h"
 uint16_t timeoutmax = 200;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
@@ -127,6 +127,7 @@ void control_tick(void)
         p.dest = serveradr;     //0 if unknown
         p.src = packet_getAddress();        //put local address into src
         p.lasthop = packet_getAddress();
+        p.iface = IFACE_LOCAL;
         if(control_state == CONTROL_SEARCHMASTER){  //request server adr
             p.data[0] = 'R';
             settings_readid(p.data+1);
@@ -136,6 +137,7 @@ void control_tick(void)
             settings_readid(p.data+1);
             p.len = strlen((char*)p.data);
         }else{
+//            p.flags = PACKET_BROADCAST;//don't know server yet
             p.len = 1;
             p.data[0] = 'B';
         }

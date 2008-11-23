@@ -44,9 +44,9 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "lib/uart.h"
-//#include "i2c.h"
-#include "rs485.h"
+
 #include "rs485_handler.h"
+#include "zbus.h"
 
 #include "cmd_handler.h"
 #include "control.h"
@@ -119,7 +119,8 @@ int main(void) {
 #endif
     settings_read();
 #if RS485_CTRL
-    rs485_init();
+//    rs485_init();
+    zbus_core_init();
 #endif
     rf_init();
     packet_init(0,0);
@@ -139,6 +140,8 @@ int main(void) {
         if(global.flags.timebase){
             control_tick();
             global.flags.timebase=0;
+    //        strcpy((char*)zbus_buf,"blubb");
+    //        zbus_txstart(1);
         }
         /* after the last pwm timeslot, rebuild the timeslot table */
         /*

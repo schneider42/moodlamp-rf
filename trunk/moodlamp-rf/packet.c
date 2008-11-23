@@ -98,6 +98,7 @@ void packet_tick(void)
 {
     uint8_t src;
     interfaces_tick();
+    cache_tick();
     if((src = interfaces_gotPacket(&p)) != IFACE_NONE){
         //uart1_puts("acDGab");
         uint8_t iface = cache_getDestIface(&p);
@@ -116,18 +117,25 @@ void packet_tick(void)
 void packet_packetOut(struct packet_t * p)
 {
     if( p->flags & PACKET_BROADCAST){
-        uint8_t iface = cache_getSrcIface(p);
+    uint8_t iface;
+        if(p->iface != IFACE_LOCAL)
+             iface = cache_getSrcIface(p);
+        else
+            iface = IFACE_LOCAL;
+        //if( iface == 1)
+        //    return;
         p->lasthop = locladr;
         p->nexthop = p->dest;
-/*      uart1_puts("acDB");
+        uart1_puts("acDB");
         uart1_putc(iface);
         serial_putenc(p,p->len+PACKET_HEADERLEN);
-            uart1_puts("ab");
-*/
-        if(p->src == locladr)
+        uart1_puts("ab");
+
+        if(p->iface == IFACE_LOCAL/*p->src == locladr && p->src != 0*/)  //hm
             interfaces_broadcast(iface,p,1);            //force
         else
             interfaces_broadcast(iface,p,0);
+        uart1_puts("acDEab");
         return;
     }
 
@@ -135,11 +143,11 @@ void packet_packetOut(struct packet_t * p)
     p->nexthop = cache_getNextHop(p);
     uint8_t iface = cache_getDestIface(p);
     //printf("acDP%c%cab",p->dest,p->nexthop);
-/*    uart1_puts("acDP");
+    uart1_puts("acDP");
     uart1_putc(iface);
     serial_putenc(p,p->len+PACKET_HEADERLEN);
     uart1_puts("ab");
-*/    interfaces_packetOut(iface,p);
+    interfaces_packetOut(iface,p);
 }
 
 

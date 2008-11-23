@@ -42,9 +42,9 @@ void serial_putenc(uint8_t * d, uint8_t n)
 
 uint8_t serial_packetOut(struct packet_t * p)
 {
-    if(p->flags & PACKET_DONE){
-        uart1_puts("acSDab");
-        //return 0;
+    if(p->flags & PACKET_DONE){         //these are special flags
+        uart1_puts("acSDab");           //for the host system
+        //return 0;                     //they don't contain any data
     }
     if(p->flags & PACKET_TIMEOUT){
         uart1_puts("acSTab");
