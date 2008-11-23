@@ -104,22 +104,26 @@
 
 
 /* enable this if you want to control a fnordlicht via RS485 */
-#ifndef RS485_CTRL
-#define RS485_CTRL 0
-#endif
-
 #if RS485_CTRL
-#define RS485_TX_DDR    DDRD
+
+#define TEENSY_SUPPORT
+
+#define RS485_TX_PIN_PORT   C
+#define RS485_TX_PIN_PIN    PC4
+
+#define RS485_NRX_PIN_PORT  C
+#define RS485_NRX_PIN_PIN   PC5
+
+#define ZBUS_BAUDRATE 115200
+/*#define RS485_TX_DDR    DDRD
 #define RS485_RX_DDR    DDRD
 #define RS485_RX_PORT   PORTD
 #define RS485_TX_PORT   PORTD
 
 #define RS485_TX_PIN    PD4
-#define RS485_NRX_PIN   PD5
+#define RS485_NRX_PIN   PD5*/
 
 #endif
-
-#define RS485_ADDRESS 10
 
 /*#if (RS485_CTRL == 1) && (SERIAL_UART == 1) && !(ROLE == ROLE_MASTER)
 #error "RS485_CTRL and SERIAL_UART are mutually exclusive!"

@@ -216,7 +216,7 @@ LICENSE:
  #error "no UART definition for MCU available"
 #endif
 
-
+#if defined( USART_USE_0)
 /*
  *  module global variables
  */
@@ -227,6 +227,7 @@ static volatile unsigned char UART_TxTail;
 static volatile unsigned char UART_RxHead;
 static volatile unsigned char UART_RxTail;
 static volatile unsigned char UART_LastRxError;
+#endif
 
 #if defined( ATMEGA_USART1 )
 static volatile unsigned char UART1_TxBuf[UART_TX_BUFFER_SIZE];
@@ -238,7 +239,7 @@ static volatile unsigned char UART1_RxTail;
 static volatile unsigned char UART1_LastRxError;
 #endif
 
-
+#if defined( USART_USE_0)
 
 SIGNAL(UART0_RECEIVE_INTERRUPT)
 /*************************************************************************
@@ -465,7 +466,7 @@ void uart_puts_p(const char *progmem_s )
 
 }/* uart_puts_p */
 
-
+#endif
 /*
  * these functions are only for ATmegas with two USART
  */

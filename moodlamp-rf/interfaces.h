@@ -12,7 +12,7 @@
 #define IFACE_RS485         2
 #define IFACE_RF            3
 
-#define IFACE_NUM           1           //3
+//#define IFACE_NUM           1           //3
 #define IFACE_LOCAL         0xFF        //local pseudo iface
 #define IFACE_NONE          0xFE
 
@@ -25,9 +25,10 @@ struct interface{
     void(*tick)(void);
     uint8_t dobroadcast;
     uint8_t getbroadcast;
+    uint8_t metric;
 };
 
-
+uint8_t interfaces_getMetric(uint8_t iface);
 uint8_t interfaces_packetOut(uint8_t id, struct packet_t * p);
 void interfaces_tick(void);
 uint8_t interfaces_gotPacket(struct packet_t * p);

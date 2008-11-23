@@ -99,6 +99,7 @@ SRC = $(TARGET).c \
 	interfaces.c \
 	packet.c \
 	cache.c \
+	zbus.c
 #fifo.c uart.c
 
 
@@ -298,6 +299,7 @@ AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
 
+
 # Uncomment the following if you want avrdude's erase cycle counter.
 # Note that this counter needs to be initialized first using -Yn,
 # see avrdude manual.
@@ -321,9 +323,9 @@ AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
+AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
 AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd7:m
-AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xd1:m
-AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfc:m
+AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
 
 #---------------- Debugging Options ----------------
 
@@ -473,6 +475,8 @@ fuse:
 program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
+program-flash: $(TARGET).hex $(TARGET).eep
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 # Generate avr-gdb config/init file which does the following:
 #     define the reset signal, load the target file, connect to target, and set 
 #     a breakpoint at main().
@@ -638,6 +642,6 @@ $(shell mkdir $(OBJDIR) 2>/dev/null)
 # Listing of phony targets.
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
-clean clean_list program debug gdb-config
+clean clean_list program program-flash debug gdb-config
 
 

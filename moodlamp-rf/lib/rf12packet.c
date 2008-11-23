@@ -5,6 +5,7 @@
 #include "rf12.h"
 #include "rf12packet.h"
 #include "packet.h"
+#include "interfaces.h"
 
 //#include "uart.h"
 
@@ -303,7 +304,7 @@ uint8_t rf12packet_nextHeader(struct packet_t * p)
         p->src = packet_getAddress();
         p->lasthop =  packet_getAddress();
         p->nexthop = packet_getAddress();
-        
+        p->iface = IFACE_NONE;
         if(rf12packet_status & RF12PACKET_TIMEOUT){
             p->flags = PACKET_TIMEOUT;
         }else{
