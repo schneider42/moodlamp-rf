@@ -23,7 +23,7 @@ uint8_t rs485_packetOut(struct packet_t * p)
         rs485_doreply = 1;
         lasttxsrc = p->src;
     }
-    memcpy((char*)zbus_buf,p,p->len + PACKET_HEADERLEN);
+    memcpy((char*)zbus_txbuf,p,p->len + PACKET_HEADERLEN);
     zbus_txstart(p->len + PACKET_HEADERLEN);
     return 0;
 }
@@ -33,6 +33,7 @@ uint8_t rs485_packetIn(struct packet_t * p)
     if(zbus_done && rs485_doreply){
         rs485_nextHeader(p);
         rs485_doreply = 0;
+        zbus_done = 0;
         return 0;
     }
     if(zbus_rxfinish() == 0)
@@ -52,8 +53,8 @@ uint8_t rs485_nextHeader(struct packet_t * p)
         p->nexthop = packet_getAddress();
         p->flags = PACKET_DONE;
 //        p->iface = IFACE_NONE;
-        zbus_done = 0;
-
+//        zbus_done = 0;
+        uart1_puts("acDRDab");
         return 1;
     }
     if(zbus_rxfinish() < PACKET_HEADERLEN)
