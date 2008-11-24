@@ -310,6 +310,7 @@ uint8_t rf12packet_nextHeader(struct packet_t * p)
         }else{
             p->flags = PACKET_DONE;
         }
+        uart1_puts("acDWDab");
         return 1;
     }
     if(rf12packet_status & RF12PACKET_NEWDATA){

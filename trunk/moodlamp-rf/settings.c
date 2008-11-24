@@ -44,7 +44,7 @@ struct thread_t script_threads_record[MAX_THREADS] EEMEM;
 struct timeslots_t pwm_record EEMEM;
 struct global_t global_record EEMEM;
 struct settings_record_t global_settings;
-char id[50] EEMEM = "master4.lamp.blinkenlichts.net";
+char id[50] EEMEM = "master5.lamp.blinkenlichts.net";
 uint8_t idbuf[60];
 
 void settings_readid(uint8_t * buf)

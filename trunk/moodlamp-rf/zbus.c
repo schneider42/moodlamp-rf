@@ -62,25 +62,6 @@
 /* We generate our own usart init module, for our usart port */
 generate_usart_init()
 
-#if 0
-static void usart_init(void)
-{
-    /* The ATmega644 datasheet suggests to clear the global\
-       interrupt flags on initialization ... */
-    uint8_t sreg = SREG; cli();
-    usart(UBRR,H) = HI8(UBRRH_VALUE);
-    usart(UBRR,L) = LO8(UBRRL_VALUE);
-    /* set mode: 8 bits, 1 stop, no parity, asynchronous usart */
-    /*   and set URSEL, if present, */
-    usart(UCSR,C) = _BV(usart(UCSZ,0)) | _BV(usart(UCSZ,1)) | _BV_URSEL;
-    /* Enable the RX interrupt and receiver and transmitter */
-    usart(UCSR,B) |= _BV(usart(TXEN)) | _BV(usart(RXEN)) | _BV(usart(RXCIE));
-    /* Set or not set the 2x mode */
-    USART_2X();
-    /* Go! */
-    SREG = sreg;
-}
-#endif
 static uint8_t send_escape_data = 0;
 static uint8_t recv_escape_data = 0;
 static uint8_t bus_blocked = 0;
@@ -89,9 +70,11 @@ static volatile zbus_index_t zbus_index;
 static volatile zbus_index_t zbus_txlen;
 static volatile zbus_index_t zbus_rxlen;
 
+volatile uint8_t zbus_txbuf[ZBUS_BUFFER_LEN];
 volatile uint8_t zbus_buf[ZBUS_BUFFER_LEN];
 static void __zbus_txstart(void);
 volatile uint8_t zbus_done = 0;
+
 uint8_t zbus_ready(void)
 {
     if(zbus_txlen != 0 || zbus_rxlen != 0 || bus_blocked)
@@ -103,11 +86,11 @@ void
 zbus_txstart(zbus_index_t size)
 {
   // FIXME
-  if(zbus_txlen != 0 || zbus_rxlen != 0 || bus_blocked)
-    return;			/* rx or tx in action or
-				   new packet left in buffer
-                                   or somebody is talking on the line */
-  zbus_index = 0;
+//  if(zbus_txlen != 0 || zbus_rxlen != 0 || bus_blocked)
+//    return;			/* rx or tx in action or
+//				   new packet left in buffer
+//                                   or somebody is talking on the line */
+
 
 #ifdef ZBUS_RAW_SUPPORT
   if (!zbus_raw_conn->rport)
@@ -136,6 +119,9 @@ static void __zbus_txstart(void) {
   uint8_t sreg = SREG; cli();
   bus_blocked = 3;
 
+  zbus_index = 0;
+//  PIN_SET(ZBUS_RX_PIN);
+  //uart1_puts("acDZTab");
   /* enable transmitter and receiver as well as their interrupts */
   usart(UCSR,B) = _BV(usart(TXCIE)) | _BV(usart(TXEN));
 
@@ -168,6 +154,8 @@ zbus_rxstart (void)
   if(zbus_txlen > 0){
     return;
   }
+//  uart1_puts("acDZRab");
+//  PIN_CLEAR(ZBUS_RX_PIN);
   zbus_rxlen = 0;
 
   uint8_t sreg = SREG; cli();
@@ -251,9 +239,13 @@ zbus_core_init(void)
 void
 zbus_core_periodic(void)
 {
-  if(bus_blocked)
-    if(--bus_blocked == 0 && zbus_txlen > 0)
-;//      __zbus_txstart();
+  static uint8_t t  = 30;
+  if(t-- == 0){
+    if(bus_blocked)
+      if(--bus_blocked == 0 && zbus_txlen > 0)
+        __zbus_txstart();
+    t = 30;
+  }
 }
 
 SIGNAL(usart(USART,_TX_vect))
@@ -266,18 +258,18 @@ SIGNAL(usart(USART,_TX_vect))
 
   /* Otherwise send data from send context, if any is left. */
   else if (zbus_txlen && zbus_index < zbus_txlen) {
-    if (zbus_buf[zbus_index] == '\\') {
+    if (zbus_txbuf[zbus_index] == '\\') {
       /* We need to quote the character. */
-      send_escape_data = zbus_buf[zbus_index];
+      send_escape_data = zbus_txbuf[zbus_index];
       usart(UDR) = '\\';
     }
     else {
       /* No quoting needed, just send it. */
-      usart(UDR) = zbus_buf[zbus_index];
+      usart(UDR) = zbus_txbuf[zbus_index];
     }
 
     zbus_index ++;
-    bus_blocked = 30;
+    bus_blocked = 3;
   }
 
   /* If send_ctx contains data, but every byte has been sent over the
@@ -331,9 +323,9 @@ SIGNAL(usart(USART,_RX_vect))
 //        return; /* lock of buffer failed, ignore packet */
       
       zbus_index = 0;
-      bus_blocked = 30;
+      bus_blocked = 3;
 
-	#ifdef HAVE_ZBUS_RX_PIN
+#ifdef HAVE_ZBUS_RX_PIN
       PIN_SET(ZBUS_RX_PIN);
 #endif
     }

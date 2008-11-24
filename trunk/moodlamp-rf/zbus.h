@@ -61,7 +61,7 @@ zbus_index_t zbus_rxfinish(void);
 
 void zbus_process(void);
 
-
+extern volatile uint8_t zbus_txbuf[ZBUS_BUFFER_LEN];
 extern volatile uint8_t zbus_buf[ZBUS_BUFFER_LEN];
 extern volatile uint8_t zbus_done;
 #endif /* ZBUS_SUPPORT */

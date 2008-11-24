@@ -117,8 +117,9 @@ void control_tick(void)
         break;
     }
     
-    static unsigned int control_beacon = 0;
-    if(control_beacon++ >= 500){
+    static unsigned int control_beacon = 500;
+    if(control_beacon-- == 0){
+        control_beacon = 500;
         if(control_state == CONTROL_SEARCHMASTER){
             p.flags = PACKET_BROADCAST;//don't know server yet
         }else{
@@ -138,12 +139,13 @@ void control_tick(void)
             p.len = strlen((char*)p.data);
         }else{
 //            p.flags = PACKET_BROADCAST;//don't know server yet
+//            control_beacon = 100;
             p.len = 1;
             p.data[0] = 'B';
         }
 
         packet_packetOut(&p);        
-        control_beacon = 0;
+//        control_beacon = 0;
     }
 
     if(timeout && --timeout == 0)
