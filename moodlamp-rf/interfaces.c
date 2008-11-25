@@ -107,7 +107,7 @@ uint8_t interfaces_broadcast(uint8_t originid, struct packet_t * p, uint8_t forc
         }
         return 0;
     }
-    uart1_puts("acDMab");
+    //uart1_puts("acDMab");
     for(i=0;i<iface_num;i++){
         if(originid != ifaces[i].id && ifaces[i].getbroadcast)
             ifaces[i].packetOut(p);
