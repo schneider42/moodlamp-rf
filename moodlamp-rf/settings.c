@@ -45,19 +45,21 @@ struct timeslots_t pwm_record EEMEM;
 struct global_t global_record EEMEM;
 struct settings_record_t global_settings;
 char id[50] EEMEM = "master5.lamp.blinkenlichts.net";
+char * name = (char *)(E2END - 50);
+
 uint8_t idbuf[60];
 
 void settings_readid(uint8_t * buf)
 {
     eeprom_read_block(buf,&id,sizeof(id));
-    //uint8_t i=0;
-    //while((*buf++ = eeprom_read_byte((&id)+(i++)))!=0);
+//    eeprom_read_block(buf,name,50);
 }
 
 uint8_t settings_compareid(uint8_t * buf)
 {
     if(strcmp((char*)idbuf,(char*)buf) == 0)
         return 1;
+
     return 0;
 }
 
@@ -126,6 +128,12 @@ void settings_read(void)
         temp = (void *) &global;
         eeprom_read_block(/*(struct global_t *)&global*/temp,&global_record,sizeof(global));
     }
+/*    eeprom_read_block(idbuf,name,50);
+    if(idbuf[0] == 255){
+        strcpy((char*)idbuf,"newlamp.local");
+        eeprom_write_block(name,idbuf,50);
+    }*/
+
     eeprom_read_block(idbuf,&id,sizeof(id));
 }
 
