@@ -54,7 +54,7 @@ uint8_t rs485_nextHeader(struct packet_t * p)
         p->flags = PACKET_DONE;
 //        p->iface = IFACE_NONE;
 //        zbus_done = 0;
-        uart1_puts("acDRDab");
+        //uart1_puts("acDRDab");
         return 1;
     }
     if(zbus_rxfinish() < PACKET_HEADERLEN)
