@@ -6,16 +6,7 @@ import rf12interface
 import traceback
 import random
 import pickle
-
-class Timer ( threading.Thread ):
-    def __init__ ( self, time, callback):
-        threading.Thread.__init__ ( self )
-        self.callback = callback
-        self.time = time
-    def run ( self ):
-        while 1:
-            time.sleep(self.time)
-            self.callback.timer()
+import Timer
             
 class MoodlampList(list):
     lock = threading.RLock()
@@ -25,11 +16,11 @@ class MoodlampList(list):
         try:
             lamp = int(lamp)
             for l in self:
-                if l.address == lamp:
+                if l.address == lamp and l.ready:
                     return l
         except ValueError:
             for l in self:
-                if l.name == lamp:
+                if l.name == lamp and l.ready:
                     return l
         raise NotFound()
 
@@ -88,12 +79,23 @@ class IHexFile:
         else:
             return self.data[i*self.pagesize:(i+1)*self.pagesize]
         
+        
+class DummyLamp:
+    timer = 60
+    address = 0
+    version = "dummy"
+    name = "dummy"
+    ready = False
+    
+    def data(self, data, broadcast):
+        pass
     
 class Moodlamp:
     version = ''
     color = [0xff,0,0]
     done = True
-        
+    ready = False
+    
     def __init__(self, interface, mld, adr, name):
         self.interface = interface
         self.mld = mld
@@ -144,6 +146,7 @@ class Moodlamp:
                         self.interface.packet( self.address, "O", 0,True)
                         self.mld.new_lamp(self)
                         self.state = 3
+                        self.ready = True
         elif self.state == 3:
             if len(data) > 1:
                 if data[0] == 'N':
@@ -236,9 +239,12 @@ class MLClient(asynchat.async_chat):
                     self.push("100 Hello World\r\n")
                     ok = False
                 elif cmd == "002":
+                    found = 0
                     for m in self.ml:
-                        self.sendLamp(m)
-                    if len(self.ml)==0:
+                        if m.ready:
+                            self.sendLamp(m)
+                            found+=1
+                    if found==0:
                         self.sendNoLampsDetected()
                         ok = False
                 elif cmd == "003":
@@ -269,6 +275,8 @@ class MLClient(asynchat.async_chat):
                     else:
                         self.sendNoSuchInterface()
                         ok = False
+                elif cmd == "r":
+                    self.interfaces[0].reset()
                 elif cmd == "010":
                     pos = 0
                     for i in self.interfaces:
@@ -338,7 +346,8 @@ class MLClient(asynchat.async_chat):
     def lamp_removed(self, lamp):
         self.ml.lock.acquire()
         self.push("104 Lamp %d removed(timeout)\r\n" % (lamp.address))
-        self.ml.lock.release()        
+        print "104 Lamp %d removed(timeout)\r\n" % (lamp.address)
+        self.ml.lock.release()
         
 class ClientServer(asyncore.dispatcher):
     def __init__(self, port,ml,interfaces,mld):
@@ -373,13 +382,13 @@ class MLD:
     def serve(self, port=2324):
         self.ml = MoodlampList()
         self.interfaces = []
-        try:
-            self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,1,2,self))
-        except:
-            self.interfaces.append(rf12interface.RF12Interface("/dev/ttyS0",115200,2,self))
+        #try:
+        self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,1,2,self))
+        #except:
+        #    self.interfaces.append(rf12interface.RF12Interface("/dev/ttyS0",115200,2,self))
         self.server = ClientServer(port,self.ml,self.interfaces, self)
         #self.interfaces[0].start()
-        Timer(1,self).start()
+        Timer.Timer(1,self).start()
         
         asyncore.loop()
 
@@ -391,6 +400,14 @@ class MLD:
         self.ml.lock.acquire()
         for m in self.ml:
             if m.address == lamp:
+                """if m is Moodlamp:
+                    print "remove lamp", m.address, " normal"
+                    while(1):
+                        pass
+                else:
+                    print "remove dummy", m.address, " normal"
+                    while(1):
+                        pass"""
                 self.ml.remove(m)
         self.ml.lock.release() 
     
@@ -413,6 +430,9 @@ class MLD:
         if data[0] == 'R':
             if adr == 0:
                 adr = self.getNewAddress()
+            dummy = DummyLamp()
+            dummy.address = adr
+            self.ml.append(dummy)
             reply = "x"+"".join(data[1:])+("\x00%c%c\x01" %(adr,0))
 
             if broadcast == True:
@@ -469,8 +489,10 @@ class MLD:
         for m in self.ml:
             m.timer -= 1
             if m.timer <= 0:
-                self.server.lamp_removed(m)
+                if m is not DummyLamp:
+                    self.server.lamp_removed(m)
                 self.ml.remove(m)
+                
         self.ml.lock.release()   
     
     def flash(self, interface, firmware):

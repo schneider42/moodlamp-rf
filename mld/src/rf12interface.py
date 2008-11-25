@@ -7,8 +7,7 @@ import math
 import random
 import crc
 import Queue
-
-status = ''
+import Timer
 
 class Packet:
     data = ""
@@ -42,12 +41,25 @@ class ReadSerial ( threading.Thread ):
       self.owner = owner
       self.queue = queue
       self.ready = False
+      self.portok = True
       
     def readline(self):                #a escapes, c starts new line, b ends line
         #print '       r'
+        t = time.time()
         data = self.rf12.read(1)            #read single byte
-        #print 'd'
-        #print data
+        if len(data) == 0:
+            u = time.time()
+            if u-t < 3:
+                print "serial port broken"
+                #while 1:
+                #time.sleep(1)
+                self.portok = False
+                return False
+            else:
+                print "timeout"
+            return False
+        #return False
+        #print 'd', data
         if data == 'a':
             if self.escaped == False:
                 self.escaped = True
@@ -64,8 +76,9 @@ class ReadSerial ( threading.Thread ):
         return False
 
     def run ( self ):
-        global status
         while 1:
+            if not self.portok:
+                break
             if self.readline():
                 print "readline", self.ar
                 if not self.ready :
@@ -90,11 +103,9 @@ class ReadSerial ( threading.Thread ):
                 elif len(self.ar) > 1 and self.ar[0] == 'S':
                     if self.ar[1] == 'D':
                         print "Status: done"
-                        status = 'D'
                     elif self.ar[1] == 'T':
                         #print time.time()
                         print "%s ------------------Status: timeout--------------------" % time.time() 
-                        status = 'T'
                     else:
                         print "?: %s" % self.ar
                 else:
@@ -125,18 +136,24 @@ class ReadSerial ( threading.Thread ):
                     self.owner.packet_done()
                 elif self.ar[0] == 'I':
                     self.owner.initinterface()
-                    
 
 class RF12Interface:
     done = True
     broadcast = 0
     
-    def __init__ ( self, port, baud, ownadr, remadr, callback):
+    def __init__ ( self, port, baud, ownadr, gateadr, callback):
+        
+        self.port = port
+        self.baud = baud
+        self.ownadr = ownadr
+        self.gateadr = gateadr
+        self.callback = callback
+        
         self.rf12 = serial.Serial(port, baud)#, timeout=1)
         self.rf12.flushInput()
         self.rf12.flushOutput()
+        self.rf12.setTimeout(30)
         self.adr = ownadr
-        self.remadr = remadr
         self.queue = Queue.Queue()
         #self.rf12.setTimeout(1)
         #while rf12.read(): pass
@@ -150,7 +167,7 @@ class RF12Interface:
         self.readthread.ready = True
         print "ready"
         #self.rf12.write("acA%cab" % adr)
-        self.write("I%c%c%c"%(ownadr,remadr,remadr))
+        self.write("I%c%c%c"%(ownadr,gateadr,gateadr))
         self.free = threading.BoundedSemaphore()
         #self.rf12.write("acR%cab" % 0)
         self.callback = callback
@@ -159,10 +176,37 @@ class RF12Interface:
         self.pagecrc = 0
         #self.free = threading.Event()
         #self.free.set()
+        Timer.Timer(1,self).start()
         self.done = True
+        
+    def initSerial(self):
+        try:
+            self.rf12 = serial.Serial(self.port, self.baud)#, timeout=1)
+            self.rf12.flushInput()
+            self.rf12.flushOutput()
+            self.rf12.setTimeout(30)
+            self.readthread = ReadSerial(self.rf12,self.callback, self, self.queue)
+            self.readthread.start()
+            time.sleep(1)
+            self.readthread.ready = True
+        except serial.SerialException:
+            pass
     
+    def timer(self):
+        if not self.readthread.isAlive():
+            print "port wohl kaputt"
+            self.rf12.close()
+            self.initSerial()
+        
+    def reset(self):
+        print "reset serial device"
+        self.rf12 = serial.Serial("/dev/ttyUSB0", 115200)#, timeout=1)
+        self.readthread.stop()
+        
     def initinterface(self):
-        self.write("I%c%c%c"%(self.adr,self.remadr,0))
+        self.write("I%c%c%c"%(self.adr,self.gateadr,0))
+        print "Set adr=",self.adr, "remadr=",self.gateadr
+        
         #self.free = threading.BoundedSemaphore()
         self.free.acquire(False);
         self.free.release();
@@ -206,20 +250,38 @@ class RF12Interface:
             return 1
         self.free."""
         #print "aquire"
+        """
         if not self.free.acquire(wait):
             print "returning badly"
-            return 1
+            return 1"""
+        i = 0
+        while not self.free.acquire(False):
+            #print "not free"
+            if not wait:
+                return 1
+            time.sleep(0.001)
+            i+=1
+            if i > 100:
+                print "giving up"
+                self.free.release()
+                return 1
         
         #print "sending"
         self.broadcast = broadcast
         self.remadr = remadr
-        if broadcast == False:
-            self.rf12.write("acP%c" % remadr)
-        else:
-            self.rf12.write("acB%c" % remadr)
-#        self.rf12.write("acP%c" % remadr)#FIXME    use a lock or a message
-        self.rf12.write(data.replace('a','aa'))
-        self.rf12.write("ab")
+        try:
+            if broadcast == False:
+                self.rf12.write("acP%c" % remadr)
+            else:
+                self.rf12.write("acB%c" % remadr)
+    #        self.rf12.write("acP%c" % remadr)#FIXME    use a lock or a message
+            self.rf12.write(data.replace('a','aa'))
+            self.rf12.write("ab")
+        except serial.serialutil.SerialException:
+            print "will net raus gehen, serialexception"
+        except OSError:
+            print "blubb oserror blubb"
+            
         print "sent packet"
         return 0
     
