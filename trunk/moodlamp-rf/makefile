@@ -99,7 +99,8 @@ SRC = $(TARGET).c \
 	interfaces.c \
 	packet.c \
 	cache.c \
-	zbus.c
+	zbus.c \
+	raw.c
 #fifo.c uart.c
 
 
@@ -324,7 +325,7 @@ AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
 AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
-AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd7:m
+AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd0:m
 AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
 
 #---------------- Debugging Options ----------------

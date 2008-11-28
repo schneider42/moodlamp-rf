@@ -39,8 +39,6 @@
 #include "common.h"
 #include "fnordlicht.h"
 #include "pwm.h"
-
-
 #include "cmd_handler.h"
 
 #if STATIC_SCRIPTS
@@ -48,28 +46,18 @@
 #include "scripts.h"
 #endif
 #include "settings.h"
-
 #include "control.h"
 #include "packet.h"
 
-#if 0
-void printbyte(uint8_t c)
-{
-    uint8_t i = c/100;
-    uart_putc(i+'0');
-    c-=i*100;
-    i=c/10;
-    uart_putc(i+'0');
-    c-=i*10;
-    uart_putc(c+'0');
-}
-#endif
 
 void cmd_dark(void)
 {
-    global_pwm.channels[0].brightness =  global_pwm.channels[0].target_brightness = 0;
-    global_pwm.channels[1].brightness =  global_pwm.channels[1].target_brightness = 0;
-    global_pwm.channels[2].brightness =  global_pwm.channels[2].target_brightness = 0;
+    global_pwm.channels[0].brightness =
+                global_pwm.channels[0].target_brightness = 0;
+    global_pwm.channels[1].brightness =
+                global_pwm.channels[1].target_brightness = 0;
+    global_pwm.channels[2].brightness =
+                global_pwm.channels[2].target_brightness = 0;
 }
 
 void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t position)
@@ -168,7 +156,6 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
     }else if(cmd == CMD_SET_BRIGHTNESS){
         global_pwm.dim = param[0];
     }else if(cmd == CMD_SET_COLOR){
-        //uart1_puts("acDsab");
         control_setColor(param[0],param[1],param[2]);
     }else if(cmd == CMD_RESET){
         jump_to_bootloader();
@@ -177,9 +164,6 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
             uint8_t pos = strlen((char*)param);
             packet_setAddress(param[pos+1],param[pos+2]);
             control_setServer(param[pos+3]);
-            //result[0] = 'G';
-            //settings_readid(result+1);
-            //return 1;
         }
     }else if(cmd == CMD_SETUP_OK){
         control_setupOK();
@@ -187,7 +171,15 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         settings_setid(param);
         settings_readid(result+1);
         return strlen((char*)result);
+    }else if(cmd == CMD_RAW){
+        if(param[0]){
+            global.flags.rawmode = 1;
+            //uart1_puts("acDsetrawab");
+        }else{
+            global.flags.rawmode = 0;
+        }
     }
+
 
     return 0;
 }

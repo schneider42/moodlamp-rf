@@ -145,6 +145,8 @@ static inline uint8_t scalevalue(uint8_t v, uint8_t s)
 {
     if(v == 0)
         return 0;
+    if(v == 255 && s == 255)
+        return 255;
     uint16_t t = v * s;
     v = t/256;              //much faster than /255 but produces a small error
     return v;
@@ -333,7 +335,8 @@ ISR(SIG_OUTPUT_COMPARE1A)
     if (pwm.next_bitmask == 0) {
         /* output initial values */
 #if LED_PORT_INVERT
-        LED_PORT = pwm.initial_bitmask & 0x07;
+        LED_PORT &= ~0x07;
+        LED_PORT |= pwm.initial_bitmask & 0x07;
 #else
         //LED_PORT |= 0x07;
         //LED_PORT &= ~(pwm.initial_bitmask & 0x07);

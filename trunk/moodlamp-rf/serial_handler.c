@@ -8,12 +8,15 @@
 #include "cache.h"
 #include <string.h>
 #include "control.h"
+#include "cmd_handler.h"
+
 //#include "settings.h"
 
 #if SERIAL_UART
-static char buffer[150];
-uint8_t packet = 0;
+char buffer[270];
+uint16_t packet = 0;
 uint8_t remote = 0;
+
 void serial_putcenc(uint8_t c)
 {
     if(c == 'a')
@@ -30,9 +33,9 @@ void serial_putsenc(uint8_t * s)
     }
 }
 
-void serial_putenc(uint8_t * d, uint8_t n)
+void serial_putenc(uint8_t * d, uint16_t n)
 {
-    uint8_t i;
+    uint16_t i;
     for(i=0;i<n;i++){
         if(*d == 'a')
             uart1_putc('a');
@@ -143,27 +146,43 @@ void serial_tick(void)
     if(state == 0){
         uart1_puts("acIab");
         state = 1;
-    }
+    } 
+}
 
-   
+uint16_t serial_rawlen(void)
+{
+    return packet;
+}
+
+uint8_t * serial_rawgetbuffer(void)
+{
+    return (uint8_t *) buffer + 1;
+}
+
+void serial_rawdone(void)
+{
+    packet = 0;
 }
 
 void serial_process(void)
 {
     if(packet)
         return;
-    uint8_t c = readline();
+    uint16_t c = readline();
     if(c){
         if(buffer[0] == 'I'){
             serial_setadr(buffer[1],buffer[2],buffer[3]);
             //serial_sendid();
-        }//else if(buffer[0] == 'B');
-        else{
+        }else if(buffer[0] == CMD_RAW){
+            cmd_handler(CMD_RAW,(uint8_t *)buffer+1,(uint8_t*)buffer);
+        }else if(buffer[0] == 'r'){
+            packet = c-1;
+        }else{
             packet = c;
         }
     } 
 }
-unsigned char readline( void )
+unsigned int readline( void )
 {
     static int fill = 0;
     static uint8_t escaped = 0;
@@ -192,8 +211,8 @@ unsigned char readline( void )
     }
     //if(fill != -1){
         buffer[fill++] = data;
-        if(fill >= 150)
-            fill = 149;
+        if(fill >= 270)
+            fill = 269;
     //}
     return 0;
 }

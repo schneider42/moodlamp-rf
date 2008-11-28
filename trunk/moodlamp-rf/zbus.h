@@ -33,9 +33,12 @@
 //#define ZBUS_RXTX_PIN_PORT  C
 //#define ZBUS_RXTX_PIN_PIN   PC0
 
-#define ZBUS_BUFFER_LEN    150
+#define ZBUS_BUFFER_LEN    270
+//#define ZBUS_BUFFER_LEN    150
+
 //#define zbus_buf           (uip_buf + ZBUS_BRIDGE_OFFSET)
 
+#if 0
 #ifdef TEENSY_SUPPORT
 #  if ZBUS_BUFFER_LEN > 254
 #    error "modify code or shrink (shared) uIP buffer."
@@ -44,6 +47,9 @@ typedef uint8_t zbus_index_t;
 #else   /* TEENSY_SUPPORT */
 typedef uint16_t zbus_index_t;
 #endif	/* not TEENSY_SUPPORT */
+#endif
+
+typedef uint16_t zbus_index_t;
 
 enum ZBusEscapes {
   ZBUS_START = '0',

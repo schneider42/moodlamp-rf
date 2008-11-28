@@ -20,6 +20,7 @@ extern volatile uint8_t packetbase;
 #define RC5_ADR_TAPE	18
 
 //This list works for the standard VCR1 setting of my universal remote (URC22B-14 sold by Conrad in Germany)
+//They work also on the VCR2 setting of the IM-1313 also sold by Conrad
 #define RC5_1		1
 #define RC5_2		2
 #define RC5_3		3
@@ -58,6 +59,9 @@ extern volatile uint8_t packetbase;
 #define RC5_POWER			12
 #define RC5_PRESETS			49
 #define RC5_MUTE			13
+#define RC5_A               44
+#define RC5_B               46
+#define RC5_C               37
 
 uint8_t rc5_checkRC5(uint16_t code);
 void rc5_init(void);

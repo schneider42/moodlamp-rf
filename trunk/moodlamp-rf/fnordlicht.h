@@ -38,6 +38,7 @@ struct flags_t {
     uint8_t timebase:1;
     uint8_t running:1;
     uint8_t rfm12base:1;
+    uint8_t rawmode:1;
 };
 
 #define STATE_RUNNING       0

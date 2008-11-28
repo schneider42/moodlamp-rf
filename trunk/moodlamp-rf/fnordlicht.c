@@ -1,6 +1,6 @@
 /* vim:fdm=marker ts=4 et ai
  * {{{
- *         moodlamp - fnordlicht firmware next generation
+ *         moodlamp-rf - fnordlicht firmware next generation
  *
  *    for additional information please
  *    see http://blinkenlichts.net/
@@ -10,7 +10,10 @@
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
  *
- * Modifications done by Tobias Schneider(schneider@blinkenlichts.net)
+ * Modifications done by:
+ * Kiu
+ * Mazzoo
+ * Tobias Schneider(schneider@blinkenlichts.net)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -47,6 +50,7 @@
 
 #include "rs485_handler.h"
 #include "zbus.h"
+#include "raw.h"
 
 #include "cmd_handler.h"
 #include "control.h"
@@ -126,22 +130,21 @@ int main(void) {
     packet_init(0,0);
     /* enable interrupts globally */
     sei();
-    global.state = STATE_RUNNING;
+//    global.state = STATE_RUNNING;
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
     while (1) {
-        //if(global.flags.rfm12base){
         if(packetbase > 32){
-            //global.flags.rfm12base = 0;
             packetbase = 0;
-            packet_tick();
+            if(global.flags.rawmode == 0)
+                packet_tick();
+            else
+                raw_tick();
         }
 
         if(global.flags.timebase){
             control_tick();
             global.flags.timebase=0;
-    //        strcpy((char*)zbus_buf,"blubb");
-    //        zbus_txstart(1);
         }
         /* after the last pwm timeslot, rebuild the timeslot table */
         /*

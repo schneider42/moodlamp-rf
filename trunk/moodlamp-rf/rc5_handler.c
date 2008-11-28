@@ -56,6 +56,12 @@
 #include "settings.h"
 
 //#define NULL (void*) 0
+#define REMOTE1_ADR         6     
+#define REMOTE2_ADR         7
+
+unsigned char remotemap[10] = {REMOTE1_ADR, REMOTE2_ADR};
+
+unsigned char remotecommands[2][30] = {{2,1,3,3,5},{3,4,6,1}};
 
 #if RC5_DECODER
 
@@ -69,15 +75,23 @@ uint8_t rc5_handler(void)
         return 1;
     uint8_t rc5adr = rc5d >> 6 & 0x1F;
     uint8_t rc5cmd = (rc5d & 0x3F) | (~rc5d >> 7 & 0x40);
-    
+
+    uart1_puts("acDRC");
+    uart1_putc(rc5adr);
+    uart1_putc(rc5cmd);
+    uart1_puts("ab");
+
+
+#ifndef RC5_USEANY
+    if(rc5adr != RC5_ADDRESS){
+        return 1;
+    }
+#endif
+
+    //unsigned char cmd = remotecommands[remotemap[rc5adr]][rc5cmd];
 
     if(global.state == STATE_STANDBY && rc5cmd != RC5_POWER && rc5cmd != RC5_RECORD)
         return 1;
-
-#ifndef RC5_USEANY
-    if(rc5adr != RC5_ADDRESS)
-        return 1;
-#endif
 
     if(rc5cmd == KEY_BRIGHTNESS_DOWN){
         cmd_handler(CMD_BRIGHTNESS_DOWN,NULL,NULL);
@@ -102,11 +116,11 @@ uint8_t rc5_handler(void)
         cmd_handler(CMD_SAVE,NULL,NULL);
     }else if(rc5cmd == KEY_SLEEP){
         cmd_handler(CMD_SLEEP,NULL,NULL);
-    }else if(rc5cmd == KEY_RED){
+    }else if(rc5cmd == KEY_RED || rc5cmd == KEY_RED2){
         cmd_handler(CMD_RED,NULL,NULL);
-    }else if(rc5cmd == KEY_GREEN){
+    }else if(rc5cmd == KEY_GREEN || rc5cmd == KEY_GREEN2){
         cmd_handler(CMD_GREEN,NULL,NULL);
-    }else if(rc5cmd == KEY_BLUE){
+    }else if(rc5cmd == KEY_BLUE || rc5cmd == KEY_BLUE2){
         cmd_handler(CMD_BLUE,NULL,NULL);
     }else if(rc5cmd == KEY_COLOR_UP){
         cmd_handler(CMD_COLOR_UP,NULL,NULL);

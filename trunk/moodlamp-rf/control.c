@@ -11,7 +11,7 @@
 #include "settings.h"
 #include <string.h>
 #include "interfaces.h"
-uint16_t timeoutmax = 200;
+uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint16_t timeout = 0;
@@ -62,8 +62,8 @@ void control_setTimeout(void)
     if(global.state != STATE_PAUSE){
         global.oldstate = global.state;
         global.state = STATE_PAUSE;
+        timeout = timeoutmax;
      }
-
 }
 
 void control_setServer(uint8_t s)
