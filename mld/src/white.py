@@ -44,16 +44,16 @@ s = con.read_until(">100", 10)
 if s.endswith("100"):
     while True:
         r = 255#220
-        g = 0#255
-        b = 0#220
+        g = 255#255
+        b = 255#220
         setc(con,lamp,r,g,b)
-        #time.sleep(0.5)
+        time.sleep(0.5)
         
-        r = 0
-        g = 255
-        b = 0
+        r = 255
+        g = 255#255
+        b = 255
         setc(con,lamp,r,g,b)
-        #time.sleep(0.5)
+        time.sleep(0.5)
         
         """r = 0
         g = 0

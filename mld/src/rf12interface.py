@@ -27,7 +27,7 @@ class ProcessPacket ( threading.Thread ):
     def run(self):
         while True:
             packet = self.queue.get()
-            print "processing packet"
+#            print "processing packet"
             self.callback.new_packet(packet.adr,packet.data, packet.broadcast)
     
 class ReadSerial ( threading.Thread ):
@@ -90,8 +90,9 @@ class ReadSerial ( threading.Thread ):
                     print "Ignoring:", str(self.ar)
                 elif len(self.ar) > 3 and (self.ar[0] == 'P' or self.ar[0] == 'B'):    
                     #print                  #received packet
-                    print "%s Sender=%d Rec=%d Data:" % (time.time(),ord(self.ar[3]),ord(self.ar[2]))
-                    print self.ar[4:]
+#                    print "%s Sender=%d Rec=%d Data:" % (time.time(),ord(self.ar[3]),ord(self.ar[2]))
+#                    print self.ar[4:]
+                    pass
                 elif len(self.ar) > 1 and self.ar[0] == 'D':                        #debug info
                     #if ar[1] != 'f':
                         #print time.time()
@@ -125,7 +126,7 @@ class ReadSerial ( threading.Thread ):
                     adr = ord(self.ar[3])
                     p = Packet(''.join(self.ar[4:]), adr, broadcast)
                     #self.callback.new_packet(adr, ''.join(self.ar[4:]), broadcast)
-                    print "queueing packet"
+ #                   print "queueing packet"
                     self.queue.put(p)                #don't block incomming packet dones
                     
                 elif self.ar[0] == 'E' or self.ar[0] == 'D':
@@ -302,8 +303,8 @@ class RF12Interface:
         else:
             self.mode = 0
             #self.done = True
-        print "setting raw"
-        self.rf12.write("acR%cab" % self.mode)            #raw mode = 1
+        print "setting raw to",mode
+        self.rf12.write("acW%cab" % self.mode)            #raw mode = 1
         self.free.release()
     
     def rawdata(self, data):
