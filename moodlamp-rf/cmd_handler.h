@@ -59,6 +59,7 @@
 #define CMD_SERVER_SET          'x'
 #define CMD_SETUP_OK            'O'
 #define CMD_SET_NAME            'N'
+#define CMD_RAW                 'W'
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
 uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);

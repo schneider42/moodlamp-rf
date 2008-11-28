@@ -47,8 +47,11 @@
 #define KEY_COLOR_UP        RC5_COLOR_UP
 #define KEY_COLOR_DOWN      RC5_COLOR_DOWN
 #define KEY_RED             RC5_RED
+#define KEY_RED2            RC5_A
 #define KEY_GREEN           RC5_GREEN
+#define KEY_GREEN2          RC5_B
 #define KEY_BLUE            RC5_BLUE
+#define KEY_BLUE2           RC5_C
 #define KEY_COLOR_FULL      RC5_CONTRAST_UP
 #define KEY_COLOR_ZERO      RC5_CONTRAST_DOWN
 #define KEY_SCRIPT1			RC5_1

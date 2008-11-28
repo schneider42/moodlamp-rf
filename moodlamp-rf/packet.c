@@ -116,6 +116,9 @@ void packet_tick(void)
 
 void packet_packetOut(struct packet_t * p)
 {
+    if(global.flags.rawmode)
+        return;
+
     if( p->flags & PACKET_BROADCAST){
     uint8_t iface;
         if(p->iface != IFACE_LOCAL)
