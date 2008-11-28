@@ -33,7 +33,7 @@ while True:
     if start:
         start = False
     elif stop:
-        print time.time(), data
+        print time.time(), len(data) ,data
         data = []
         stop = False
     elif escaped == False:

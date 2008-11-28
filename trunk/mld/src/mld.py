@@ -29,7 +29,7 @@ class IHexFile:
         self.data = []
         self.done = False
         self.adr = -1
-        self.pagesize = 128
+        self.pagesize = 256
         pass
     
     def parseLine(self, line):
@@ -135,8 +135,8 @@ class Moodlamp:
             #self.interface.writeflashpage(firmware)
             
     def tick(self, type, data, broadcast):
-        print "ml tick"
-        print list(data)
+#        print "ml tick"
+#        print list(data)
         if self.state == 2:
             if type == 1:
                 if len(data) > 2 :
@@ -166,7 +166,7 @@ class Moodlamp:
         self.interface.set_raw(mode)
         
     def setprog(self, prog):
-        self.interface.packet( self.address, chr(prog), 0,True)
+        self.interface.packet( self.address, "\x21"+chr(prog), 0,True)
     
     def setname(self, name):
         self.interface.packet( self.address, "N"+name+"\x00", 0,True)
