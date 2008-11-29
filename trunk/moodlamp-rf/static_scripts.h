@@ -45,7 +45,7 @@
 
 /* opcodes */
 /* {{{ */
-#define OP_NOP              0x00
+#define OP_RND_CHANNEL      0x00
 #define OP_FADE_CHANNEL     0x10
 #define OP_FADE_CHANNELS    0x20
 #define OP_JUMP             0x30
@@ -58,8 +58,8 @@
 
 /* opcode macros */
 /* {{{ */
-#define MACRO_NOP() \
-    OP_NOP, 0, 0, 0
+#define MACRO_RND_CHANNEL(channel, speed_l_min, speed_h_max) \
+    OP_RND_CHANNEL, channel, speed_l_min, speed_h_max
 
 #define MACRO_FADE_CHANNEL(channel, target_brightness, speed) \
     (OP_FADE_CHANNEL | channel), target_brightness, LOW(speed), HIGH(speed)

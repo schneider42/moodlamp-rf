@@ -94,6 +94,8 @@ void jump_to_bootloader(void)
     while(1);
 }
 
+unsigned int random_seed __attribute__ ((section (".noinit")));
+
 /** main function
  */
 int main(void) {
@@ -128,6 +130,10 @@ int main(void) {
 #endif
     rf_init();
     packet_init(0,0);
+
+    srandom(random_seed);
+    random_seed = random();
+
     /* enable interrupts globally */
     sei();
 //    global.state = STATE_RUNNING;

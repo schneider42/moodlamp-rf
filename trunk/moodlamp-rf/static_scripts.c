@@ -35,6 +35,7 @@
 #include "static_scripts.h"
 #include "pwm.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include <avr/pgmspace.h>
 
 
@@ -44,7 +45,7 @@ void wait_handler(struct thread_t *current_thread);
 
 /* opcode handlers */
 /* {{{ */
-uint8_t opcode_handler_nop(uint8_t parameters[], struct thread_t *current_thread);
+uint8_t opcode_handler_rnd_channel(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_fade_channels(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_jump(uint8_t parameters[], struct thread_t *current_thread);
@@ -59,7 +60,7 @@ uint8_t opcode_handler_stop(uint8_t parameters[], struct thread_t *current_threa
 /* opcode lookup table */
 /* {{{ */
 uint8_t (*opcode_lookup_table[])(uint8_t parameters[], struct thread_t *current_thread) = {
-    &opcode_handler_nop,            /* opcode 0x00 */
+    &opcode_handler_rnd_channel,    /* opcode 0x00 */
     &opcode_handler_fade_channel,   /* opcode 0x10 */
     &opcode_handler_fade_channels,  /* opcode 0x20 */
     &opcode_handler_jump,           /* opcode 0x30 */
@@ -305,6 +306,33 @@ void respeed(struct thread_t *current_thread)
         }
     }
 }
+
+uint8_t opcode_handler_rnd_channel(uint8_t parameters[], struct thread_t *current_thread)
+/* {{{ */ {
+    (void) current_thread;
+
+    uint8_t r;
+
+    r = (uint8_t)0xff & (random() + (uint16_t)parameters[2]);
+    if (!r) r=1;
+    global_pwm.channels[parameters[1]].speed_l = r;
+
+    r =  random() & 0xff;
+    while (r>parameters[3])
+        r >>= 1;
+    global_pwm.channels[parameters[1]].speed_h = r;
+
+    r = random() & 0xff;
+    /* FIXME this is a workaround for a bug in opcode_handler_wait()
+     *       when target_brightness equals the old value */
+    while (r == global_pwm.channels[parameters[1]].target_brightness)
+        r = random() & 0xff;
+
+    global_pwm.channels[parameters[1]].target_brightness  = r;
+
+    return OP_RETURN_OK;
+}
+/* }}} */
 
 uint8_t opcode_handler_fade_channels(uint8_t parameters[], struct thread_t *current_thread)
 /* {{{ */ {
