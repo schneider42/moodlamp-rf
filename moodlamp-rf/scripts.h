@@ -61,6 +61,18 @@ static const uint8_t testscript_eeprom[] EEMEM = {
     MACRO_JUMP(-4)
     };
 
+static const uint8_t colorchange_rnd[] PROGMEM = {
+
+    MACRO_RND_CHANNEL(CHANNEL_RED  , 0x42, 0x02),
+    MACRO_WAIT(_BV(CHANNEL_RED)|_BV(CHANNEL_GREEN)|_BV(CHANNEL_BLUE)),
+    MACRO_RND_CHANNEL(CHANNEL_GREEN, 0x42, 0x02),
+    MACRO_WAIT(_BV(CHANNEL_RED)|_BV(CHANNEL_GREEN)|_BV(CHANNEL_BLUE)),
+    MACRO_RND_CHANNEL(CHANNEL_BLUE , 0x42, 0x02),
+    MACRO_WAIT(_BV(CHANNEL_RED)|_BV(CHANNEL_GREEN)|_BV(CHANNEL_BLUE)),
+
+    MACRO_JUMP(-6),
+    };
+
 
 static const uint8_t colorchange_red[] PROGMEM = {
     MACRO_FADE_CHANNEL(CHANNEL_RED, 255, 0x200),
@@ -166,6 +178,7 @@ static const uint8_t blinken[] PROGMEM = {
 static const struct playlist_t global_playlist[] = {
     {&memory_handler_flash, (uint16_t) &green_flash},
     {&memory_handler_flash, (uint16_t) &blinken},
+    {&memory_handler_flash, (uint16_t) &colorchange_rnd},
     {&memory_handler_flash, (uint16_t) &colorchange_red},
     {&memory_handler_flash, (uint16_t) &colorchange_red_blue},
     {&memory_handler_flash, (uint16_t) &green_blink},
