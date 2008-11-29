@@ -1,0 +1,131 @@
+#! /usr/bin/python
+import socket
+import sys
+import binascii
+import optparse
+
+pagesize = 64 # suitable for atmega8
+
+
+parser = optparse.OptionParser()
+parser.add_option("-H", "--host", dest = "host",
+                  default = '127.0.0.1',
+                  help = "zbus bridge hostname")
+parser.add_option("-f", "--file", dest = "file",
+                  default = 'ethersex.bin',
+                  help = "binary data to flash")
+
+(options, args) = parser.parse_args()
+
+for res in socket.getaddrinfo (options.host, 0x4243, socket.AF_UNSPEC,
+                               socket.SOCK_DGRAM):
+    af, socktype, proto, canonname, sa = res
+    try:
+        s = socket.socket(af, socktype, proto)
+    except socket.error, msg:
+        s = None
+        continue
+    try:
+        s.connect(sa)
+    except socket.error, msg:
+        s.close()
+        s = None
+        continue
+    break
+
+if s is None:
+    print 'could not open socket'
+    sys.exit(1)
+
+try:
+    handle = open (options.file)
+except IOError:
+    print "%s: unable to open file." % (options.file)
+    sys.exit(1)
+
+s.settimeout (1)
+
+##############################################################################
+
+def crc_update (crc, data):
+    for i in range (8):
+        if (crc ^ data) & 1:
+            crc = (crc >> 1) ^ 0x8c
+        else:
+            crc = crc >> 1
+
+        data = data >> 1
+    
+    return crc
+
+def crc_calc(data):
+    crc = 0
+
+    for i in range (pagesize):
+        crc = crc_update (crc, ord (data[i]))
+
+    return crc
+
+
+##############################################################################
+
+chunkno = 0
+
+chunk = handle.read (pagesize)
+chunklen = len (chunk)
+
+while 1:
+    while len (chunk) < pagesize:
+        chunk = chunk + "\377"
+
+    print "%02x (%02x): " % (chunkno, chunklen)
+
+    ## calculate 8-bit crc ...
+    sendchunk = chunk + chr (crc_calc (chunk))
+    sendchunk = chr (0x23) + chr (chunkno) + sendchunk
+
+    ## send packet
+    s.send (sendchunk)
+
+    ## recv reply
+    try:
+        reply = s.recv (2)
+    except:
+        reply = ""
+
+    if len (reply) != 2:
+        continue
+
+    if ord (reply[0]) != 0x23:
+        continue
+
+    if reply[1] != sendchunk[-1]:
+        continue
+
+    if chunklen < pagesize:
+        break
+
+    ## prepare to send next byte ...
+    chunkno += 1
+    chunk = handle.read (pagesize)
+    chunklen = len (chunk)
+
+while 1:
+    sendchunk = chr (0x42)
+    s.send (sendchunk)
+
+    try:
+        reply = s.recv (2)
+    except:
+        reply = ""
+
+    if len (reply) != 2:
+        continue
+
+    if ord (reply[0]) != 0x42:
+        continue
+
+    if ord (reply[1]) != 0x00:
+        continue
+
+    break
