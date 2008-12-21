@@ -77,7 +77,7 @@ volatile uint8_t zbus_done = 0;
 
 uint8_t zbus_ready(void)
 {
-    if(zbus_txlen != 0 || zbus_rxlen != 0 || bus_blocked)
+    if(zbus_txlen != 0 || zbus_rxlen != 0)// || bus_blocked)
         return 0;
     return 1;
 }
@@ -170,6 +170,10 @@ zbus_rxstart (void)
   SREG = sreg;
 }
 
+void zbus_rxdone(void)
+{
+}
+
 
 static void
 zbus_rxstop (void)
@@ -243,8 +247,8 @@ zbus_core_periodic(void)
   if(t-- == 0){
     if(bus_blocked)
       if(--bus_blocked == 0 && zbus_txlen > 0)
-        __zbus_txstart();
-    t = 30;
+;//        __zbus_txstart();
+    t = 6;
   }
 }
 
@@ -361,8 +365,8 @@ SIGNAL(usart(USART,_RX_vect))
       return;
 
     /* If bus is not blocked we aren't on an message */
-    if (!bus_blocked)
-      return;
+    //if (!bus_blocked)
+    //  return;
       
     zbus_buf[zbus_index] = data;
     zbus_index++;

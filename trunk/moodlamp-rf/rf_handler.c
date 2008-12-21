@@ -25,6 +25,9 @@ void rf_init(void)
     sei();
     printf("acDinit rfab");
 #endif*/
+    if(!(PINC & (1<<PC3)))
+        return;
+
     rf12_init();
     rf12_setfreq(RF12FREQ(434.32));
     rf12_setbandwidth(4, 1, 4);     // 200kHz Bandbreite, -6dB Verstärkung, DRSSI threshold: -79dBm

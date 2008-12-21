@@ -3,6 +3,7 @@
 
 //extern uint16_t timeoutmax;
 extern unsigned int initadr;
+extern uint16_t control_beacontime;
 
 void control_init(void);
 void control_setServer(uint8_t s);
@@ -12,4 +13,5 @@ void control_setTimeout(void);
 void control_tick(void);
 void control_gotAddress(void);
 void control_setupOK(void);
+void control_selfassign(void);
 #endif
