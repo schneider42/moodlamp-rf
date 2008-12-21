@@ -4,6 +4,7 @@
 //extern uint16_t timeoutmax;
 extern unsigned int initadr;
 extern uint16_t control_beacontime;
+extern uint8_t control_faderunning;
 
 void control_init(void);
 void control_setServer(uint8_t s);

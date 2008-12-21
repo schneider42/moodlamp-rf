@@ -17,6 +17,8 @@ uint32_t sleeptick=0;
 uint16_t timeout = 0;
 uint8_t  serveradr = 0;
 uint16_t control_beacontime = 500;
+uint8_t control_faderunning = 0;
+
 
 #define CONTROL_SEARCHMASTER         1
 #define CONTROL_IDENTIFY             2
@@ -26,6 +28,7 @@ uint8_t control_state = CONTROL_SEARCHMASTER;
 void control_init(void)
 {
     control_state = CONTROL_SEARCHMASTER;
+    control_faderunning = global.flags.running;
 }
 
 void control_setColor(uint8_t r, uint8_t g, uint8_t b)
@@ -60,7 +63,7 @@ void control_setTimeout(void)
 {
     if(timeout)
         timeout = timeoutmax;
-    if(global.state != STATE_PAUSE){
+    if(global.state != STATE_PAUSE && global.state != STATE_REMOTE){
         global.oldstate = global.state;
         global.state = STATE_PAUSE;
         timeout = timeoutmax;
@@ -81,10 +84,16 @@ void control_setupOK(void)
 void control_tick(void)
 {
     switch(global.state){
+        case STATE_REMOTE:
+            control_faderunning = 1;
+            global.flags.running = 0;
+        break;
         case STATE_RUNNING:
+            control_faderunning = 1;
             global.flags.running = 1;
         break;
         case STATE_PAUSE:
+            control_faderunning = 0;
             global.flags.running = 0;
         break;
         case STATE_ENTERSTANDBY:
