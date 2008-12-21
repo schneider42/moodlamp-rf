@@ -14,16 +14,23 @@ data = []
 escaped = False
 stop = False
 start = False
-
+inframe = False
 while True:
     c = ser.read(1)
+#    print "c=",ord( c)
+#    continue
     if escaped:
         if c == '0':
             start = True
+            inframe = True
+            print "start"
         elif c == '1':
             stop = True
+            inframe = False
         elif c == '\\':
             d = '\\'
+        else:
+            print "out of order escape"
         escaped = False
     elif c == '\\':
         escaped = 1
@@ -36,8 +43,8 @@ while True:
         print time.time(), len(data) ,data
         data = []
         stop = False
-    elif escaped == False:
+    elif escaped == False and inframe:
         data.append(d)
-        
-    
+    elif escaped == False:
+        print "c=",ord( c)
 

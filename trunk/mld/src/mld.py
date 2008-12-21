@@ -222,7 +222,7 @@ class MLClient(asynchat.async_chat):
         self.data = self.data + data
 
     def found_terminator(self):
-        print "Client at",self.addr,":",tuple(self.data)
+        #print "Client at",self.addr,":",tuple(self.data)
         if self.data.strip() == "":
             if self.state == 0:
                 self.push(">")
