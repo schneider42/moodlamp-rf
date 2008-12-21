@@ -7,10 +7,12 @@ AVRDUDE=avrdude
 CPPFLAGS += -mmcu=atmega644p -DF_CPU=18432000UL 
 CFLAGS += -std=gnu99 -Os -g -Wall -W
 LDFLAGS += $(CPPFLAGS) $(CFLAGS) -nostdlib -Wl,--section-start=.text=0xE000
+#LDFLAGS += $(CPPFLAGS) $(CFLAGS)  -Wl,--section-start=.text=0xE000
 
 all: zbusloader.hex
 
 zbusloader: zbusloader.o avr_init.o
+#zbusloader: zbusloader.o
 	$(CC) -o $@ $(LDFLAGS) $^
 	$(SIZE) $@
 

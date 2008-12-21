@@ -21,10 +21,9 @@
 #include <avr/boot.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
 #include <util/delay.h>
-
 #include "pinconfig.h"
+#include <avr/wdt.h>
 
 #define noinline __attribute__((noinline))
 #define naked    __attribute__((naked))
@@ -39,29 +38,25 @@ unsigned char zbusloader_tx_buf[2];
 #define ZBUS_UBRR 9
 
 
-static void
-timer_init (void)
+static void timer_init (void)
 {
   /* select clk/256 prescaler,
      at 8 MHz this means 31250 ticks per seconds, i.e. total timeout
      of 2.09 seconds. */
-  TCCR1B = _BV (CS12);
-
-  /* enable overflow interrupt of Timer 1 */
-  TIMSK1 = _BV (TOIE1);
-
-  sei ();
+    TCCR1B = _BV (CS12);
+    /* enable overflow interrupt of Timer 1 */
+    TIMSK1 = _BV (TOIE1);
+    sei ();
 }
 
-void
-zbus_init(void)
+void zbus_init(void)
 {
     /* set baud rate */
     UBRR0H = ZBUS_UBRR >> 8;
     UBRR0L = ZBUS_UBRR;
 
     ZBUS_TX_DDR |= _BV(ZBUS_TX_PIN);
-    ZBUS_TX_PORT &= ~_BV(ZBUS_nRX_PIN);
+    ZBUS_TX_PORT &= ~_BV(ZBUS_TX_PIN);
     
     ZBUS_nRX_DDR |= _BV(ZBUS_nRX_PIN);
     ZBUS_nRX_PORT &= ~_BV(ZBUS_nRX_PIN);
@@ -75,199 +70,214 @@ zbus_init(void)
 }
 
 
-static void
-flash_page (void)
+static void flash_page (void)
 {
-#if SPM_PAGESIZE < 256
-  uint8_t i;
-#else
-  uint16_t i;
-#endif
+//#if SPM_PAGESIZE < 256
+//  uint8_t i;
+//#else
+    uint16_t j;
+//#endif
 
-  uint16_t page = zbusloader_buf[1] * SPM_PAGESIZE;
+    uint16_t page = zbusloader_buf[1] * SPM_PAGESIZE;
 
-  eeprom_busy_wait();
+    eeprom_busy_wait();
 
-  boot_page_erase(page);
-  boot_spm_busy_wait();
+    boot_page_erase(page);
+    boot_spm_busy_wait();
 
-  for(i = 0; i < SPM_PAGESIZE; i += 2) {
-    /* Set up little-endian word. */
-    uint16_t w = zbusloader_buf[2 + i];
-    w += zbusloader_buf[3 + i] << 8;
-        
-    boot_page_fill (page + i, w);
-  }
+    for(j = 0; j < SPM_PAGESIZE; j += 2) {
+        /* Set up little-endian word. */
+        uint16_t w = zbusloader_buf[2 + j];
+        w += zbusloader_buf[3 + j] << 8;    
+        boot_page_fill (page + j, w);
+    }
 
-  boot_page_write (page);
-  boot_spm_busy_wait();
+    boot_page_write (page);
+    boot_spm_busy_wait();
 
-  /* Reenable RWW-section again. */
-  boot_rww_enable ();
+    /* Reenable RWW-section again. */
+    boot_rww_enable ();
 }
 
+volatile uint16_t i = 0x17;
 
-void
-zbusloader_rx ()
+void zbusloader_rx ()
 {
-  uint8_t last = 0;
-  uint8_t current;
-  uint16_t i = 0;
-  uint8_t started = 0;
-  while (1) {
-    /* While an byte is recieved */
-    while ( !(UCSR0A & _BV(RXC0)) );
-      if ((UCSR0A & _BV(DOR0)) || (UCSR0A & _BV(FE0))) {
-	current = UDR0;
-	continue;
-      }
-      current = UDR0;
-      if (last == '\\') {
-	if (current == '0') {
-	  started = 1;
+    uint8_t last = 0;
+    uint8_t current;
+    uint8_t started = 0;
+    for(i=0;i<BUFSZ;i++)
+        zbusloader_buf[i] = 0xAA;
+    i = 0;
 
+    while (1) {
+        /* While an byte is recieved */
+        while ( !(UCSR0A & _BV(RXC0)) );
+        if ((UCSR0A & _BV(DOR0)) || (UCSR0A & _BV(FE0))) {
+	        current = UDR0;
+	        continue;
+        }
+        current = UDR0;
+
+        if (last == '\\') {
+	        if (current == '0') {
+	            started = 1;
 #ifdef STATUS_LED_RX
-	  STATUS_LED_PORT |= _BV (STATUS_LED_RX);
+STATUS_LED_PORT |= _BV (STATUS_LED_RX);
 #endif
-	}
-	else if (current == '1') 
-	  break;
-	else 
-	  goto append_data;
-      } else {
-	if (current == '\\') goto save_current;
+	        } else if (current == '1'){ 
+	            break;
+            } else { 
+	            goto append_data;
+            }
+        } else {
+	        if (current == '\\') goto save_current;
 append_data:
-	if(started == 0) goto save_current;
-	zbusloader_buf[i++] = current;
-      }
+	        if(started == 0) goto save_current;
+	        
+            zbusloader_buf[i++] = current;
+        }
 save_current:
-      last = current;
-  }
+        if (last == '\\')
+            last = 0;
+        else
+            last = current;
+    }
 #ifdef STATUS_LED_RX
-	  STATUS_LED_PORT &= ~_BV (STATUS_LED_RX);
+STATUS_LED_PORT &= ~_BV (STATUS_LED_RX);
 #endif
-  if (i <= BUFSZ)
+  if (i <= BUFSZ){
     return;
+  }
   zbusloader_buf[0] = 0;
 }
 
-void
-zbus_send_byte(uint8_t data) {
-  UDR0 = data;
-  while ( !( UCSR0A & _BV(TXC0)) );
-  UCSR0A |= _BV(TXC0);
+void zbus_send_byte(uint8_t data)
+{
+    UDR0 = data;
+    while ( !( UCSR0A & _BV(TXC0)) );
+    UCSR0A |= _BV(TXC0);
 }
 
-void
-zbusloader_tx_reply(void) 
+void zbusloader_tx_reply(void) 
 {
 #ifdef STATUS_LED_TX
-  STATUS_LED_PORT |= _BV (STATUS_LED_TX);
+STATUS_LED_PORT |= _BV (STATUS_LED_TX);
 #endif
-  ZBUS_TX_PORT |= _BV(ZBUS_TX_PIN);
-  ZBUS_nRX_PORT |= _BV(ZBUS_nRX_PIN);
+    ZBUS_TX_PORT |= _BV(ZBUS_TX_PIN);
+    ZBUS_nRX_PORT |= _BV(ZBUS_nRX_PIN);
 
-  /* Start Conditon */
-  zbus_send_byte('\\');
-  zbus_send_byte('0');
-  /* byte one */
-  zbus_send_byte(zbusloader_tx_buf[0]);
-  /* byte two: can be \ */
-  if (zbusloader_tx_buf[1] == '\\') {
+    /* Start Conditon */
     zbus_send_byte('\\');
-  }
-  zbus_send_byte(zbusloader_tx_buf[1]);
-  /* Stop Condition */
-  zbus_send_byte('\\');
-  zbus_send_byte('1');
+    zbus_send_byte('0');
+    /* byte one */
+    zbus_send_byte(zbusloader_tx_buf[0]);
+    /* byte two: can be \ */
+    if (zbusloader_tx_buf[1] == '\\') {
+        zbus_send_byte('\\');
+    }
+    zbus_send_byte(zbusloader_tx_buf[1]);
+    /* Stop Condition */
+    zbus_send_byte('\\');
+    zbus_send_byte('1');
 
-  ZBUS_TX_PORT &= ~_BV(ZBUS_TX_PIN);
-  ZBUS_nRX_PORT &= ~_BV(ZBUS_nRX_PIN);
+    ZBUS_TX_PORT &= ~_BV(ZBUS_TX_PIN);
+    ZBUS_nRX_PORT &= ~_BV(ZBUS_nRX_PIN);
 
 #ifdef STATUS_LED_TX
-  STATUS_LED_PORT &= ~_BV (STATUS_LED_TX);
+STATUS_LED_PORT &= ~_BV (STATUS_LED_TX);
 #endif
 }
 
 
-static void
-crc_update (unsigned char *crc, uint8_t data)
+static void crc_update (unsigned char *crc, uint8_t data)
 {
-  for (uint8_t j = 0; j < 8; j ++)
-    {
-      if ((*crc ^ data) & 1)
-	*crc = (*crc >> 1) ^ 0x8c;
-      else
-        *crc = (*crc >> 1);
-
-      data = data >> 1;
+    for (uint8_t j = 0; j < 8; j ++){
+        if ((*crc ^ data) & 1)
+	        *crc = (*crc >> 1) ^ 0x8c;
+        else
+            *crc = (*crc >> 1);
+        data = data >> 1;
     }
 }
 
 
-static uint8_t
-crc_check (void)
+static uint8_t crc_check (void)
 {
-  unsigned char crc_chk = 0;
-  unsigned char *ptr = zbusloader_buf + 2;
+    unsigned char crc_chk = 0;
+    unsigned char *ptr = zbusloader_buf + 2;
 
-  for (uint16_t i = 0; i < SPM_PAGESIZE; i ++)
-    crc_update (&crc_chk, *(ptr ++));
+    for (uint16_t j = 0; j < SPM_PAGESIZE; j ++)
+        crc_update (&crc_chk, *(ptr ++));
 
-  /* subtract one from the other, this is far cheaper than comparation */
-  crc_chk -= *ptr;
-  return crc_chk;
+    /* subtract one from the other, this is far cheaper than comparation */
+    crc_chk -= *ptr;
+    return crc_chk;
 }
 
 naked void
 zbusloader_main (void)
+//int main(void)
 {
-  timer_init ();
-  zbus_init();
-  UCSR0A |= _BV(TXC0);
+//    wdt_disable();
+    timer_init ();
+    zbus_init();
+//    cli();
+    UCSR0A |= _BV(TXC0);
 #ifdef STATUS_LED_RX
-  STATUS_LED_DDR |= _BV (STATUS_LED_RX);
+    STATUS_LED_DDR |= _BV (STATUS_LED_RX);
 #endif
 
 #ifdef STATUS_LED_TX
-  STATUS_LED_DDR |= _BV (STATUS_LED_TX);
+    STATUS_LED_DDR |= _BV (STATUS_LED_TX);
 #endif
+//    ZBUS_nRX_DDR |= _BV(ZBUS_TX_PIN);
+//    ZBUS_nRX_PORT ^= _BV(ZBUS_TX_PIN);
 
-  for (;;) 
-    {
-      /* try to receive a packet */
-      zbusloader_rx ();
+//    STATUS_LED_PORT ^= _BV (STATUS_LED_TX);    
+//    zbusloader_tx_reply ();
+//    while(1);
+    while(1){
+        /* try to receive a packet */
+        zbusloader_rx ();
 
-      /* check packet validity */
-      if (zbusloader_buf[0] == MAGIC_LAUNCH_APP) {
-	_delay_us(50);
-        zbusloader_tx_buf[0] = 0x42;
-        zbusloader_tx_buf[1] = 0;
+        /* check packet validity */
+       if (zbusloader_buf[0] == MAGIC_LAUNCH_APP) {
+            _delay_us(50);
+            zbusloader_tx_buf[0] = 0x42;
+            zbusloader_tx_buf[1] = 0;
+            zbusloader_tx_reply ();
+            break;
+        }
+        /*zbusloader_tx_buf[0] = zbusloader_buf[0];
+        zbusloader_tx_buf[1] = zbusloader_buf[BUFSZ-1];
         zbusloader_tx_reply ();
-	break;
-      }
 
-      if (zbusloader_buf[0] != MAGIC_FLASH_PAGE)
-	continue;		/* unknown magic, ignore. */
+        zbusloader_tx_buf[0] = (i>>8)&0xFF;
+        zbusloader_tx_buf[1] = i&0xff;
+        zbusloader_tx_reply ();*/
 
-      if (crc_check ())
-	continue;		/* crc invalid */
+        if (zbusloader_buf[0] != MAGIC_FLASH_PAGE)
+	        continue;		/* unknown magic, ignore. */
 
-      /* clear global interrupt flag, so timer interrupt cannot
-         call the application any longer. */
-      cli ();
+        if (crc_check ())
+	        continue;		/* crc invalid */
 
-      /* flash page */
-      flash_page ();
+        /* clear global interrupt flag, so timer interrupt cannot
+            call the application any longer. */
+        cli ();
 
-      /* transmit reply */
-      zbusloader_tx_buf[0] = 0x23;
-      zbusloader_tx_buf[1] = zbusloader_buf[BUFSZ - 1];
-      zbusloader_tx_reply ();
+        /* flash page */
+        flash_page ();
+
+        /* transmit reply */
+        zbusloader_tx_buf[0] = 0x23;
+        zbusloader_tx_buf[1] = zbusloader_buf[BUFSZ - 1];
+        zbusloader_tx_reply ();
     }
   
-  /* leave here, thusly jump into application now */
-  __asm volatile ("ret");
-  STATUS_LED_PORT |= _BV (STATUS_LED_TX);
+    /* leave here, thusly jump into application now */
+    __asm volatile ("ret");
+    STATUS_LED_PORT |= _BV (STATUS_LED_TX);
 }
 
