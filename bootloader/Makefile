@@ -119,3 +119,9 @@ lock:
 
 launcher:
 	$(MAKE) -C launcher
+
+fuse:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U lfuse:w:0xe7:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U hfuse:w:0xd0:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U efuse:w:0xfd:m
+
