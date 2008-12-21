@@ -130,6 +130,9 @@ int main(void) {
     init_script_threads();
 #endif
     settings_read();
+
+    control_init();
+
 #if RS485_CTRL
     rs485_init();
     zbus_core_init();
@@ -170,7 +173,9 @@ int main(void) {
          * execute all script threads */
         if (global.flags.new_cycle) {
             global.flags.new_cycle = 0;
-            update_brightness();
+            if(control_faderunning)
+                update_brightness();
+
             if(global.flags.running){
 #if STATIC_SCRIPTS
                 execute_script_threads();

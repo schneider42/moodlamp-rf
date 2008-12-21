@@ -40,7 +40,6 @@ struct flags_t {
     uint8_t rfm12base:1;
     uint8_t rawmode:1;
 };
-
 #define STATE_RUNNING       0
 #define STATE_STANDBY       1
 #define STATE_PAUSE         2
@@ -48,6 +47,7 @@ struct flags_t {
 #define STATE_LEAVESTANDBY  4
 #define STATE_ENTERSLEEP    5
 #define STATE_SLEEP         6
+#define STATE_REMOTE        7
 
 #define SLEEP_TIME          (180 * 125)        //125 equals 1 second
 //#define STATE_
