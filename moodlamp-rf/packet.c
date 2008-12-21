@@ -100,10 +100,10 @@ void packet_tick(void)
     interfaces_tick();
     cache_tick();
     if((src = interfaces_gotPacket(&p)) != IFACE_NONE){
-        //uart1_puts("acDGab");
         uint8_t iface = cache_getDestIface(&p);
+        uart1_puts("acDG"); uart1_putc(iface);uart1_puts("ab");
         if(interfaces_isReady(iface)){
-            //uart1_puts("acDgab");
+            uart1_puts("acDgab");
             interfaces_getPacket(src,&p);
             packet_packetIn(&p,src);
         }

@@ -6,7 +6,7 @@
 #include "interfaces.h"
 #include "cache.h"
 #include "control.h"
-#include "zbus.h"
+#include "zbusneu.h"
 
 uint8_t lasttxsrc = 0;
 uint8_t rs485_doreply = 0;
@@ -39,6 +39,7 @@ uint8_t rs485_packetIn(struct packet_t * p)
     if(zbus_rxfinish() == 0)
         return 1;
     memcpy(p,(char*)zbus_buf,zbus_rxfinish());
+    zbus_rxdone();
     zbus_rxstart();
     return 0;
 }

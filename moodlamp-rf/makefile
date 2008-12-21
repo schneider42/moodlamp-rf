@@ -99,7 +99,7 @@ SRC = $(TARGET).c \
 	interfaces.c \
 	packet.c \
 	cache.c \
-	zbus.c \
+	zbusneu.c \
 	raw.c
 #fifo.c uart.c
 

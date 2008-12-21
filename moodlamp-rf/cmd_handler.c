@@ -60,6 +60,7 @@ void cmd_dark(void)
                 global_pwm.channels[2].target_brightness = 0;
 }
 
+
 void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t position)
 {
     script_threads[0].handler.execute = execute;
@@ -178,6 +179,16 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         }else{
             global.flags.rawmode = 0;
         }
+    }else if(cmd == CMD_DISABLE_BEACON){
+        control_beacontime = 0;
+    }else if(cmd ==  CMD_SELF_ASSIGN){
+        control_selfassign();
+    }else if(cmd == CMD_STANDALONE){
+        control_beacontime = 0;
+        control_selfassign();
+    }else if(cmd == CMD_FADE){
+        uint16_t speed = (param[3]<<8)+param[4];
+        control_fade(param[0],param[1],param[2],speed);
     }
 
 

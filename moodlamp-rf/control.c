@@ -15,7 +15,8 @@ uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint16_t timeout = 0;
-uint8_t serveradr = 0;
+uint8_t  serveradr = 0;
+uint16_t control_beacontime = 500;
 
 #define CONTROL_SEARCHMASTER         1
 #define CONTROL_IDENTIFY             2
@@ -31,11 +32,11 @@ void control_setColor(uint8_t r, uint8_t g, uint8_t b)
 {
 cli();
     global_pwm.channels[0].brightness = r;
-//    global_pwm.channels[0].target_brightness = r;
+    global_pwm.channels[0].target_brightness = r;
     global_pwm.channels[1].brightness = g;
-//    global_pwm.channels[1].target_brightness = g;
+    global_pwm.channels[1].target_brightness = g;
     global_pwm.channels[2].brightness = b;
-//    global_pwm.channels[2].target_brightness = b;
+    global_pwm.channels[2].target_brightness = b;
 sei();
 control_setTimeout();
 
@@ -48,7 +49,7 @@ void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
     global_pwm.channels[1].target_brightness = g;
     global_pwm.channels[2].target_brightness = b;
     for(pos = 0; pos < 3; pos++){
-        global_pwm.channels[pos].speed_h = speed << 8;
+        global_pwm.channels[pos].speed_h = speed >> 8;
         global_pwm.channels[pos].speed_l = speed & 0xFF;
     }
     control_setTimeout();
@@ -118,8 +119,8 @@ void control_tick(void)
     }
     
     static unsigned int control_beacon = 500;
-    if(control_beacon-- == 0){
-        control_beacon = 500;
+    if(control_beacon-- == 0 && control_beacontime != 0){
+        control_beacon = control_beacontime;
         if(control_state == CONTROL_SEARCHMASTER){
             p.flags = PACKET_BROADCAST;//don't know server yet
         }else{
@@ -153,3 +154,12 @@ void control_tick(void)
 
 }
 
+void control_selfassign(void)
+{
+    uint8_t adr = idbuf[0];
+    if(control_state == CONTROL_SETUPOK)
+        return;
+    packet_setAddress(adr,adr);
+    control_setServer(1);
+    control_setupOK();
+}

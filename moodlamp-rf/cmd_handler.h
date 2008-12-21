@@ -60,6 +60,11 @@
 #define CMD_SETUP_OK            'O'
 #define CMD_SET_NAME            'N'
 #define CMD_RAW                 'W'
+#define CMD_DISABLE_BEACON      'Q'
+#define CMD_SELF_ASSIGN         'A'
+#define CMD_STANDALONE          'X'
+#define CMD_FADE                'F'
+
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
 uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);

@@ -37,6 +37,7 @@
 
 #include <avr/io.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <stdio.h>
@@ -110,6 +111,11 @@ int main(void) {
     /* Turn off WDT */
     WDTCSR = 0x00;
 
+    volatile long l;
+//    for(l=0;l<1000000;l++);
+    DDRC &= ~(1<<PC3);
+    PORTC |= (1<<PC3);
+
     init_pwm();
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
@@ -125,7 +131,7 @@ int main(void) {
 #endif
     settings_read();
 #if RS485_CTRL
-//    rs485_init();
+    rs485_init();
     zbus_core_init();
 #endif
     rf_init();
@@ -133,7 +139,6 @@ int main(void) {
 
     srandom(random_seed);
     random_seed = random();
-
     /* enable interrupts globally */
     sei();
 //    global.state = STATE_RUNNING;
@@ -165,8 +170,8 @@ int main(void) {
          * execute all script threads */
         if (global.flags.new_cycle) {
             global.flags.new_cycle = 0;
+            update_brightness();
             if(global.flags.running){
-                update_brightness();
 #if STATIC_SCRIPTS
                 execute_script_threads();
 #endif

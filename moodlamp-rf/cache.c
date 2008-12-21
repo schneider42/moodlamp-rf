@@ -8,16 +8,13 @@ uint8_t table[256][4];      //[host] = (interface, nexthop, metric, timeout)
 #define NO_METRIC       255
 void cache_init(void)
 {
-    uint8_t i;
-    for(i=0;i<64;i++){
+    uint16_t i;
+    for(i=0;i<256;i++){
         table[i][0] = IFACE_NONE;
         table[i][1] = 0;
         table[i][2] = NO_METRIC;
         table[i][3] = 0;
     }
-    //table[2] = IFACE_SERIAL;
-    //table[1] = IFACE_LOCAL;
-
 }
 
 uint8_t cache_getSrcIface(struct packet_t * p)
