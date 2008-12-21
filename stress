@@ -1,0 +1,8 @@
+#!/bin/bash
+while [ true ] ; do
+python singlegreen.py
+#sleep 2
+python fadereal.py
+sleep 3
+done
+
