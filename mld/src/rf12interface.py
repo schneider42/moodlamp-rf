@@ -33,6 +33,7 @@ class ProcessPacket ( threading.Thread ):
 class ReadSerial ( threading.Thread ):
     escaped = False
     ar=[]
+    debug = 1
 
     def __init__ ( self, rf12, callback, owner, queue):
       self.rf12 = rf12
@@ -80,7 +81,8 @@ class ReadSerial ( threading.Thread ):
             if not self.portok:
                 break
             if self.readline():
-                print "readline", self.ar
+                if self.debug:
+                    print "readline", self.ar
                 if not self.ready :
 
                 #elif self.ar[0] == 'S':
@@ -103,7 +105,8 @@ class ReadSerial ( threading.Thread ):
                     print "%s -----------Error: %s-----------------" % (time.time() ,''.join(self.ar[1:]))
                 elif len(self.ar) > 1 and self.ar[0] == 'S':
                     if self.ar[1] == 'D':
-                        print "Status: done"
+                        if self.debug:
+                            print "Status: done"
                     elif self.ar[1] == 'T':
                         #print time.time()
                         print "%s ------------------Status: timeout--------------------" % time.time() 
@@ -141,6 +144,7 @@ class ReadSerial ( threading.Thread ):
 class RF12Interface:
     done = True
     broadcast = 0
+    debug = 1
     
     def __init__ ( self, port, baud, ownadr, gateadr, callback):
         
@@ -169,6 +173,7 @@ class RF12Interface:
         print "ready"
         #self.rf12.write("acA%cab" % adr)
         self.write("I%c%c%c"%(ownadr,gateadr,gateadr))
+        print "Set interface=",ownadr, ",", gateadr, ",",gateadr
         self.free = threading.BoundedSemaphore()
         #self.rf12.write("acR%cab" % 0)
         self.callback = callback
@@ -221,7 +226,8 @@ class RF12Interface:
         
     def packet_done(self):
         self.done = True
-        print "release"
+        if self.debug:
+            print "release"
         self.free.acquire(False);
         self.free.release()
         self.callback.packet_done(self.broadcast, self.remadr)    #Todo use a queue or something to prevent blocking
@@ -230,11 +236,13 @@ class RF12Interface:
         self.readthread.start()
         time.sleep(1)
         self.readthread.ready = True
-        print "ready"
+        if self.debug:
+            print "ready"
         
     def packet(self, remadr, data, broadcast, wait):
-        print str(time.time())+" send packet to "+str(remadr)+" len="+str(len(data))
-        print list(data)
+        if self.debug:
+            print str(time.time())+" send packet to "+str(remadr)+" len="+str(len(data))
+            print list(data)
         if self.mode == 1:
             return 0
         """if self.done == False:
@@ -282,8 +290,8 @@ class RF12Interface:
             print "will net raus gehen, serialexception"
         except OSError:
             print "blubb oserror blubb"
-            
-        print "sent packet"
+        if self.debug:
+            print "sent packet"
         return 0
     
     def sniff(self, sniff):

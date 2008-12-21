@@ -27,7 +27,7 @@ for opt, arg in opts:
     elif opt == ("-p", "--port"):
         port = int(arg)
     elif opt in ("-l", "--lamp"):
-        lamp = int(arg)
+        lamp = arg
 
 if lamp == -1:
     print "Usage: load [OPTION] -l LAMP"
@@ -43,17 +43,19 @@ con.write("001\r\n")
 s = con.read_until(">100", 10)
 if s.endswith("100"):
     while True:
-        r = 255#220
-        g = 0#255
-        b = 0#220
+        r = 255
+        g = 255
+        b = 255
         setc(con,lamp,r,g,b)
-        #time.sleep(0.5)
+#        setc(con,15,r,g,b)
+#        time.sleep(0.1)
         
         r = 0
-        g = 255
+        g = 0
         b = 0
         setc(con,lamp,r,g,b)
-        #time.sleep(0.5)
+#        setc(con,15,r,g,b)
+#        time.sleep(1)
         
         """r = 0
         g = 0
