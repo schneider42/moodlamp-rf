@@ -6,6 +6,7 @@
 #include "stdint.h"
 #include "cache.h"
 #include "stdlib.h"
+//#include "lib/uart.h"
 
 uint8_t locladr = 0;
 uint8_t broadcastadr = 0;
@@ -101,9 +102,9 @@ void packet_tick(void)
     cache_tick();
     if((src = interfaces_gotPacket(&p)) != IFACE_NONE){
         uint8_t iface = cache_getDestIface(&p);
-        uart1_puts("acDG"); uart1_putc(iface);uart1_puts("ab");
+        //uart1_puts("acDG"); uart1_putc(iface);uart1_puts("ab");
         if(interfaces_isReady(iface)){
-            uart1_puts("acDgab");
+            //uart1_puts("acDgab");
             interfaces_getPacket(src,&p);
             packet_packetIn(&p,src);
         }
