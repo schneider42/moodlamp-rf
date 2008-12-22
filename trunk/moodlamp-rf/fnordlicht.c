@@ -111,7 +111,7 @@ int main(void) {
     /* Turn off WDT */
     WDTCSR = 0x00;
 
-    volatile long l;
+    //volatile long l;
 //    for(l=0;l<1000000;l++);
     DDRC &= ~(1<<PC3);
     PORTC |= (1<<PC3);
