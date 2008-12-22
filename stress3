@@ -1,8 +1,8 @@
 #!/bin/bash
 while [ true ] ; do
 python fadered.py
-sleep 1
+sleep 2
 python fadegreen.py
-sleep 1
+sleep 2
 done
 
