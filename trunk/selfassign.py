@@ -8,7 +8,7 @@ def wait():
             break
 
 autoassign = "acB\x00Xab"
-pause = "acB\x00S\x02ab"
+pause = "acB\x00S\x07ab"
 ser = serial.Serial('/dev/ttyUSB0', 230400)
 
 #ser.write("acI\x01\x02\x02ab")

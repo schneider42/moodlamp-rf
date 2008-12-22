@@ -59,9 +59,9 @@ while(1):
     print "."
     wait()
 
-    r = 23;
-    g = 23;
-    b = 23;
+    r = 0;
+    g = 0;
+    b = 0;
     setcolor = "B%cC%c%c%c"%(lamp,r,g,b)
     write(setcolor)
     print "."

@@ -50,7 +50,7 @@ r = 255
 g = 0
 b = 0
 
-setcolor = "B%cF%c%c%c%c%c"%(lamp,r,g,b,2,50)
+setcolor = "B%cF%c%c%c%c%c"%(lamp,r,g,b,1,50)
 write(setcolor)
 print "."
 wait()
