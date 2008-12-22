@@ -1,0 +1,978 @@
+   1               		.file	"zbus.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.global __do_copy_data
+   8               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+ 103               	.global	zbus_ready
+ 105               	zbus_ready:
+   1:zbus.c        **** /* vim:fdm=marker et ai
+   2:zbus.c        ****  * {{{
+   3:zbus.c        ****  *
+   4:zbus.c        ****  * Copyright (c) 2007 by Christian Dietrich <stettberger@dokucode.de>
+   5:zbus.c        ****  * Copyright (c) 2008 by Stefan Siegl <stesie@brokenpipe.de>
+   6:zbus.c        ****  *
+   7:zbus.c        ****  * This program is free software; you can redistribute it and/or
+   8:zbus.c        ****  * modify it under the terms of the GNU General Public License
+   9:zbus.c        ****  * as published by the Free Software Foundation; either version 2
+  10:zbus.c        ****  * of the License, or (at your option) any later version.
+  11:zbus.c        ****  *
+  12:zbus.c        ****  * This program is distributed in the hope that it will be useful,
+  13:zbus.c        ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  14:zbus.c        ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  15:zbus.c        ****  * GNU General Public License for more details.
+  16:zbus.c        ****  *
+  17:zbus.c        ****  * You should have received a copy of the GNU General Public License
+  18:zbus.c        ****  * along with this program; if not, write to the Free Software
+  19:zbus.c        ****  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+  20:zbus.c        ****  *
+  21:zbus.c        ****  * For more information on the GPL, please go to:
+  22:zbus.c        ****  * http://www.gnu.org/copyleft/gpl.html
+  23:zbus.c        ****  }}} */
+  24:zbus.c        **** 
+  25:zbus.c        **** #include <avr/io.h>
+  26:zbus.c        **** #include <avr/interrupt.h>
+  27:zbus.c        **** #include <avr/pgmspace.h>
+  28:zbus.c        **** #include <avr/eeprom.h>
+  29:zbus.c        **** //#include <util/delay.h>
+  30:zbus.c        **** #include "bit-macros.h"
+  31:zbus.c        **** //#include "../eeprom.h"
+  32:zbus.c        **** //#include "../config.h"
+  33:zbus.c        **** //#include "../syslog/syslog.h"
+  34:zbus.c        **** //#include "../crypto/encrypt-llh.h"
+  35:zbus.c        **** //#include "../net/zbus_raw_net.h"
+  36:zbus.c        **** #include "config.h"
+  37:zbus.c        **** #include "zbus.h"
+  38:zbus.c        **** 
+  39:zbus.c        **** #ifndef ZBUS_USE_USART
+  40:zbus.c        **** #define ZBUS_USE_USART 0 
+  41:zbus.c        **** #endif
+  42:zbus.c        **** #define USE_USART ZBUS_USE_USART 
+  43:zbus.c        **** #define BAUD ZBUS_BAUDRATE
+  44:zbus.c        **** #include "esusart.h"
+  45:zbus.c        **** 
+  46:zbus.c        **** /*
+  47:zbus.c        **** #include <util/setbaud.h>
+  48:zbus.c        **** */
+  49:zbus.c        **** #define _PORT_CHAR(character) PORT ## character
+  50:zbus.c        **** #define PORT_CHAR(character) _PORT_CHAR(character)
+  51:zbus.c        **** #define PIN_SET(pin) PORT_CHAR(pin ## _PORT) |= _BV(pin ## _PIN)
+  52:zbus.c        **** #define PIN_CLEAR(pin) PORT_CHAR(pin ## _PORT) &= ~_BV(pin ## _PIN)
+  53:zbus.c        **** #define _DDR_CHAR(character) DDR ## character
+  54:zbus.c        **** #define DDR_CHAR(character) _DDR_CHAR(character)
+  55:zbus.c        **** #define DDR_CONFIG_OUT(pin)  DDR_CHAR( pin ## _PORT) |= _BV((pin ## _PIN))
+  56:zbus.c        **** 
+  57:zbus.c        **** #define HAVE_ZBUS_RX_PIN
+  58:zbus.c        **** #define ZBUS_RX_PIN_PIN     PC3
+  59:zbus.c        **** #define ZBUS_RX_PIN_PORT    C
+  60:zbus.c        **** 
+  61:zbus.c        **** #if RS485_CTRL
+  62:zbus.c        **** /* We generate our own usart init module, for our usart port */
+  63:zbus.c        **** generate_usart_init()
+  64:zbus.c        **** 
+  65:zbus.c        **** static uint8_t send_escape_data = 0;
+  66:zbus.c        **** static uint8_t recv_escape_data = 0;
+  67:zbus.c        **** static uint8_t bus_blocked = 0;
+  68:zbus.c        **** 
+  69:zbus.c        **** static volatile zbus_index_t zbus_index;
+  70:zbus.c        **** static volatile zbus_index_t zbus_txlen;
+  71:zbus.c        **** static volatile zbus_index_t zbus_rxlen;
+  72:zbus.c        **** 
+  73:zbus.c        **** volatile uint8_t zbus_txbuf[ZBUS_BUFFER_LEN];
+  74:zbus.c        **** volatile uint8_t zbus_buf[ZBUS_BUFFER_LEN];
+  75:zbus.c        **** static void __zbus_txstart(void);
+  76:zbus.c        **** volatile uint8_t zbus_done = 0;
+  77:zbus.c        **** 
+  78:zbus.c        **** uint8_t zbus_ready(void)
+  79:zbus.c        **** {
+ 107               	.LM0:
+ 108               	.LFBB1:
+ 109               	/* prologue: frame size=0 */
+ 110               	/* prologue end (size=0) */
+  80:zbus.c        ****     if(zbus_txlen != 0 || zbus_rxlen != 0)// || bus_blocked)
+ 112               	.LM1:
+ 113 0000 8091 0000 		lds r24,zbus_txlen
+ 114 0004 9091 0000 		lds r25,(zbus_txlen)+1
+ 115 0008 892B      		or r24,r25
+ 116 000a 01F0      		breq .L2
+ 118               	.LM2:
+ 119 000c 80E0      		ldi r24,lo8(0)
+ 120 000e 90E0      		ldi r25,hi8(0)
+ 121 0010 0895      		ret
+ 122               	.L2:
+ 123 0012 8091 0000 		lds r24,zbus_rxlen
+ 124 0016 9091 0000 		lds r25,(zbus_rxlen)+1
+ 125 001a 20E0      		ldi r18,lo8(0)
+ 126 001c 892B      		or r24,r25
+ 127 001e 01F4      		brne .L8
+ 128 0020 81E0      		ldi r24,lo8(1)
+ 129 0022 2827      		eor r18,r24
+ 130 0024 822F      		mov r24,r18
+ 131 0026 9927      		clr r25
+  81:zbus.c        ****         return 0;
+  82:zbus.c        ****     return 1;
+  83:zbus.c        **** }
+ 133               	.LM3:
+ 134 0028 0895      		ret
+ 135               	.L8:
+ 137               	.LM4:
+ 138 002a 21E0      		ldi r18,lo8(1)
+ 139 002c 81E0      		ldi r24,lo8(1)
+ 140 002e 2827      		eor r18,r24
+ 141 0030 822F      		mov r24,r18
+ 142 0032 9927      		clr r25
+ 144               	.LM5:
+ 145 0034 0895      		ret
+ 146               	/* epilogue: frame size=0 */
+ 147               	/* epilogue: noreturn */
+ 148               	/* epilogue end (size=0) */
+ 149               	/* function zbus_ready size 27 (27) */
+ 151               	.Lscope1:
+ 154               	__zbus_txstart:
+  84:zbus.c        **** 
+  85:zbus.c        **** void
+  86:zbus.c        **** zbus_txstart(zbus_index_t size)
+  87:zbus.c        **** {
+  88:zbus.c        ****   // FIXME
+  89:zbus.c        **** //  if(zbus_txlen != 0 || zbus_rxlen != 0 || bus_blocked)
+  90:zbus.c        **** //    return;			/* rx or tx in action or
+  91:zbus.c        **** //				   new packet left in buffer
+  92:zbus.c        **** //                                   or somebody is talking on the line */
+  93:zbus.c        **** 
+  94:zbus.c        **** 
+  95:zbus.c        **** #ifdef ZBUS_RAW_SUPPORT
+  96:zbus.c        ****   if (!zbus_raw_conn->rport)
+  97:zbus.c        **** #endif
+  98:zbus.c        ****   {
+  99:zbus.c        **** #ifdef SKIPJACK_SUPPORT
+ 100:zbus.c        ****     zbus_encrypt (zbus_buf, &size);
+ 101:zbus.c        **** 
+ 102:zbus.c        ****     if (!size){
+ 103:zbus.c        ****       uip_buf_unlock ();
+ 104:zbus.c        ****       // FIXME
+ 105:zbus.c        ****       zbus_rxstart ();		/* destroy the packet and restart rx */
+ 106:zbus.c        ****       return;
+ 107:zbus.c        ****     }
+ 108:zbus.c        **** #endif
+ 109:zbus.c        ****   }
+ 110:zbus.c        ****   zbus_txlen = size;
+ 111:zbus.c        **** 
+ 112:zbus.c        ****   if(bus_blocked)
+ 113:zbus.c        ****     return;
+ 114:zbus.c        ****   __zbus_txstart();
+ 115:zbus.c        **** }
+ 116:zbus.c        **** 
+ 117:zbus.c        **** static void __zbus_txstart(void) {
+ 156               	.LM6:
+ 157               	.LFBB2:
+ 158               	/* prologue: frame size=0 */
+ 159               	/* prologue end (size=0) */
+ 118:zbus.c        **** 
+ 119:zbus.c        ****   uint8_t sreg = SREG; cli();
+ 161               	.LM7:
+ 162 0036 9FB7      		in r25,95-0x20
+ 163               	/* #APP */
+ 164 0038 F894      		cli
+ 120:zbus.c        ****   bus_blocked = 3;
+ 166               	.LM8:
+ 167               	/* #NOAPP */
+ 168 003a 83E0      		ldi r24,lo8(3)
+ 169 003c 8093 0000 		sts bus_blocked,r24
+ 121:zbus.c        **** 
+ 122:zbus.c        ****   zbus_index = 0;
+ 171               	.LM9:
+ 172 0040 1092 0000 		sts (zbus_index)+1,__zero_reg__
+ 173 0044 1092 0000 		sts zbus_index,__zero_reg__
+ 123:zbus.c        **** //  PIN_SET(ZBUS_RX_PIN);
+ 124:zbus.c        ****   //uart1_puts("acDZTab");
+ 125:zbus.c        ****   /* enable transmitter and receiver as well as their interrupts */
+ 126:zbus.c        ****   usart(UCSR,B) = _BV(usart(TXCIE)) | _BV(usart(TXEN));
+ 175               	.LM10:
+ 176 0048 88E4      		ldi r24,lo8(72)
+ 177 004a 8093 C100 		sts 193,r24
+ 127:zbus.c        **** 
+ 128:zbus.c        ****   /* Enable transmitter */
+ 129:zbus.c        ****   PIN_SET(RS485_TX_PIN);
+ 179               	.LM11:
+ 180 004e 449A      		sbi 40-0x20,4
+ 130:zbus.c        ****   PIN_SET(RS485_NRX_PIN);
+ 182               	.LM12:
+ 183 0050 459A      		sbi 40-0x20,5
+ 131:zbus.c        ****   //PIN_SET(ZBUS_RXTX_PIN);
+ 132:zbus.c        **** 
+ 133:zbus.c        ****   /* reset tx interrupt flag */
+ 134:zbus.c        ****   usart(UCSR,A) |= _BV(usart(TXC));
+ 185               	.LM13:
+ 186 0052 E0EC      		ldi r30,lo8(192)
+ 187 0054 F0E0      		ldi r31,hi8(192)
+ 188 0056 8081      		ld r24,Z
+ 189 0058 8064      		ori r24,lo8(64)
+ 190 005a 8083      		st Z,r24
+ 135:zbus.c        **** 
+ 136:zbus.c        ****   /* Go! */
+ 137:zbus.c        ****   SREG = sreg;
+ 192               	.LM14:
+ 193 005c 9FBF      		out 95-0x20,r25
+ 138:zbus.c        **** 
+ 139:zbus.c        ****   /* Transmit Start sequence */
+ 140:zbus.c        ****   send_escape_data = ZBUS_START;
+ 195               	.LM15:
+ 196 005e 80E3      		ldi r24,lo8(48)
+ 197 0060 8093 0000 		sts send_escape_data,r24
+ 141:zbus.c        ****   usart(UDR) = '\\';
+ 199               	.LM16:
+ 200 0064 8CE5      		ldi r24,lo8(92)
+ 201 0066 8093 C600 		sts 198,r24
+ 202               	/* epilogue: frame size=0 */
+ 203 006a 0895      		ret
+ 204               	/* epilogue end (size=1) */
+ 205               	/* function __zbus_txstart size 28 (27) */
+ 210               	.Lscope2:
+ 213               	.global	zbus_txstart
+ 215               	zbus_txstart:
+ 217               	.LM17:
+ 218               	.LFBB3:
+ 219               	/* prologue: frame size=0 */
+ 220               	/* prologue end (size=0) */
+ 222               	.LM18:
+ 223 006c 9093 0000 		sts (zbus_txlen)+1,r25
+ 224 0070 8093 0000 		sts zbus_txlen,r24
+ 226               	.LM19:
+ 227 0074 8091 0000 		lds r24,bus_blocked
+ 228 0078 8111      		cpse r24,__zero_reg__
+ 229 007a 0895      		ret
+ 230               	.L15:
+ 232               	.LM20:
+ 233 007c 0E94 0000 		call __zbus_txstart
+ 234 0080 0895      		ret
+ 235               	/* epilogue: frame size=0 */
+ 236               	/* epilogue: noreturn */
+ 237               	/* epilogue end (size=0) */
+ 238               	/* function zbus_txstart size 12 (12) */
+ 240               	.Lscope3:
+ 242               	.global	zbus_rxstart
+ 244               	zbus_rxstart:
+ 142:zbus.c        **** 
+ 143:zbus.c        **** #ifdef HAVE_ZBUS_TX_PIN
+ 144:zbus.c        ****   PIN_SET(ZBUS_TX_PIN);
+ 145:zbus.c        **** #endif
+ 146:zbus.c        **** //  PORTC |= (1<<PC3);
+ 147:zbus.c        ****   return;
+ 148:zbus.c        **** }
+ 149:zbus.c        **** 
+ 150:zbus.c        **** 
+ 151:zbus.c        **** void
+ 152:zbus.c        **** zbus_rxstart (void)
+ 153:zbus.c        **** {
+ 246               	.LM21:
+ 247               	.LFBB4:
+ 248               	/* prologue: frame size=0 */
+ 249               	/* prologue end (size=0) */
+ 154:zbus.c        ****   if(zbus_txlen > 0){
+ 251               	.LM22:
+ 252 0082 8091 0000 		lds r24,zbus_txlen
+ 253 0086 9091 0000 		lds r25,(zbus_txlen)+1
+ 254 008a 892B      		or r24,r25
+ 255 008c 01F4      		brne .L19
+ 155:zbus.c        ****     return;
+ 156:zbus.c        ****   }
+ 157:zbus.c        **** //  uart1_puts("acDZRab");
+ 158:zbus.c        **** //  PIN_CLEAR(ZBUS_RX_PIN);
+ 159:zbus.c        ****   zbus_rxlen = 0;
+ 257               	.LM23:
+ 258 008e 1092 0000 		sts (zbus_rxlen)+1,__zero_reg__
+ 259 0092 1092 0000 		sts zbus_rxlen,__zero_reg__
+ 160:zbus.c        **** 
+ 161:zbus.c        ****   uint8_t sreg = SREG; cli();
+ 261               	.LM24:
+ 262 0096 9FB7      		in r25,95-0x20
+ 263               	/* #APP */
+ 264 0098 F894      		cli
+ 162:zbus.c        **** 
+ 163:zbus.c        ****   /* disable transmitter, enable receiver (and rx interrupt) */
+ 164:zbus.c        ****   usart(UCSR,B) = _BV(usart(RXCIE)) | _BV(usart(RXEN));
+ 266               	.LM25:
+ 267               	/* #NOAPP */
+ 268 009a 80E9      		ldi r24,lo8(-112)
+ 269 009c 8093 C100 		sts 193,r24
+ 165:zbus.c        **** 
+ 166:zbus.c        ****   /* Default is reciever enabled*/
+ 167:zbus.c        ****   PIN_CLEAR(RS485_TX_PIN);
+ 271               	.LM26:
+ 272 00a0 4498      		cbi 40-0x20,4
+ 168:zbus.c        ****   PIN_CLEAR(RS485_NRX_PIN);
+ 274               	.LM27:
+ 275 00a2 4598      		cbi 40-0x20,5
+ 169:zbus.c        **** 
+ 170:zbus.c        ****   SREG = sreg;
+ 277               	.LM28:
+ 278 00a4 9FBF      		out 95-0x20,r25
+ 279               	.L19:
+ 280 00a6 0895      		ret
+ 281               	/* epilogue: frame size=0 */
+ 282               	/* epilogue: noreturn */
+ 283               	/* epilogue end (size=0) */
+ 284               	/* function zbus_rxstart size 20 (20) */
+ 289               	.Lscope4:
+ 291               	.global	zbus_rxfinish
+ 293               	zbus_rxfinish:
+ 171:zbus.c        **** }
+ 172:zbus.c        **** 
+ 173:zbus.c        **** 
+ 174:zbus.c        **** static void
+ 175:zbus.c        **** zbus_rxstop (void)
+ 176:zbus.c        **** {
+ 177:zbus.c        ****   uint8_t sreg = SREG; cli();
+ 178:zbus.c        **** 
+ 179:zbus.c        ****   /* completely disable usart */
+ 180:zbus.c        ****   usart(UCSR,B) = 0;
+ 181:zbus.c        **** 
+ 182:zbus.c        ****   SREG = sreg;
+ 183:zbus.c        **** }
+ 184:zbus.c        **** 
+ 185:zbus.c        **** 
+ 186:zbus.c        **** zbus_index_t
+ 187:zbus.c        **** zbus_rxfinish(void) 
+ 188:zbus.c        **** {
+ 295               	.LM29:
+ 296               	.LFBB5:
+ 297               	/* prologue: frame size=0 */
+ 298               	/* prologue end (size=0) */
+ 189:zbus.c        ****   if (zbus_rxlen != 0) {
+ 300               	.LM30:
+ 301 00a8 8091 0000 		lds r24,zbus_rxlen
+ 302 00ac 9091 0000 		lds r25,(zbus_rxlen)+1
+ 303 00b0 892B      		or r24,r25
+ 304 00b2 01F0      		breq .L25
+ 190:zbus.c        **** #ifdef SKIPJACK_SUPPORT
+ 191:zbus.c        **** #ifdef ZBUS_RAW_SUPPORT
+ 192:zbus.c        ****     if (!zbus_raw_conn->rport)
+ 193:zbus.c        **** #endif
+ 194:zbus.c        ****     zbus_decrypt(zbus_buf, (zbus_index_t *) &zbus_rxlen);
+ 195:zbus.c        ****     if(!zbus_rxlen) {
+ 196:zbus.c        ****       zbus_rxstart ();
+ 197:zbus.c        ****       uip_buf_unlock();
+ 198:zbus.c        ****     }
+ 199:zbus.c        **** 
+ 200:zbus.c        **** #endif
+ 201:zbus.c        ****     return zbus_rxlen;
+ 306               	.LM31:
+ 307 00b4 8091 0000 		lds r24,zbus_rxlen
+ 308 00b8 9091 0000 		lds r25,(zbus_rxlen)+1
+ 202:zbus.c        ****   }
+ 203:zbus.c        ****   return 0;
+ 204:zbus.c        **** }
+ 310               	.LM32:
+ 311 00bc 0895      		ret
+ 312               	.L25:
+ 314               	.LM33:
+ 315 00be 80E0      		ldi r24,lo8(0)
+ 316 00c0 90E0      		ldi r25,hi8(0)
+ 317 00c2 0895      		ret
+ 318               	/* epilogue: frame size=0 */
+ 319               	/* epilogue: noreturn */
+ 320               	/* epilogue end (size=0) */
+ 321               	/* function zbus_rxfinish size 14 (14) */
+ 323               	.Lscope5:
+ 325               	.global	zbus_core_init
+ 327               	zbus_core_init:
+ 205:zbus.c        **** 
+ 206:zbus.c        **** void
+ 207:zbus.c        **** zbus_core_init(void)
+ 208:zbus.c        **** {
+ 329               	.LM34:
+ 330               	.LFBB6:
+ 331               	/* prologue: frame size=0 */
+ 332               	/* prologue end (size=0) */
+ 333               	.LBB4:
+ 334               	.LBB5:
+ 336               	.LM35:
+ 337 00c4 9FB7      		in r25,95-0x20
+ 338               	/* #APP */
+ 339 00c6 F894      		cli
+ 340               	/* #NOAPP */
+ 341 00c8 1092 C500 		sts 197,__zero_reg__
+ 342 00cc 89E0      		ldi r24,lo8(9)
+ 343 00ce 8093 C400 		sts 196,r24
+ 344 00d2 86E0      		ldi r24,lo8(6)
+ 345 00d4 8093 C200 		sts 194,r24
+ 346 00d8 E1EC      		ldi r30,lo8(193)
+ 347 00da F0E0      		ldi r31,hi8(193)
+ 348 00dc 8081      		ld r24,Z
+ 349 00de 8869      		ori r24,lo8(-104)
+ 350 00e0 8083      		st Z,r24
+ 351 00e2 E0EC      		ldi r30,lo8(192)
+ 352 00e4 F0E0      		ldi r31,hi8(192)
+ 353 00e6 8081      		ld r24,Z
+ 354 00e8 8D7F      		andi r24,lo8(-3)
+ 355 00ea 8083      		st Z,r24
+ 356 00ec 9FBF      		out 95-0x20,r25
+ 357               	.LBE5:
+ 358               	.LBE4:
+ 209:zbus.c        ****     /* Initialize the usart module */
+ 210:zbus.c        ****     usart_init();
+ 211:zbus.c        **** 
+ 212:zbus.c        ****     /* Enable RX/TX Swtich as Output */
+ 213:zbus.c        ****     DDR_CONFIG_OUT(RS485_TX_PIN);
+ 360               	.LM36:
+ 361 00ee 3C9A      		sbi 39-0x20,4
+ 214:zbus.c        ****     DDR_CONFIG_OUT(RS485_NRX_PIN);
+ 363               	.LM37:
+ 364 00f0 3D9A      		sbi 39-0x20,5
+ 215:zbus.c        **** #ifdef HAVE_ZBUS_RX_PIN
+ 216:zbus.c        ****     DDR_CONFIG_OUT(ZBUS_RX_PIN);
+ 366               	.LM38:
+ 367 00f2 3B9A      		sbi 39-0x20,3
+ 217:zbus.c        **** #endif
+ 218:zbus.c        **** #ifdef HAVE_ZBUS_TX_PIN
+ 219:zbus.c        ****     DDR_CONFIG_OUT(ZBUS_TX_PIN);
+ 220:zbus.c        **** #endif
+ 221:zbus.c        **** //DDRC |= (1<<PC3);
+ 222:zbus.c        **** //PORTC |= (1<<PC3);
+ 223:zbus.c        ****     /* clear the buffers */
+ 224:zbus.c        ****     zbus_txlen = 0;
+ 369               	.LM39:
+ 370 00f4 1092 0000 		sts (zbus_txlen)+1,__zero_reg__
+ 371 00f8 1092 0000 		sts zbus_txlen,__zero_reg__
+ 225:zbus.c        ****     zbus_rxlen = 0;
+ 373               	.LM40:
+ 374 00fc 1092 0000 		sts (zbus_rxlen)+1,__zero_reg__
+ 375 0100 1092 0000 		sts zbus_rxlen,__zero_reg__
+ 226:zbus.c        ****     zbus_index = 0;
+ 377               	.LM41:
+ 378 0104 1092 0000 		sts (zbus_index)+1,__zero_reg__
+ 379 0108 1092 0000 		sts zbus_index,__zero_reg__
+ 227:zbus.c        **** 
+ 228:zbus.c        **** /*#ifndef TEENSY_SUPPORT
+ 229:zbus.c        ****     uint16_t s_usart_baudrate;
+ 230:zbus.c        ****     eeprom_restore_int(usart_baudrate, &s_usart_baudrate);
+ 231:zbus.c        ****     uint16_t ubrr = usart_baudrate(s_usart_baudrate);
+ 232:zbus.c        ****     usart(UBRR,H) = HI8(ubrr);
+ 233:zbus.c        ****     usart(UBRR,L) = LO8(ubrr);
+ 234:zbus.c        **** #endif*/
+ 235:zbus.c        **** 
+ 236:zbus.c        ****     zbus_rxstart ();
+ 381               	.LM42:
+ 382 010c 0E94 0000 		call zbus_rxstart
+ 383               	/* epilogue: frame size=0 */
+ 384 0110 0895      		ret
+ 385               	/* epilogue end (size=1) */
+ 386               	/* function zbus_core_init size 40 (39) */
+ 388               	.Lscope6:
+ 390               	.global	zbus_core_periodic
+ 392               	zbus_core_periodic:
+ 237:zbus.c        **** }
+ 238:zbus.c        **** 
+ 239:zbus.c        **** void
+ 240:zbus.c        **** zbus_core_periodic(void)
+ 241:zbus.c        **** {
+ 394               	.LM43:
+ 395               	.LFBB7:
+ 396               	/* prologue: frame size=0 */
+ 397               	/* prologue end (size=0) */
+ 242:zbus.c        ****   static uint8_t t  = 30;
+ 243:zbus.c        ****   if(t-- == 0){
+ 399               	.LM44:
+ 400 0112 8091 0000 		lds r24,t.1909
+ 401 0116 8150      		subi r24,lo8(-(-1))
+ 402 0118 8093 0000 		sts t.1909,r24
+ 403 011c 8F3F      		cpi r24,lo8(-1)
+ 404 011e 01F0      		breq .L35
+ 405 0120 0895      		ret
+ 406               	.L35:
+ 244:zbus.c        ****     if(bus_blocked)
+ 408               	.LM45:
+ 409 0122 8091 0000 		lds r24,bus_blocked
+ 410 0126 8823      		tst r24
+ 411 0128 01F0      		breq .L31
+ 245:zbus.c        ****       if(--bus_blocked == 0 && zbus_txlen > 0)
+ 413               	.LM46:
+ 414 012a 8150      		subi r24,lo8(-(-1))
+ 415 012c 8093 0000 		sts bus_blocked,r24
+ 416 0130 8823      		tst r24
+ 417 0132 01F4      		brne .L31
+ 418 0134 8091 0000 		lds r24,zbus_txlen
+ 419 0138 9091 0000 		lds r25,(zbus_txlen)+1
+ 420               	.L31:
+ 246:zbus.c        **** ;//        __zbus_txstart();
+ 247:zbus.c        ****     t = 6;
+ 422               	.LM47:
+ 423 013c 86E0      		ldi r24,lo8(6)
+ 424 013e 8093 0000 		sts t.1909,r24
+ 425 0142 0895      		ret
+ 426               	/* epilogue: frame size=0 */
+ 427               	/* epilogue: noreturn */
+ 428               	/* epilogue end (size=0) */
+ 429               	/* function zbus_core_periodic size 25 (25) */
+ 434               	.Lscope7:
+ 436               	.global	__vector_22
+ 438               	__vector_22:
+ 248:zbus.c        ****   }
+ 249:zbus.c        **** }
+ 250:zbus.c        **** 
+ 251:zbus.c        **** SIGNAL(usart(USART,_TX_vect))
+ 252:zbus.c        **** {
+ 440               	.LM48:
+ 441               	.LFBB8:
+ 442               	/* prologue: frame size=0 */
+ 443 0144 1F92      		push __zero_reg__
+ 444 0146 0F92      		push __tmp_reg__
+ 445 0148 0FB6      		in __tmp_reg__,__SREG__
+ 446 014a 0F92      		push __tmp_reg__
+ 447 014c 1124      		clr __zero_reg__
+ 448 014e 2F93      		push r18
+ 449 0150 3F93      		push r19
+ 450 0152 4F93      		push r20
+ 451 0154 5F93      		push r21
+ 452 0156 6F93      		push r22
+ 453 0158 7F93      		push r23
+ 454 015a 8F93      		push r24
+ 455 015c 9F93      		push r25
+ 456 015e AF93      		push r26
+ 457 0160 BF93      		push r27
+ 458 0162 EF93      		push r30
+ 459 0164 FF93      		push r31
+ 460               	/* prologue end (size=17) */
+ 253:zbus.c        ****   /* If there's a carry byte, send it! */
+ 254:zbus.c        ****   if (send_escape_data) {
+ 462               	.LM49:
+ 463 0166 8091 0000 		lds r24,send_escape_data
+ 464 016a 8823      		tst r24
+ 465 016c 01F0      		breq .L37
+ 255:zbus.c        ****     usart(UDR) = send_escape_data;
+ 467               	.LM50:
+ 468 016e 8093 C600 		sts 198,r24
+ 256:zbus.c        ****     send_escape_data = 0;
+ 470               	.LM51:
+ 471 0172 1092 0000 		sts send_escape_data,__zero_reg__
+ 472 0176 00C0      		rjmp .L48
+ 473               	.L37:
+ 257:zbus.c        ****   }
+ 258:zbus.c        **** 
+ 259:zbus.c        ****   /* Otherwise send data from send context, if any is left. */
+ 260:zbus.c        ****   else if (zbus_txlen && zbus_index < zbus_txlen) {
+ 475               	.LM52:
+ 476 0178 8091 0000 		lds r24,zbus_txlen
+ 477 017c 9091 0000 		lds r25,(zbus_txlen)+1
+ 478 0180 892B      		or r24,r25
+ 479 0182 01F4      		brne .L49
+ 480               	.L40:
+ 261:zbus.c        ****     if (zbus_txbuf[zbus_index] == '\\') {
+ 262:zbus.c        ****       /* We need to quote the character. */
+ 263:zbus.c        ****       send_escape_data = zbus_txbuf[zbus_index];
+ 264:zbus.c        ****       usart(UDR) = '\\';
+ 265:zbus.c        ****     }
+ 266:zbus.c        ****     else {
+ 267:zbus.c        ****       /* No quoting needed, just send it. */
+ 268:zbus.c        ****       usart(UDR) = zbus_txbuf[zbus_index];
+ 269:zbus.c        ****     }
+ 270:zbus.c        **** 
+ 271:zbus.c        ****     zbus_index ++;
+ 272:zbus.c        ****     bus_blocked = 3;
+ 273:zbus.c        ****   }
+ 274:zbus.c        **** 
+ 275:zbus.c        ****   /* If send_ctx contains data, but every byte has been sent over the
+ 276:zbus.c        ****      wires, send a stop condition. */
+ 277:zbus.c        ****   else if (zbus_txlen) {
+ 482               	.LM53:
+ 483 0184 8091 0000 		lds r24,zbus_txlen
+ 484 0188 9091 0000 		lds r25,(zbus_txlen)+1
+ 485 018c 892B      		or r24,r25
+ 486 018e 01F0      		breq .L46
+ 278:zbus.c        ****     zbus_txlen = 0;		/* mark buffer as empty. */
+ 488               	.LM54:
+ 489 0190 1092 0000 		sts (zbus_txlen)+1,__zero_reg__
+ 490 0194 1092 0000 		sts zbus_txlen,__zero_reg__
+ 279:zbus.c        **** //    uip_buf_unlock();
+ 280:zbus.c        **** 
+ 281:zbus.c        ****     /* Generate the stop condition. */
+ 282:zbus.c        ****     send_escape_data = ZBUS_STOP;
+ 492               	.LM55:
+ 493 0198 81E3      		ldi r24,lo8(49)
+ 494 019a 8093 0000 		sts send_escape_data,r24
+ 283:zbus.c        ****     usart(UDR) = '\\';
+ 496               	.LM56:
+ 497 019e 8CE5      		ldi r24,lo8(92)
+ 498 01a0 8093 C600 		sts 198,r24
+ 499 01a4 00C0      		rjmp .L48
+ 500               	.L49:
+ 502               	.LM57:
+ 503 01a6 2091 0000 		lds r18,zbus_index
+ 504 01aa 3091 0000 		lds r19,(zbus_index)+1
+ 505 01ae 8091 0000 		lds r24,zbus_txlen
+ 506 01b2 9091 0000 		lds r25,(zbus_txlen)+1
+ 507 01b6 2817      		cp r18,r24
+ 508 01b8 3907      		cpc r19,r25
+ 509 01ba 00F4      		brsh .L40
+ 511               	.LM58:
+ 512 01bc E091 0000 		lds r30,zbus_index
+ 513 01c0 F091 0000 		lds r31,(zbus_index)+1
+ 514 01c4 E050      		subi r30,lo8(-(zbus_txbuf))
+ 515 01c6 F040      		sbci r31,hi8(-(zbus_txbuf))
+ 516 01c8 9081      		ld r25,Z
+ 517 01ca 9C35      		cpi r25,lo8(92)
+ 518 01cc 01F0      		breq .L50
+ 520               	.LM59:
+ 521 01ce E091 0000 		lds r30,zbus_index
+ 522 01d2 F091 0000 		lds r31,(zbus_index)+1
+ 523 01d6 E050      		subi r30,lo8(-(zbus_txbuf))
+ 524 01d8 F040      		sbci r31,hi8(-(zbus_txbuf))
+ 525 01da 8081      		ld r24,Z
+ 526 01dc 8093 C600 		sts 198,r24
+ 527               	.L45:
+ 529               	.LM60:
+ 530 01e0 8091 0000 		lds r24,zbus_index
+ 531 01e4 9091 0000 		lds r25,(zbus_index)+1
+ 532 01e8 0196      		adiw r24,1
+ 533 01ea 9093 0000 		sts (zbus_index)+1,r25
+ 534 01ee 8093 0000 		sts zbus_index,r24
+ 536               	.LM61:
+ 537 01f2 83E0      		ldi r24,lo8(3)
+ 538 01f4 8093 0000 		sts bus_blocked,r24
+ 539 01f8 00C0      		rjmp .L48
+ 540               	.L46:
+ 284:zbus.c        ****   }
+ 285:zbus.c        **** 
+ 286:zbus.c        ****   /* Nothing to do, disable transmitter and TX LED. */
+ 287:zbus.c        ****   else {
+ 288:zbus.c        ****     bus_blocked = 0;
+ 542               	.LM62:
+ 543 01fa 1092 0000 		sts bus_blocked,__zero_reg__
+ 289:zbus.c        **** #ifdef HAVE_ZBUS_TX_PIN
+ 290:zbus.c        ****     PIN_CLEAR(ZBUS_TX_PIN);
+ 291:zbus.c        **** #endif
+ 292:zbus.c        **** //PORTC &= ~(1<<PC3);
+ 293:zbus.c        ****     zbus_txlen = 0;
+ 545               	.LM63:
+ 546 01fe 1092 0000 		sts (zbus_txlen)+1,__zero_reg__
+ 547 0202 1092 0000 		sts zbus_txlen,__zero_reg__
+ 294:zbus.c        ****     zbus_rxstart ();
+ 549               	.LM64:
+ 550 0206 0E94 0000 		call zbus_rxstart
+ 295:zbus.c        ****     zbus_done = 1;
+ 552               	.LM65:
+ 553 020a 81E0      		ldi r24,lo8(1)
+ 554 020c 8093 0000 		sts zbus_done,r24
+ 555 0210 00C0      		rjmp .L48
+ 556               	.L50:
+ 558               	.LM66:
+ 559 0212 E091 0000 		lds r30,zbus_index
+ 560 0216 F091 0000 		lds r31,(zbus_index)+1
+ 561 021a E050      		subi r30,lo8(-(zbus_txbuf))
+ 562 021c F040      		sbci r31,hi8(-(zbus_txbuf))
+ 563 021e 8081      		ld r24,Z
+ 564 0220 8093 0000 		sts send_escape_data,r24
+ 566               	.LM67:
+ 567 0224 9093 C600 		sts 198,r25
+ 568 0228 00C0      		rjmp .L45
+ 569               	.L48:
+ 570               	/* epilogue: frame size=0 */
+ 571 022a FF91      		pop r31
+ 572 022c EF91      		pop r30
+ 573 022e BF91      		pop r27
+ 574 0230 AF91      		pop r26
+ 575 0232 9F91      		pop r25
+ 576 0234 8F91      		pop r24
+ 577 0236 7F91      		pop r23
+ 578 0238 6F91      		pop r22
+ 579 023a 5F91      		pop r21
+ 580 023c 4F91      		pop r20
+ 581 023e 3F91      		pop r19
+ 582 0240 2F91      		pop r18
+ 583 0242 0F90      		pop __tmp_reg__
+ 584 0244 0FBE      		out __SREG__,__tmp_reg__
+ 585 0246 0F90      		pop __tmp_reg__
+ 586 0248 1F90      		pop __zero_reg__
+ 587 024a 1895      		reti
+ 588               	/* epilogue end (size=17) */
+ 589               	/* function __vector_22 size 132 (98) */
+ 591               	.Lscope8:
+ 593               	.global	__vector_20
+ 595               	__vector_20:
+ 296:zbus.c        ****   }
+ 297:zbus.c        **** }
+ 298:zbus.c        **** 
+ 299:zbus.c        **** SIGNAL(usart(USART,_RX_vect))
+ 300:zbus.c        **** {
+ 597               	.LM68:
+ 598               	.LFBB9:
+ 599               	/* prologue: frame size=0 */
+ 600 024c 1F92      		push __zero_reg__
+ 601 024e 0F92      		push __tmp_reg__
+ 602 0250 0FB6      		in __tmp_reg__,__SREG__
+ 603 0252 0F92      		push __tmp_reg__
+ 604 0254 1124      		clr __zero_reg__
+ 605 0256 2F93      		push r18
+ 606 0258 3F93      		push r19
+ 607 025a 4F93      		push r20
+ 608 025c 5F93      		push r21
+ 609 025e 6F93      		push r22
+ 610 0260 7F93      		push r23
+ 611 0262 8F93      		push r24
+ 612 0264 9F93      		push r25
+ 613 0266 AF93      		push r26
+ 614 0268 BF93      		push r27
+ 615 026a EF93      		push r30
+ 616 026c FF93      		push r31
+ 617               	/* prologue end (size=17) */
+ 301:zbus.c        **** //  PIN_SET(ZBUS_RX_PIN);
+ 302:zbus.c        ****   /* Ignore errors */
+ 303:zbus.c        ****   if ((usart(UCSR,A) & _BV(usart(DOR))) || (usart(UCSR,A) & _BV(usart(FE)))) {
+ 619               	.LM69:
+ 620 026e 8091 C000 		lds r24,192
+ 621 0272 83FD      		sbrc r24,3
+ 622 0274 00C0      		rjmp .L52
+ 624               	.LM70:
+ 625 0276 8091 C000 		lds r24,192
+ 626 027a 84FF      		sbrs r24,4
+ 627 027c 00C0      		rjmp .L54
+ 628               	.L52:
+ 629               	.LBB9:
+ 304:zbus.c        ****     uint8_t v = usart(UDR);
+ 631               	.LM71:
+ 632 027e 8091 C600 		lds r24,198
+ 633 0282 00C0      		rjmp .L70
+ 634               	.L54:
+ 635               	.LBE9:
+ 305:zbus.c        ****     (void) v;
+ 306:zbus.c        ****     return; 
+ 307:zbus.c        ****   }
+ 308:zbus.c        ****   uint8_t data = usart(UDR);
+ 637               	.LM72:
+ 638 0284 2091 C600 		lds r18,198
+ 309:zbus.c        **** 
+ 310:zbus.c        **** 
+ 311:zbus.c        ****   /* Old data is not read by application, ignore message */
+ 312:zbus.c        ****   if (zbus_rxlen != 0) return;
+ 640               	.LM73:
+ 641 0288 8091 0000 		lds r24,zbus_rxlen
+ 642 028c 9091 0000 		lds r25,(zbus_rxlen)+1
+ 643 0290 892B      		or r24,r25
+ 644 0292 01F0      		breq .+2
+ 645 0294 00C0      		rjmp .L70
+ 313:zbus.c        **** 
+ 314:zbus.c        ****   /* Don't accept incoming message if we're sending and sharing
+ 315:zbus.c        ****      send and receive buffer. */
+ 316:zbus.c        ****   if (zbus_txlen != 0) return;
+ 647               	.LM74:
+ 648 0296 8091 0000 		lds r24,zbus_txlen
+ 649 029a 9091 0000 		lds r25,(zbus_txlen)+1
+ 650 029e 892B      		or r24,r25
+ 651 02a0 01F0      		breq .+2
+ 652 02a2 00C0      		rjmp .L70
+ 317:zbus.c        **** 
+ 318:zbus.c        ****   if (recv_escape_data) {
+ 654               	.LM75:
+ 655 02a4 8091 0000 		lds r24,recv_escape_data
+ 656 02a8 8823      		tst r24
+ 657 02aa 01F0      		breq .L58
+ 319:zbus.c        ****     recv_escape_data = 0;
+ 659               	.LM76:
+ 660 02ac 1092 0000 		sts recv_escape_data,__zero_reg__
+ 320:zbus.c        **** 
+ 321:zbus.c        ****     if (data == ZBUS_START) {
+ 662               	.LM77:
+ 663 02b0 2033      		cpi r18,lo8(48)
+ 664 02b2 01F0      		breq .L71
+ 322:zbus.c        **** //      if (uip_buf_lock())
+ 323:zbus.c        **** //        return; /* lock of buffer failed, ignore packet */
+ 324:zbus.c        ****       
+ 325:zbus.c        ****       zbus_index = 0;
+ 326:zbus.c        ****       bus_blocked = 3;
+ 327:zbus.c        **** 
+ 328:zbus.c        **** #ifdef HAVE_ZBUS_RX_PIN
+ 329:zbus.c        ****       PIN_SET(ZBUS_RX_PIN);
+ 330:zbus.c        **** #endif
+ 331:zbus.c        ****     }
+ 332:zbus.c        **** 
+ 333:zbus.c        ****     else if (data == ZBUS_STOP) {
+ 666               	.LM78:
+ 667 02b4 2133      		cpi r18,lo8(49)
+ 668 02b6 01F0      		breq .L72
+ 334:zbus.c        ****       /* Only if there was a start condition before */
+ 335:zbus.c        ****       if (bus_blocked) {
+ 336:zbus.c        **** 	zbus_rxstop ();
+ 337:zbus.c        **** 
+ 338:zbus.c        **** #ifdef HAVE_ZBUS_RX_PIN
+ 339:zbus.c        ****         PIN_CLEAR(ZBUS_RX_PIN);
+ 340:zbus.c        **** #endif
+ 341:zbus.c        **** 	zbus_rxlen = zbus_index;
+ 342:zbus.c        ****       }
+ 343:zbus.c        **** 
+ 344:zbus.c        ****       /* force bus free even if we didn't catch the start condition. */
+ 345:zbus.c        ****       bus_blocked = 0;
+ 346:zbus.c        ****       if(zbus_txlen > 0)
+ 347:zbus.c        ****         __zbus_txstart();
+ 348:zbus.c        ****     }
+ 349:zbus.c        **** 
+ 350:zbus.c        ****     else if (data == '\\')
+ 670               	.LM79:
+ 671 02b8 2C35      		cpi r18,lo8(92)
+ 672 02ba 01F0      		breq .+2
+ 673 02bc 00C0      		rjmp .L70
+ 674               	.L67:
+ 351:zbus.c        ****       goto append_data;
+ 352:zbus.c        ****   } 
+ 353:zbus.c        **** 
+ 354:zbus.c        ****   else if (data == '\\') 
+ 355:zbus.c        ****     recv_escape_data = 1;
+ 356:zbus.c        **** 
+ 357:zbus.c        ****   else {
+ 358:zbus.c        ****   append_data:
+ 359:zbus.c        ****     /* Not enough space in buffer */
+ 360:zbus.c        ****     if (zbus_index >= ZBUS_BUFFER_LEN)
+ 676               	.LM80:
+ 677 02be 8091 0000 		lds r24,zbus_index
+ 678 02c2 9091 0000 		lds r25,(zbus_index)+1
+ 679 02c6 8E50      		subi r24,lo8(270)
+ 680 02c8 9140      		sbci r25,hi8(270)
+ 681 02ca 00F4      		brsh .L70
+ 361:zbus.c        ****       return;
+ 362:zbus.c        **** 
+ 363:zbus.c        ****     /* If bus is not blocked we aren't on an message */
+ 364:zbus.c        ****     //if (!bus_blocked)
+ 365:zbus.c        ****     //  return;
+ 366:zbus.c        ****       
+ 367:zbus.c        ****     zbus_buf[zbus_index] = data;
+ 683               	.LM81:
+ 684 02cc E091 0000 		lds r30,zbus_index
+ 685 02d0 F091 0000 		lds r31,(zbus_index)+1
+ 686 02d4 E050      		subi r30,lo8(-(zbus_buf))
+ 687 02d6 F040      		sbci r31,hi8(-(zbus_buf))
+ 688 02d8 2083      		st Z,r18
+ 368:zbus.c        ****     zbus_index++;
+ 690               	.LM82:
+ 691 02da 8091 0000 		lds r24,zbus_index
+ 692 02de 9091 0000 		lds r25,(zbus_index)+1
+ 693 02e2 0196      		adiw r24,1
+ 694 02e4 9093 0000 		sts (zbus_index)+1,r25
+ 695 02e8 8093 0000 		sts zbus_index,r24
+ 696 02ec 00C0      		rjmp .L70
+ 697               	.L58:
+ 699               	.LM83:
+ 700 02ee 2C35      		cpi r18,lo8(92)
+ 701 02f0 01F4      		brne .L67
+ 703               	.LM84:
+ 704 02f2 81E0      		ldi r24,lo8(1)
+ 705 02f4 8093 0000 		sts recv_escape_data,r24
+ 706 02f8 00C0      		rjmp .L70
+ 707               	.L71:
+ 709               	.LM85:
+ 710 02fa 1092 0000 		sts (zbus_index)+1,__zero_reg__
+ 711 02fe 1092 0000 		sts zbus_index,__zero_reg__
+ 713               	.LM86:
+ 714 0302 83E0      		ldi r24,lo8(3)
+ 715 0304 8093 0000 		sts bus_blocked,r24
+ 717               	.LM87:
+ 718 0308 439A      		sbi 40-0x20,3
+ 719 030a 00C0      		rjmp .L70
+ 720               	.L72:
+ 722               	.LM88:
+ 723 030c 8091 0000 		lds r24,bus_blocked
+ 724 0310 8823      		tst r24
+ 725 0312 01F0      		breq .L64
+ 726               	.LBB10:
+ 727               	.LBB11:
+ 729               	.LM89:
+ 730 0314 8FB7      		in r24,95-0x20
+ 731               	/* #APP */
+ 732 0316 F894      		cli
+ 734               	.LM90:
+ 735               	/* #NOAPP */
+ 736 0318 1092 C100 		sts 193,__zero_reg__
+ 738               	.LM91:
+ 739 031c 8FBF      		out 95-0x20,r24
+ 740               	.LBE11:
+ 741               	.LBE10:
+ 743               	.LM92:
+ 744 031e 4398      		cbi 40-0x20,3
+ 746               	.LM93:
+ 747 0320 8091 0000 		lds r24,zbus_index
+ 748 0324 9091 0000 		lds r25,(zbus_index)+1
+ 749 0328 9093 0000 		sts (zbus_rxlen)+1,r25
+ 750 032c 8093 0000 		sts zbus_rxlen,r24
+ 751               	.L64:
+ 753               	.LM94:
+ 754 0330 1092 0000 		sts bus_blocked,__zero_reg__
+ 756               	.LM95:
+ 757 0334 8091 0000 		lds r24,zbus_txlen
+ 758 0338 9091 0000 		lds r25,(zbus_txlen)+1
+ 759 033c 892B      		or r24,r25
+ 760 033e 01F0      		breq .L70
+ 762               	.LM96:
+ 763 0340 0E94 0000 		call __zbus_txstart
+ 764               	.L70:
+ 765               	/* epilogue: frame size=0 */
+ 766 0344 FF91      		pop r31
+ 767 0346 EF91      		pop r30
+ 768 0348 BF91      		pop r27
+ 769 034a AF91      		pop r26
+ 770 034c 9F91      		pop r25
+ 771 034e 8F91      		pop r24
+ 772 0350 7F91      		pop r23
+ 773 0352 6F91      		pop r22
+ 774 0354 5F91      		pop r21
+ 775 0356 4F91      		pop r20
+ 776 0358 3F91      		pop r19
+ 777 035a 2F91      		pop r18
+ 778 035c 0F90      		pop __tmp_reg__
+ 779 035e 0FBE      		out __SREG__,__tmp_reg__
+ 780 0360 0F90      		pop __tmp_reg__
+ 781 0362 1F90      		pop __zero_reg__
+ 782 0364 1895      		reti
+ 783               	/* epilogue end (size=17) */
+ 784               	/* function __vector_20 size 143 (109) */
+ 792               	.Lscope9:
+ 793               	.global	zbus_done
+ 794               	.global	zbus_done
+ 795               		.section .bss
+ 798               	zbus_done:
+ 799 0000 00        		.skip 1,0
+ 800               		.lcomm recv_escape_data,1
+ 801               		.lcomm bus_blocked,1
+ 802               		.lcomm send_escape_data,1
+ 803               		.data
+ 806               	t.1909:
+ 807 0000 1E        		.byte	30
+ 808               		.lcomm zbus_index,2
+ 809               		.lcomm zbus_txlen,2
+ 810               		.lcomm zbus_rxlen,2
+ 811               		.comm zbus_txbuf,270,1
+ 812               		.comm zbus_buf,270,1
+ 823               		.text
+ 825               	.Letext0:
+ 826               	/* File "zbus.c": code  441 = 0x01b9 ( 371), prologues  34, epilogues  36 */
+DEFINED SYMBOLS
+                            *ABS*:00000000 zbus.c
+     /tmp/ccw6js2O.s:2      *ABS*:0000003f __SREG__
+     /tmp/ccw6js2O.s:3      *ABS*:0000003e __SP_H__
+     /tmp/ccw6js2O.s:4      *ABS*:0000003d __SP_L__
+     /tmp/ccw6js2O.s:5      *ABS*:00000000 __tmp_reg__
+     /tmp/ccw6js2O.s:6      *ABS*:00000001 __zero_reg__
+     /tmp/ccw6js2O.s:105    .text:00000000 zbus_ready
+     /tmp/ccw6js2O.s:808    .bss:00000006 zbus_txlen
+     /tmp/ccw6js2O.s:809    .bss:00000008 zbus_rxlen
+     /tmp/ccw6js2O.s:154    .text:00000036 __zbus_txstart
+     /tmp/ccw6js2O.s:800    .bss:00000002 bus_blocked
+     /tmp/ccw6js2O.s:802    .bss:00000004 zbus_index
+     /tmp/ccw6js2O.s:801    .bss:00000003 send_escape_data
+     /tmp/ccw6js2O.s:215    .text:0000006c zbus_txstart
+     /tmp/ccw6js2O.s:244    .text:00000082 zbus_rxstart
+     /tmp/ccw6js2O.s:293    .text:000000a8 zbus_rxfinish
+     /tmp/ccw6js2O.s:327    .text:000000c4 zbus_core_init
+     /tmp/ccw6js2O.s:392    .text:00000112 zbus_core_periodic
+     /tmp/ccw6js2O.s:806    .data:00000000 t.1909
+     /tmp/ccw6js2O.s:438    .text:00000144 __vector_22
+                            *COM*:0000010e zbus_txbuf
+     /tmp/ccw6js2O.s:798    .bss:00000000 zbus_done
+     /tmp/ccw6js2O.s:595    .text:0000024c __vector_20
+                             .bss:00000001 recv_escape_data
+                            *COM*:0000010e zbus_buf
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
