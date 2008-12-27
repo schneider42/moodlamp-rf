@@ -1,0 +1,35 @@
+import serial
+import time
+import getopt
+import sys
+
+
+def tohex(val):
+    h = hex(val)[1:]
+    if val < 0x10 :
+        h = '0'+h
+    return h
+
+
+def wait():
+#    time.sleep(0.45)
+    while(1):
+        if ser.read(1) == 'D':
+            break
+
+r = tohex(int(sys.argv[1]))
+print r
+
+setcolor =  "acC#00#000000ab"
+setcolor2 = "acF#46#%s%s%s%s%sab"%(r,g,b,h,l)
+
+ser = serial.Serial('/dev/ttyUSB0', 115200)
+
+while(1):
+    ser.write(setcolor)
+    wait()
+    time.sleep(0.2)
+    ser.write(setcolor2)
+    wait()
+    time.sleep(2)
+
