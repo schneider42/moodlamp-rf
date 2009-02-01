@@ -179,14 +179,18 @@ SIGNAL(usart(USART,_TX_vect))
         zbus_rxstart();
         return;
     }
-    if(zbus_txbuf[p] == '\\'){
-        usart(UDR) = '\\';
-        escaped = '\\';
-        return;
-    }
     if(escaped){
         usart(UDR) = escaped;
         escaped = 0;
+        p++;
+        if(p == zbus_txlen)
+            zbus_intx = 3;
+        return;
+    }
+
+    if(zbus_txbuf[p] == '\\'){
+        usart(UDR) = '\\';
+        escaped = '\\';
         return;
     }
 
