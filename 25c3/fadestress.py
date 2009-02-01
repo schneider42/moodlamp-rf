@@ -23,8 +23,8 @@ b = tohex(int(sys.argv[3]))
 h = tohex(int(sys.argv[4])>>8)
 l = tohex(int(sys.argv[4])&0xFF)
 
-setcolor =  "acC#00#202020ab"
-setcolor2 = "acF#4C#%s%s%s%s%sab"%(r,g,b,h,l)
+setcolor =  "acC#00#000000ab"
+setcolor2 = "acF#00#%s%s%s%s%sab"%(r,g,b,h,l)
 
 ser = serial.Serial('/dev/ttyUSB0', 115200)
 
