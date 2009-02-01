@@ -102,6 +102,9 @@
 #define UART_BAUDRATE 19200
 #endif
 
+#ifndef PWM_USESCALE
+#define PWM_USESCALE
+#endif
 
 /* enable this if you want to control a fnordlicht via RS485 */
 #if RS485_CTRL
