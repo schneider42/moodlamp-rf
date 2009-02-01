@@ -4,8 +4,8 @@
 #include "serial_handler.h"
 #include <string.h>
 
-char buffer[270];
-uint8_t serial_buffer[270];
+char buffer[SERIAL_BUFFERLEN];
+uint8_t serial_buffer[SERIAL_BUFFERLEN];
 
 uint16_t packet = 0;
 uint8_t remote = 0;
@@ -58,7 +58,7 @@ unsigned int readline( void )
     }
     data = i&0xFF;
 
-    if(data == 'a'){
+    if(data == SERIAL_ESCAPE){
         if(!escaped){
             escaped = 1;
             return 0;
@@ -66,17 +66,17 @@ unsigned int readline( void )
         escaped = 0;
     }else if(escaped){
         escaped = 0;
-        if(data == 'c'){
+        if(data == SERIAL_START){
             fill = 0;
             return 0;
-        }else if( data == 'b'){
+        }else if( data == SERIAL_END){
             return fill;
         }
     }
     //if(fill != -1){
         buffer[fill++] = data;
-        if(fill >= 270)
-            fill = 269;
+        if(fill >= SERIAL_BUFFERLEN)
+            fill = SERIAL_BUFFERLEN -1;
     //}
     return 0;
 }

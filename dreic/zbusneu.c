@@ -5,6 +5,7 @@
 #include "bit-macros.h"
 #include "config.h"
 #include "zbusneu.h"
+#include "lib/uart.h"
 
 #ifndef ZBUS_USE_USART
 #define ZBUS_USE_USART 0 
@@ -139,7 +140,7 @@ zbus_core_init(void)
     zbus_rxlen = 0;
     zbus_index = 0;
 
-    zbus_rxstart ();
+    //zbus_rxstart ();
 }
 
 void
@@ -151,6 +152,7 @@ zbus_core_periodic(void)
         zbus_rxstart();
 }
 
+#ifndef USART_USE_0
 SIGNAL(usart(USART,_TX_vect))
 {
     static uint8_t escaped = 0;
@@ -176,17 +178,21 @@ SIGNAL(usart(USART,_TX_vect))
         zbus_txfinished = 1;
         zbus_txlen = 0;
         zbus_done = 1;
-        zbus_rxstart();
-        return;
-    }
-    if(zbus_txbuf[p] == '\\'){
-        usart(UDR) = '\\';
-        escaped = '\\';
+        //zbus_rxstart();
         return;
     }
     if(escaped){
         usart(UDR) = escaped;
         escaped = 0;
+        p++;
+        if(p == zbus_txlen)
+            zbus_intx = 3;
+        return;
+    }
+
+    if(zbus_txbuf[p] == '\\'){
+        usart(UDR) = '\\';
+        escaped = '\\';
         return;
     }
 
@@ -229,6 +235,5 @@ SIGNAL(usart(USART,_RX_vect))
   zbus_buf[zbus_rxlen++] = data;
 
 }
-
-
+#endif
 #endif
