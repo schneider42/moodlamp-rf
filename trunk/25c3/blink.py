@@ -27,7 +27,7 @@ setcolor =  "acC#00#000000ab"
 #setcolor2 = "acF#4C#%s%s%s%s%sab"%(r,g,b,h,l)
 
 setcolor2 =  "acC#00#FFFFFFab"
-ser = serial.Serial('/dev/ttyUSB2', 115200)
+ser = serial.Serial('/dev/ttyUSB0', 115200)
 w = float(sys.argv[1])
 
 while(1):
