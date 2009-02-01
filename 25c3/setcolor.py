@@ -19,19 +19,21 @@ def wait():
 
 val = int(sys.argv[1])
 
-r = g = b = tohex(val)
-r = 19
-g = 20
-b = 21
-setcolor = "acC#4C#%s%s%sab"%(r,g,b)
+#r = g = b = tohex(val)
+r = tohex(int(sys.argv[1]))
+g = tohex(int(sys.argv[2]))
+b = tohex(int(sys.argv[3]))
+setcolor = "acC#00#%s%s%sab"%(r,g,b)
 
-ser = serial.Serial('/dev/ttyUSB2', 115200)
+ser = serial.Serial('/dev/ttyUSB0', 115200)
 
-while(1):
-    ser.write(setcolor)
-    print setcolor
-    wait()
-    time.sleep(0.2)
+#while(1):
+ser.write(setcolor)
+#print setcolor
+wait()
+#ser.write(setcolor)
+#wait()
+#    time.sleep(0.2)
     #val+=1
 #    r = g = b =  tohex(val)
 #    g = tohex(val+1)
