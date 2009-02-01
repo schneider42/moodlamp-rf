@@ -17,7 +17,7 @@ start = False
 inframe = False
 while True:
     c = ser.read(1)
-#    print "c=",ord( c)
+#    print "c=",list(c)
 #    continue
     if escaped:
         if c == '0':
