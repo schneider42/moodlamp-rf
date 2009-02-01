@@ -25,6 +25,7 @@ void raw_tick(void)
         uart1_puts("acR");
         serial_putenc((unsigned char *)zbus_buf, len);
         uart1_puts("ab");
+        zbus_rxdone();
         zbus_rxstart();
     }
 
