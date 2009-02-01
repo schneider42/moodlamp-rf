@@ -176,10 +176,11 @@ void update_pwm_timeslots(void)
     olddim = global_pwm.dim;
     */
     for(i=0;i<PWM_CHANNELS;i++){
+#ifdef PWM_USESCALE
         global_pwm.channels[i].brightness_scale = scalevalue(global_pwm.channels[i].brightness,global_pwm.dim);
-        //if (global_pwm.channels[i].brightness_scale != global_pwm.channels[i].brightness)
-            //while(1);
-        //global_pwm.channels[i].brightness_scale = global_pwm.channels[i].brightness;
+#else
+        global_pwm.channels[i].brightness_scale = global_pwm.channels[i].brightness;
+#endif
     }
         
     /* sort channels according to the current brightness */
@@ -329,7 +330,7 @@ static inline void prepare_next_timeslot(void)
 /** timer1 overflow (=output compare a) interrupt */
 ISR(SIG_OUTPUT_COMPARE1A)
 /*{{{*/ {
-    static uint8_t timebase = 0;
+    //static uint8_t timebase = 0;
    // PORTD |= (1<<PD3);
     /* decide if this interrupt is the beginning of a pwm cycle */
     if (pwm.next_bitmask == 0) {
@@ -344,7 +345,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
         LED_PORT |= (~pwm.initial_bitmask)&0x07;
 #endif
         /* if next timeslot would happen too fast or has already happened, just spinlock */
-        while (TCNT1 + 500 > pwm.slots[pwm.index].top)
+        while (TCNT1 + 1000 > pwm.slots[pwm.index].top)
         {
             /* spin until timer interrupt is near enough */
             while (pwm.slots[pwm.index].top > TCNT1);
@@ -363,10 +364,10 @@ ISR(SIG_OUTPUT_COMPARE1A)
         /* signal new cycle to main procedure */
         global.flags.new_cycle = 1;
     }
-    if(timebase++){
+    //if(timebase++){
         global.flags.timebase = 1;
-        timebase = 0;
-    }
+        //timebase = 0;
+    //}
     /* prepare the next timeslot */
     prepare_next_timeslot();
     //PORTD &= ~(1<<PD3);
