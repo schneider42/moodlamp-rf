@@ -61,6 +61,8 @@ struct global_t {
 
 extern volatile struct global_t global;
 
+extern uint16_t main_reset;
+
 void jump_to_bootloader(void);
 
 #endif

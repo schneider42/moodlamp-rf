@@ -11,12 +11,13 @@
 #include "settings.h"
 #include <string.h>
 #include "interfaces.h"
+#include <avr/wdt.h>
 uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint16_t timeout = 0;
 uint8_t  serveradr = 0;
-uint16_t control_beacontime = 500;
+uint16_t control_beacontime = 1000;
 uint8_t control_faderunning = 0;
 
 
@@ -127,8 +128,8 @@ void control_tick(void)
         break;
     }
     
-    static unsigned int control_beacon = 500;
-    if(control_beacon-- == 0 && control_beacontime != 0){
+    static unsigned int control_beacon = 1000;
+    if(control_beacontime !=  0 && control_beacon-- == 0 ){
         control_beacon = control_beacontime;
         if(control_state == CONTROL_SEARCHMASTER){
             p.flags = PACKET_BROADCAST;//don't know server yet
@@ -166,6 +167,8 @@ void control_tick(void)
 void control_selfassign(void)
 {
     uint8_t adr = idbuf[0];
+    //wdt_reset();
+    //main_reset = 0;
     if(control_state == CONTROL_SETUPOK)
         return;
     packet_setAddress(adr,adr);

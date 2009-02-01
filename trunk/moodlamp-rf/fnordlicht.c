@@ -78,6 +78,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_file, NULL, _FDEV_SETUP_WRITE
 /* structs */
 volatile struct global_t global = {{0, 0}};
 /* prototypes */
+//uint16_t main_reset = 0;
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream)
@@ -101,7 +102,7 @@ unsigned int random_seed __attribute__ ((section (".noinit")));
  */
 int main(void) {
 //    SPCR &= ~(1<<SPE);
-//    TIMSK &= ~(1<<TOIE1);
+//    TIMSK0 &= ~(1<<TOIE1);
     wdt_disable();
     /* Clear WDRF in MCUSR */
     MCUSR &= ~(1<<WDRF);
@@ -154,6 +155,8 @@ int main(void) {
                 packet_tick();
             else
                 raw_tick();
+            //if(main_reset++ > 4000)
+            //  jump_to_bootloader(); 
         }
 
         if(global.flags.timebase){
