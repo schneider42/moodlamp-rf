@@ -65,6 +65,10 @@
 #define UART_BAUDRATE 230400
 #define SERIAL_UART 1
 
+
+#define JUMPER1_PIN     PC3
+#define JUMPER1_PORT    C
+
 /* debug defines */
 #ifndef DEBUG
 #define DEBUG 0

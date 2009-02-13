@@ -60,9 +60,6 @@ void rf12packet_sendpacket(void)
 
 void rf12packet_tick(void)      //every 1ms ~ 2bytes
 {
-    if(!(PINC & (1<<PC3)))
-        return;
-
 //    EIMSK &= ~(1<<INT0);
     unsigned char ret = rf12_rxfinish((uint8_t *)&inpacket);
     if(ret != 255 && ret != 254 && ret != 0){
@@ -271,9 +268,6 @@ unsigned char rf12packet_incrseq(void)      //used for not mc and bc packets
 
 uint8_t rf12packet_packetOut(struct packet_t * p)
 {
-    if(!(PINC & (1<<PC3)))
-        return 0;
-
     if(state != STATE_IDLE)
         return 1;
 //    uart1_puts("acDPoab");
@@ -303,9 +297,6 @@ uint8_t rf12packet_packetOut(struct packet_t * p)
 
 uint8_t rf12packet_nextHeader(struct packet_t * p)
 {
-    if(!(PINC & (1<<PC3)))
-        return 0;
-
     struct packet_t * packet = &(outpacket.packet);
     if(doreply && 
         (rf12packet_status & RF12PACKET_PACKETDONE ||
@@ -333,9 +324,6 @@ uint8_t rf12packet_nextHeader(struct packet_t * p)
 
 uint8_t rf12packet_packetIn(struct packet_t * p)
 {
-    if(!(PINC & (1<<PC3)))
-        return 0;
-
     //struct packet_t * packet = &(outpacket.packet);
     if(doreply &&
         (rf12packet_status & RF12PACKET_PACKETDONE ||
@@ -355,16 +343,8 @@ uint8_t rf12packet_packetIn(struct packet_t * p)
     return 0;
 }
 
-/*unsigned char rf12packet_isidle(void)
-{
-    return state==STATE_IDLE?1:0;
-}*/
-
 uint8_t rf12packet_ready(void)
 {
-    if(!(PINC & (1<<PC3)))
-        return 1;
-
     return state==STATE_IDLE?1:0;
 }
 
