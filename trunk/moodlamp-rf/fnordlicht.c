@@ -69,6 +69,8 @@
 #include "control.h"
 #include "serial_handler.h"
 #include "packet.h"
+#include "pinutils.h"
+#include "interfaces.h"
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream);
@@ -114,9 +116,8 @@ int main(void) {
 
     //volatile long l;
 //    for(l=0;l<1000000;l++);
-    DDRC &= ~(1<<PC3);
-    PORTC |= (1<<PC3);
-
+    DDR_CONFIG_IN(JUMPER1);
+    PIN_SET(JUMPER1);
     init_pwm();
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
@@ -132,6 +133,9 @@ int main(void) {
 #endif
     settings_read();
 
+    if(!PIN_HIGH(JUMPER1))
+        interfaces_setEnabled(IFACE_RF,0);
+
     control_init();
 
 #if RS485_CTRL
@@ -143,6 +147,7 @@ int main(void) {
 
     srandom(random_seed);
     random_seed = random();
+
     /* enable interrupts globally */
     sei();
 //    global.state = STATE_RUNNING;
@@ -151,9 +156,9 @@ int main(void) {
     while (1) {
         if(packetbase > 32){
             packetbase = 0;
-            if(global.flags.rawmode == 0)
+            if(global.flags.rawmode == 0){
                 packet_tick();
-            else
+            }else
                 raw_tick();
             //if(main_reset++ > 4000)
             //  jump_to_bootloader(); 

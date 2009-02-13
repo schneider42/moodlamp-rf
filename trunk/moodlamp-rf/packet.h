@@ -38,7 +38,6 @@ void packet_setAddress(uint8_t address, uint8_t broadcast);
 void packet_init(uint8_t address, uint8_t broadcast);
 void packet_packetIn(struct packet_t * p, uint8_t interface);
 void packet_tick(void);
-void packet_setserver(uint8_t s);
 void packet_packetOut(struct packet_t * p);
 
 #endif
