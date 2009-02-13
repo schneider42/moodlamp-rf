@@ -5,6 +5,7 @@
 #include "bit-macros.h"
 #include "config.h"
 #include "zbusneu.h"
+#include "pinutils.h"
 
 #ifndef ZBUS_USE_USART
 #define ZBUS_USE_USART 0 
@@ -16,18 +17,6 @@
 /*
 #include <util/setbaud.h>
 */
-#define _PORT_CHAR(character) PORT ## character
-#define PORT_CHAR(character) _PORT_CHAR(character)
-#define PIN_SET(pin) PORT_CHAR(pin ## _PORT) |= _BV(pin ## _PIN)
-#define PIN_CLEAR(pin) PORT_CHAR(pin ## _PORT) &= ~_BV(pin ## _PIN)
-#define _DDR_CHAR(character) DDR ## character
-#define DDR_CHAR(character) _DDR_CHAR(character)
-#define DDR_CONFIG_OUT(pin)  DDR_CHAR( pin ## _PORT) |= _BV((pin ## _PIN))
-
-#define HAVE_ZBUS_RX_PIN
-#define ZBUS_RX_PIN_PIN     PC3
-#define ZBUS_RX_PIN_PORT    C
-
 #if RS485_CTRL
 /* We generate our own usart init module, for our usart port */
 generate_usart_init()

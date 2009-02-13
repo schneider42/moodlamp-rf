@@ -46,13 +46,6 @@
 /*
 #include <util/setbaud.h>
 */
-#define _PORT_CHAR(character) PORT ## character
-#define PORT_CHAR(character) _PORT_CHAR(character)
-#define PIN_SET(pin) PORT_CHAR(pin ## _PORT) |= _BV(pin ## _PIN)
-#define PIN_CLEAR(pin) PORT_CHAR(pin ## _PORT) &= ~_BV(pin ## _PIN)
-#define _DDR_CHAR(character) DDR ## character
-#define DDR_CHAR(character) _DDR_CHAR(character)
-#define DDR_CONFIG_OUT(pin)  DDR_CHAR( pin ## _PORT) |= _BV((pin ## _PIN))
 
 #define HAVE_ZBUS_RX_PIN
 #define ZBUS_RX_PIN_PIN     PC3
