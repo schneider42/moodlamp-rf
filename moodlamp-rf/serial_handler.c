@@ -13,22 +13,22 @@
 //#include "settings.h"
 
 #if SERIAL_UART
-char buffer[270];
+char buffer[SERIAL_BUFFERLEN];
 uint16_t packet = 0;
 uint8_t remote = 0;
 
 void serial_putcenc(uint8_t c)
 {
-    if(c == 'a')
-        uart1_putc('a');
+    if(c == SERIAL_ESCAPE)
+        uart1_putc(SERIAL_ESCAPE);
     uart1_putc(c);
 }
 
-void serial_putsenc(uint8_t * s)
+void serial_putsenc(char * s)
 {
     while(*s){
-        if(*s == 'a')
-            uart1_putc('a');
+        if(*s == SERIAL_ESCAPE)
+            uart1_putc(SERIAL_ESCAPE);
         uart1_putc(*s++);
     }
 }
@@ -37,24 +37,50 @@ void serial_putenc(uint8_t * d, uint16_t n)
 {
     uint16_t i;
     for(i=0;i<n;i++){
-        if(*d == 'a')
-            uart1_putc('a');
+        if(*d == SERIAL_ESCAPE)
+            uart1_putc(SERIAL_ESCAPE);
         uart1_putc(*d++);
     }
+}
+
+inline void serial_putStart(void)
+{
+    uart1_putc(SERIAL_ESCAPE);
+    uart1_putc(SERIAL_START);
+}
+
+inline void serial_putStop(void)
+{
+    uart1_putc(SERIAL_ESCAPE);
+    uart1_putc(SERIAL_END);
+}
+
+void serial_sendFrames(char * s)
+{
+    serial_putStart();
+    serial_putsenc(s);
+    serial_putStop();
+}
+
+void serial_sendFramec(uint8_t s)
+{
+    serial_putStart();
+    serial_putcenc(s);
+    serial_putStop();
 }
 
 uint8_t serial_packetOut(struct packet_t * p)
 {
     if(p->flags & PACKET_DONE){         //these are special flags
-        uart1_puts("acSDab");           //for the host system
+        serial_sendFrames("SD");           //for the host system
         //return 0;                     //they don't contain any data
     }
     if(p->flags & PACKET_TIMEOUT){
-        uart1_puts("acSTab");
+        serial_sendFrames("ST");
     }
     if(p->len == 0)             //hm somehow uggly
         return 0;
-    uart1_puts("ac");
+    serial_putStart();
     if(p->flags & PACKET_BROADCAST)
         serial_putcenc('B');
     else
@@ -70,7 +96,7 @@ uint8_t serial_packetOut(struct packet_t * p)
         }
     }*/
     serial_putenc(p->data,p->len);
-    uart1_puts("ab");
+    serial_putStop();
     return 0;
 }
 
@@ -118,20 +144,8 @@ void serial_setadr(uint8_t remadr, uint8_t adr, uint8_t broadcast){
     packet_init(adr,broadcast);
     remote = remadr;
 //    cache_set(remote, IFACE_SERIAL);
-//    control_setserver(remote);
 }
 
-/*void serial_send(char * s)
-{
-    uint8_t c;
-    uint8_t len = strlen(s);
-    for(c=0;c< p->len;c++){
-        uart1_putc(s);
-        if(p->data[c] == 'a'){
-            uart1_putc('a');
-        }
-    }
-}*/
 
 void serial_sendid(void)
 {
@@ -142,10 +156,10 @@ void serial_sendid(void)
 
 void serial_tick(void)
 {
-    static uint8_t state = 0;
-    if(state == 0){
-        uart1_puts("acIab");
-        state = 1;
+    static uint8_t state = SERIAL_STATE_INIT;
+    if(state == SERIAL_STATE_INIT){
+        serial_sendFramec(SERIAL_INIT);
+        state = SERIAL_STATE_NORMAL;
     } 
 }
 
@@ -170,12 +184,12 @@ void serial_process(void)
         return;
     uint16_t c = readline();
     if(c){
-        if(buffer[0] == 'I'){
+        if(buffer[0] == SERIAL_INIT){
             serial_setadr(buffer[1],buffer[2],buffer[3]);
             //serial_sendid();
         }else if(buffer[0] == CMD_RAW){
-            cmd_handler(CMD_RAW,(uint8_t *)buffer+1,(uint8_t*)buffer);
-        }else if(buffer[0] == 'r'){
+            cmd_handler(CMD_RAW,(uint8_t *)buffer+1,NULL);
+        }else if(buffer[0] == SERIAL_RAWDATA){
             packet = c-1;
         }else{
             packet = c;
@@ -194,7 +208,7 @@ unsigned int readline( void )
     }
     data = i&0xFF;
 
-    if(data == 'a'){
+    if(data == SERIAL_ESCAPE){
         if(!escaped){
             escaped = 1;
             return 0;
@@ -202,18 +216,16 @@ unsigned int readline( void )
         escaped = 0;
     }else if(escaped){
         escaped = 0;
-        if(data == 'c'){
+        if(data == SERIAL_START){
             fill = 0;
             return 0;
-        }else if( data == 'b'){
+        }else if( data == SERIAL_END){
             return fill;
         }
     }
-    //if(fill != -1){
-        buffer[fill++] = data;
-        if(fill >= 270)
-            fill = 269;
-    //}
+    buffer[fill++] = data;
+    if(fill >= SERIAL_BUFFERLEN)
+        fill = SERIAL_BUFFERLEN - 1;
     return 0;
 }
 
