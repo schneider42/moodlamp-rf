@@ -1,0 +1,32 @@
+Index: libmpcodecs/vf.c
+===================================================================
+--- libmpcodecs/vf.c	(revision 28549)
++++ libmpcodecs/vf.c	(working copy)
+@@ -99,6 +99,7 @@
+ extern const vf_info_t vf_info_blackframe;
+ extern const vf_info_t vf_info_geq;
+ extern const vf_info_t vf_info_ow;
++extern const vf_info_t vf_info_ambimood;
+ 
+ // list of available filters:
+ static const vf_info_t* const filter_list[]={
+@@ -191,6 +192,7 @@
+     &vf_info_yadif,
+     &vf_info_blackframe,
+     &vf_info_ow,
++    &vf_info_ambimood,
+     NULL
+ };
+ 
+Index: Makefile
+===================================================================
+--- Makefile	(revision 28549)
++++ Makefile	(working copy)
+@@ -167,6 +167,7 @@
+               libmpcodecs/vf_yuvcsp.c \
+               libmpcodecs/vf_yuy2.c \
+               libmpcodecs/vf_yvu9.c \
++              libmpcodecs/vf_ambimood.c \
+               libmpdemux/aac_hdr.c \
+               libmpdemux/asfheader.c \
+               libmpdemux/aviheader.c \
