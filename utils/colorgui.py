@@ -12,8 +12,10 @@ def tohex(val):
     if val < 0x10 :
         h = '0'+h
     return h.upper()
-
-lamp = tohex(int(sys.argv[1]))
+if len(sys.argv) > 1:
+    lamp = tohex(int(sys.argv[1]))
+else:
+    lamp = tohex(0)
 
 def new_color(color):
     c = color.get_current_color()
