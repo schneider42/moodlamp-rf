@@ -44,7 +44,7 @@ struct thread_t script_threads_record[MAX_THREADS] EEMEM;
 struct timeslots_t pwm_record EEMEM;
 struct global_t global_record EEMEM;
 struct settings_record_t global_settings;
-char id[50] EEMEM = "master5.lamp.blinkenlichts.net";
+//char id[50] EEMEM = "master5.lamp.blinkenlichts.net";
 char * name = (char *)(E2END - 50);
 
 uint8_t idbuf[60];
@@ -66,32 +66,33 @@ uint8_t settings_compareid(uint8_t * buf)
 void settings_setid(uint8_t * buf)
 {
     uint8_t len = strlen((char*)buf);
-    if(len > (sizeof(id)-1)){
-        len = sizeof(id)-1;
+//    if(len > (sizeof(id)-1)){
+//        len = sizeof(id)-1;
+    if(len > 50){
+        len = 49;
         buf[len] = 0;
     }
 //    eeprom_write_block(&id,buf,len+1);
-  eeprom_write_block(name,buf,len+1);  
+  eeprom_write_block(buf,name,len+1);  
 }
 
 void settings_save(void)
 {
     const void * temp;
     global_settings.firstboot = 0;
-    eeprom_write_block(&global_settings_record,&global_settings, sizeof(global_settings)); 
+    eeprom_write_block(&global_settings, &global_settings_record,sizeof(global_settings)); 
     temp =(const void *) &global_pwm;       //Just to avoid compiler warnings
     eeprom_write_block(
-            //(const void *)&global_pwm,
-            &global_pwm_record,
             temp,
+            &global_pwm_record,
             sizeof(global_pwm)
     );
 #if STATIC_SCRIPTS
-    eeprom_write_block(&script_threads_record,script_threads,sizeof(script_threads)*MAX_THREADS);
+    eeprom_write_block(script_threads,&script_threads_record,sizeof(script_threads)*MAX_THREADS);
 #endif
-    eeprom_write_block(&pwm_record,&pwm,sizeof(pwm));
+    eeprom_write_block(&pwm,&pwm_record,sizeof(pwm));
     temp = (const void *) &global;
-    eeprom_write_block(&global_record,/*(struct global_t *)&global*/temp,sizeof(global));
+    eeprom_write_block(/*(struct global_t *)&global*/temp,&global_record,sizeof(global));
 
 }
 
