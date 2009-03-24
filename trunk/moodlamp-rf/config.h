@@ -141,7 +141,7 @@
 
 /* check for avr-libc version */
 #if __AVR_LIBC_VERSION__ < 10605UL
-#error newer libc version (>= 1.6.5) needed!
+#error newer libc version (>= 1.6.4) needed!
 #endif
 
 /* check if cpu speed is defined */
