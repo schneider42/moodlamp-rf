@@ -140,7 +140,7 @@
 #include <avr/version.h>
 
 /* check for avr-libc version */
-#if __AVR_LIBC_VERSION__ < 10605UL
+#if __AVR_LIBC_VERSION__ < 10604UL
 #error newer libc version (>= 1.6.4) needed!
 #endif
 
