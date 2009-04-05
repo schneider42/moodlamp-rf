@@ -13,12 +13,12 @@ class Packet:
     data = ""
     adr = -1
     broadcast = False
-    def __init__ ( self, data, adr, broadcast):
+    def __init__(self, data, adr, broadcast):
         self.data = data
         self.adr = adr
         self.broadcast = broadcast
 
-class ProcessPacket ( threading.Thread ):
+class ProcessPacket(threading.Thread):
     def __init__(self, queue, callback):
         threading.Thread.__init__ ( self )
         self.callback = callback
@@ -30,12 +30,12 @@ class ProcessPacket ( threading.Thread ):
 #            print "processing packet"
             self.callback.new_packet(packet.adr,packet.data, packet.broadcast)
     
-class ReadSerial ( threading.Thread ):
+class ReadSerial(threading.Thread):
     escaped = False
     ar=[]
     debug = 1
 
-    def __init__ ( self, rf12, callback, owner, queue):
+    def __init__(self, rf12, callback, owner, queue):
       self.rf12 = rf12
       threading.Thread.__init__ ( self )
       self.callback = callback
@@ -44,7 +44,8 @@ class ReadSerial ( threading.Thread ):
       self.ready = False
       self.portok = True
       
-    def readline(self):                #a escapes, c starts new line, b ends line
+    def readline(self):
+        #a escapes, c starts new line, b ends line
         #print '       r'
         t = time.time()
         data = self.rf12.read(1)            #read single byte
@@ -76,7 +77,7 @@ class ReadSerial ( threading.Thread ):
         self.ar.append(data);
         return False
 
-    def run ( self ):
+    def run(self):
         while 1:
             if not self.portok:
                 break
@@ -90,7 +91,7 @@ class ReadSerial ( threading.Thread ):
                  
                 #self.callback.new_packet(''.join(self.ar))
                     print "Ignoring:", str(self.ar)
-                elif len(self.ar) > 3 and (self.ar[0] == 'P' or self.ar[0] == 'B'):    
+                elif len(self.ar) > 3 and (self.ar[0] == 'P' or self.ar[0] == 'B'):
                     #print                  #received packet
 #                    print "%s Sender=%d Rec=%d Data:" % (time.time(),ord(self.ar[3]),ord(self.ar[2]))
 #                    print self.ar[4:]
@@ -109,7 +110,7 @@ class ReadSerial ( threading.Thread ):
                             print "Status: done"
                     elif self.ar[1] == 'T':
                         #print time.time()
-                        print "%s ------------------Status: timeout--------------------" % time.time() 
+                        print "%s ------------------Status: timeout--------------------" % time.time()
                     else:
                         print "?: %s" % self.ar
                 else:
@@ -146,8 +147,7 @@ class RF12Interface:
     broadcast = 0
     debug = 1
     
-    def __init__ ( self, port, baud, ownadr, gateadr, callback):
-        
+    def __init__(self, port, baud, ownadr, gateadr, callback):
         self.port = port
         self.baud = baud
         self.ownadr = ownadr
@@ -206,7 +206,7 @@ class RF12Interface:
         
     def reset(self):
         print "reset serial device"
-        self.rf12 = serial.Serial("/dev/ttyUSB0", 115200)#, timeout=1)
+        self.rf12 = serial.Serial("/dev/ttyUSB0", 115200)
         self.readthread.stop()
         
     def initinterface(self):
@@ -297,7 +297,7 @@ class RF12Interface:
     def sniff(self, sniff):
         if sniff == True:
             print "setting mode to sniffer"
-            self.rf12.write("acS\x02ab") 
+            self.rf12.write("acS\x02ab")
         else:
             print "sniffer off"
             self.rf12.write("acS\x00ab")
@@ -345,7 +345,7 @@ class RF12Interface:
             sendchunk.append(chr(0x23))
             sendchunk.append(chr(pagenumber))
             sendchunk += data
-            crc8 = crc.crc8()
+            crc8 = crc.Crc8()
             dcrc = crc8.crc_calc (data, pagesize)
             print "crc=", dcrc
             self.pagecrc = chr(dcrc)
