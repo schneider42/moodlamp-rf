@@ -1,6 +1,6 @@
-class crc8:
-    def crc_update (self, crc, data):
-        for i in range (8):
+class Crc8:
+    def crc_update(self, crc, data):
+        for i in range(8):
             if (crc ^ data) & 1:
                 crc = (crc >> 1) ^ 0x8c
             else:
@@ -12,9 +12,7 @@ class crc8:
     
     def crc_calc(self, data, pagesize):
         crc = 0
-        #print "pagesize=",pagesize
         for i in range (pagesize):
-            #print "update", i
             crc = self.crc_update (crc, ord(data[i]))
     
         return crc

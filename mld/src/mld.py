@@ -1,6 +1,8 @@
 #from __future__ import with_statement
 
-import socket, sys, threading, time
+daemonize = 'false' #true/false
+
+import socket, sys, threading, time, os
 import asyncore, asynchat
 import rf12interface
 import traceback
@@ -182,7 +184,7 @@ class NotFound(Exception):
 
 class MLClient(asynchat.async_chat):
     lock = threading.Lock()
-    
+
     def sendLampNotFound(self):
         self.push("402 No such moodlamp\r\n")
     def sendOK(self):
@@ -214,6 +216,7 @@ class MLClient(asynchat.async_chat):
         self.ml = ml
         self.addr = addr
         self.state = 0
+	self.push("? to wake up el presidente\r\n")
         self.push(">")
         self.mld = mld
         self.interfaces = interfaces
@@ -235,7 +238,9 @@ class MLClient(asynchat.async_chat):
                 print "cmd=",cmd
                 ok = True
                 
-                if cmd == "001":
+		if cmd == "000":
+		    self.close() 
+                elif cmd == "001":
                     self.push("100 Hello World\r\n")
                     ok = False
                 elif cmd == "002":
@@ -248,8 +253,16 @@ class MLClient(asynchat.async_chat):
                         self.sendNoLampsDetected()
                         ok = False
                 elif cmd == "003":
-                    m = self.ml.getLamp(s[1])
-                    m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
+		    if int(s[1]) == 0:
+		        for n in self.ml:
+			    if n.ready:
+				self.push("Send %d -> %s %s %s\r\n" % (n.address, int(s[2],16),int(s[3],16),int(s[4],16)))
+			        m = self.ml.getLamp(n.address)
+			        m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
+		    else:
+			self.push("Send %d -> %s %s %s\r\n" % (int(s[1]), int(s[2],16),int(s[3],16),int(s[4],16)))
+                        m = self.ml.getLamp(s[1])
+                        m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
                 elif cmd == "004":
                     m = self.ml.getLamp(s[1])
                     m.pause(True);
@@ -299,6 +312,25 @@ class MLClient(asynchat.async_chat):
                     m.setname("".join(s[2:]))
                 elif cmd == "016":
                     m = self.ml.getLamp(s[1])
+		elif cmd == "?":
+		    self.push("000 - quit telnet ;)\r\n")
+		    self.push("001 - hello world?\r\n")
+		    self.push("002 - list of all available and ready moodlamps\r\n")
+		    self.push("003 [moodlamp_id] <ff> <00> <00> - fo change color r/g/b as hex\r\n                                   moodlamp id 0 for all moodlamps\r\n")
+		    self.push("004 [moodlamp_id] - toggle pause\r\n")
+		    self.push("005 - \r\n")
+		    self.push("006 - \r\n")
+		    self.push("007 - \r\n")
+		    self.push("008 - \r\n")
+		    self.push("009 - \r\n")
+		    self.push("010 - \r\n")
+		    self.push("011 - \r\n")
+		    self.push("012 - \r\n")
+		    self.push("013 [moodlamp_id] - reseting moodlamp\r\n")
+		    self.push("014 - \r\n")
+		    self.push("015 [moodlamp_id] <name> - to change name\r\n")
+		    self.push("016 - \r\n")
+		    self.push("r - reseting the serial device\r\n")
                 elif cmd == "":
                     pass
                 else:
@@ -500,5 +532,34 @@ class MLD:
 
         self.ml.lock.release()
         return r
-    
-MLD().serve()
+
+def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    try:
+	if os.fork() > 0: os._exit(0)
+    except OSError, error:
+	    print 'fork #1 failed: %d (%s)' % (error.errno, error.strerror)
+	    os._exit(1)
+    os.chdir('.')
+    os.setsid()
+    os.umask(0)
+    try:
+	    pid = os.fork()
+	    if pid > 0:
+		    print 'mld daemon pid %d\r\n' % pid
+		    os._exit(0)
+    except OSError, error:
+		    print 'fork #2 failed: %d (%s)' % (error.errno, error.strerror)
+		    os._exit(1)
+    for f in sys.stdout, sys.stderr: f.flush( )
+    si = file(stdin, 'r')
+    so = file(stdout, 'a+')
+    se = file(stderr, 'a+', 0)
+    os.dup2(si.fileno( ), sys.stdin.fileno( ))
+    os.dup2(so.fileno( ), sys.stdout.fileno( ))
+    os.dup2(se.fileno( ), sys.stderr.fileno( ))
+    MLD().serve()
+
+if daemonize == 'true': 
+    daemon()
+else:
+    MLD().serve()
