@@ -146,47 +146,35 @@ SIGNAL(usart(USART,_TX_vect))
     static uint16_t p = 0;
     if(zbus_intx == 1){
         usart(UDR) = ZBUS_START;
-        zbus_intx = 2;
+        zbus_intx++;
         p = 0;
-        return;
-    }
-    if(zbus_intx == 3){
+    }else if(zbus_intx == 2){
+        if(escaped){
+            usart(UDR) = escaped;
+            escaped = 0;
+        }else if(zbus_txbuf[p] == '\\'){
+            usart(UDR) = '\\';
+            escaped = '\\';
+            return;
+        }else{
+            usart(UDR) = zbus_txbuf[p];
+        }
+        if(++p == zbus_txlen){
+            zbus_intx++;
+        }
+    }else if(zbus_intx == 3){
         usart(UDR) = '\\';
-        zbus_intx = 4;
-        return;
-    }
-    if(zbus_intx == 4){
+        zbus_intx++;
+    }else if(zbus_intx == 4){
         usart(UDR) = ZBUS_STOP;
         zbus_intx++;
-        return;
-    }
-    if(zbus_intx == 5){
+    }else if(zbus_intx == 5){
         zbus_intx = 0;
         zbus_txfinished = 1;
         zbus_txlen = 0;
         zbus_done = 1;
         zbus_rxstart();
-        return;
     }
-    if(escaped){
-        usart(UDR) = escaped;
-        escaped = 0;
-        p++;
-        if(p == zbus_txlen)
-            zbus_intx = 3;
-        return;
-    }
-
-    if(zbus_txbuf[p] == '\\'){
-        usart(UDR) = '\\';
-        escaped = '\\';
-        return;
-    }
-
-    usart(UDR) = zbus_txbuf[p++];
-    if(p == zbus_txlen)
-        zbus_intx = 3;
-
 }
 
 SIGNAL(usart(USART,_RX_vect))
