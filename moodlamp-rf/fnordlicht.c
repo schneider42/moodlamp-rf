@@ -82,6 +82,8 @@ volatile struct global_t global = {{0, 0}};
 /* prototypes */
 //uint16_t main_reset = 0;
 
+uint8_t  config;
+
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream)
 {
@@ -116,8 +118,22 @@ int main(void) {
 
     //volatile long l;
 //    for(l=0;l<1000000;l++);
-    DDR_CONFIG_IN(JUMPER1);
-    PIN_SET(JUMPER1);
+    DDR_CONFIG_IN(CONFIG1);
+    PIN_SET(CONFIG1);
+    if( !PIN_HIGH(CONFIG1) ){
+        config = 30;
+    }else{
+        config = 21;
+    }
+
+    if( config == 21 ){
+        DDR_CONFIG_IN(JUMPER1C1);
+        PIN_SET(JUMPER1C1);
+    }else if( config == 30){
+        DDR_CONFIG_IN(JUMPER1C2);
+        PIN_SET(JUMPER1C2);
+    }
+
     init_pwm();
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
@@ -132,8 +148,7 @@ int main(void) {
     init_script_threads();
 #endif
     settings_read();
-
-    if(!PIN_HIGH(JUMPER1))
+    if((config == 21 && !PIN_HIGH(JUMPER1C1)) || (config== 30 && !PIN_HIGH(JUMPER1C2)))
         interfaces_setEnabled(IFACE_RF,0);
 
     control_init();
@@ -169,13 +184,13 @@ int main(void) {
             global.flags.timebase=0;
         }
         /* after the last pwm timeslot, rebuild the timeslot table */
-        /*
+        
         if (global.flags.last_pulse) {
             global.flags.last_pulse = 0;
-            if(global.flags.running)
-                update_pwm_timeslots();
+            //if(global.flags.running)
+            //    update_pwm_timeslots();
         }
-        */
+        
 
         /* at the beginning of each pwm cycle, call the fading engine and
          * execute all script threads */
