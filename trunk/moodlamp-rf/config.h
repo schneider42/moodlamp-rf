@@ -65,9 +65,22 @@
 #define UART_BAUDRATE 230400
 #define SERIAL_UART 1
 
+#define CONFIG1_PIN     PC1
+#define CONFIG1_PORT     C
 
-#define JUMPER1_PIN     PC3
-#define JUMPER1_PORT    C
+#define JUMPER1C1_PIN     PC3
+#define JUMPER1C1_PORT    C
+
+#define JUMPER1C2_PIN     PC3
+#define JUMPER1C2_PORT    C
+
+#define xRC5C2_PORT     PORTB
+#define	xRC5C2_IN       PINB
+#define	xRC5C2          PB1			// IR input low active
+
+#define xRC5C1_PORT     PORTD
+#define	xRC5C1_IN       PIND
+#define	xRC5C1          PD7			// IR input low active
 
 /* debug defines */
 #ifndef DEBUG
