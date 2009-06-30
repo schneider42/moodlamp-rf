@@ -312,23 +312,24 @@ uint8_t opcode_handler_rnd_channel(uint8_t parameters[], struct thread_t *curren
     (void) current_thread;
 
     uint8_t r;
+    uint8_t channel = parameters[1];
 
-    r = (uint8_t)0xff & (random() + (uint16_t)parameters[2]);
+    r = (uint8_t)0xff & (random() + (uint16_t)parameters[2]);       //minimum speed?
     if (!r) r=1;
-    global_pwm.channels[parameters[1]].speed_l = r;
+    global_pwm.channels[channel].speed_l = r;
 
     r =  random() & 0xff;
-    while (r>parameters[3])
+    while (r>parameters[3])                                         //maximum speed?
         r >>= 1;
-    global_pwm.channels[parameters[1]].speed_h = r;
+    global_pwm.channels[channel].speed_h = r;
 
     r = random() & 0xff;
     /* FIXME this is a workaround for a bug in opcode_handler_wait()
      *       when target_brightness equals the old value */
-    while (r == global_pwm.channels[parameters[1]].target_brightness)
+    while (r == global_pwm.channels[channel].target_brightness)
         r = random() & 0xff;
 
-    global_pwm.channels[parameters[1]].target_brightness  = r;
+    global_pwm.channels[channel].target_brightness  = r;
 
     return OP_RETURN_OK;
 }
