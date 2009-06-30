@@ -33,6 +33,16 @@ ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
 {
 //  sei();																	//don't block the PWM interrupt
   uint16_t tmp = rc5_tmp;				// for faster access
+  uint8_t xrc5_in = 0;
+  uint8_t xrc5 = 0;
+
+  if( config == 21){
+    xrc5_in = xRC5C1_IN;
+    xrc5 = xRC5C1;
+  }else if( config == 30 ){
+    xrc5_in = xRC5C2_IN;
+    xrc5 = xRC5C2;
+  }
 
   TCNT0 = -2;					// 2 * 256 = 512 cycle
 
@@ -42,7 +52,7 @@ ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
     tmp = 0;
   }
 
-  if( (rc5_bit ^ xRC5_IN) & 1<<xRC5 ){		// change detect
+  if( (rc5_bit ^ xrc5_in) & 1<<xrc5 ){		// change detect
     rc5_bit = ~rc5_bit;				// 0x00 -> 0xFF -> 0x00
 
     if( rc5_time < PULSE_MIN )			// to short
@@ -51,7 +61,7 @@ ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
     if( !tmp || rc5_time > PULSE_1_2 ){		// start or long pulse time
       if( !(tmp & 0x4000) )			// not to many bits
         tmp <<= 1;				// shift
-      if( !(rc5_bit & 1<<xRC5) )		// inverted bit
+      if( !(rc5_bit & 1<<xrc5) )		// inverted bit
         tmp |= 1;				// insert new bit
       rc5_time = 0;				// count next pulse time
     }
@@ -99,7 +109,11 @@ void rc5_init(void)
 //    TIMSK0 |= 1<<TOIE0;           //enable timer interrupt
     TIMSK |= 1<<TOIE0;          //enable timer interrupt
 #endif
-    xRC5_PORT |= (1<<xRC5);
+    if( config == 21){
+        xRC5C1_PORT |= (1<<xRC5C1);
+    }else if( config == 30 ){
+        xRC5C2_PORT |= (1<<xRC5C2);
+    }
 }
 
 #endif

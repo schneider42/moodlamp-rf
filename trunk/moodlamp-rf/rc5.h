@@ -6,10 +6,6 @@
 #define FCPU F_CPU
 #define XTAL FCPU
 
-#define xRC5_PORT   PORTD
-#define xRC5_DDR    DDRD
-#define	xRC5_IN		PIND
-#define	xRC5		PD6			// IR input low active
 extern uint16_t	rc5_data;				// store result
 extern volatile uint8_t packetbase;
 
