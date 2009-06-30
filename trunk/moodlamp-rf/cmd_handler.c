@@ -35,6 +35,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "common.h"
 #include "fnordlicht.h"
@@ -142,8 +143,13 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
     }else if(cmd == CMD_COLOR_ZERO){
         global_pwm.channels[global_pwm.channel_modifier].brightness=0;
     }else if(cmd == CMD_GET_VERSION){
-        strcpy((char *) result,"D=");
-        strcat((char *) result,__DATE__);
+        //strcpy((char *) result,"D=");
+        //strcat((char *) result,__DATE__);
+        //strcat((char *) result,"H=");
+
+        //strcpy((char *) result, "D="__DATE__"H=");
+        //strcat((char *) result,__DATE__);
+        sprintf((char *)result,"D="__DATE__" H=%d",config);
         return strlen((char *)result);
     }else if(cmd == CMD_GET_STATE){
         result[0] = global.state;
