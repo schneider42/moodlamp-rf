@@ -49,7 +49,7 @@
 #include "settings.h"
 #include "control.h"
 #include "packet.h"
-
+#include "adc.h"
 
 void cmd_dark(void)
 {
@@ -149,7 +149,7 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
 
         //strcpy((char *) result, "D="__DATE__"H=");
         //strcat((char *) result,__DATE__);
-        sprintf((char *)result,"D="__DATE__" H=%d",config);
+        sprintf((char *)result,"D="__DATE__" H=%d",global.config);
         return strlen((char *)result);
     }else if(cmd == CMD_GET_STATE){
         result[0] = global.state;
@@ -195,9 +195,11 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
     }else if(cmd == CMD_FADE){
         uint16_t speed = (param[3]<<8)+param[4];
         control_fade(param[0],param[1],param[2],speed);
+    }else if(cmd == CMD_GET_VOLTAGE){
+        uint16_t adc = adc_getChannel(6);
+        sprintf((char *)result,"V=%u",adc);
+        return strlen((char *)result);
     }
-
-
     return 0;
 }
 

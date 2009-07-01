@@ -39,6 +39,7 @@ struct flags_t {
     uint8_t running:1;
     uint8_t rfm12base:1;
     uint8_t rawmode:1;
+    uint8_t lowbat:1;
 };
 #define STATE_RUNNING       0
 #define STATE_STANDBY       1
@@ -56,14 +57,13 @@ struct global_t {
     struct flags_t flags;
     uint8_t state;
     uint8_t oldstate;
-    uint8_t uuid[16];
+    uint8_t config;
 };
 
 extern volatile struct global_t global;
 
 extern uint16_t main_reset;
 
-extern uint8_t  config;
 void jump_to_bootloader(void);
 
 #endif

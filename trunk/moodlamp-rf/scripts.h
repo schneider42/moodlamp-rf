@@ -126,7 +126,17 @@ static const uint8_t green_blink[] PROGMEM = {
     MACRO_SLEEP(125),
     MACRO_JUMP(-4)
     };
-    
+
+static const uint8_t red_blink[] PROGMEM = {
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 0),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 0),
+    MACRO_SET_CHANNEL(CHANNEL_RED, 150),
+    MACRO_SLEEP(125),
+    MACRO_SET_CHANNEL(CHANNEL_RED, 0),
+    MACRO_SLEEP(125),
+    MACRO_JUMP(-4)
+    };
+   
 static const uint8_t police[] PROGMEM = {
     MACRO_SET_CHANNEL(CHANNEL_RED, 0),
     MACRO_SET_CHANNEL(CHANNEL_GREEN, 0),
@@ -182,6 +192,7 @@ static const struct playlist_t global_playlist[] = {
     {&memory_handler_flash, (uint16_t) &colorchange_red},
     {&memory_handler_flash, (uint16_t) &colorchange_red_blue},
     {&memory_handler_flash, (uint16_t) &green_blink},
-    {&memory_handler_flash, (uint16_t) &police}
+    {&memory_handler_flash, (uint16_t) &police},
+    {&memory_handler_flash, (uint16_t) &red_blink}
 };
 #endif
