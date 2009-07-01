@@ -115,7 +115,8 @@ int main(void) {
     WDTCSR |= (1<<WDCE) | (1<<WDE);
     /* Turn off WDT */
     WDTCSR = 0x00;
-
+    DDRA |= (1<<PA4) | (1<<PA5) | (1<<PA7);
+    PORTA |= (1<<PA4) | (1<<PA5) | (1<<PA7);
     //volatile long l;
 //    for(l=0;l<1000000;l++);
     DDR_CONFIG_IN(CONFIG1);
