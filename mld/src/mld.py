@@ -144,7 +144,8 @@ class Moodlamp:
                 if len(data) > 2 :
                     if data[0:2] == "D=":
                         print "processing date"
-                        self.version = data[2:]
+                        self.version = data[2:data.find('H=')-1]
+                        self.config = data[data.find('H=')+2:]
                         self.interface.packet( self.address, "O", 0,True)
                         self.mld.new_lamp(self)
                         self.state = 3
@@ -153,6 +154,10 @@ class Moodlamp:
             if len(data) > 1:
                 if data[0] == 'N':
                     self.name = "".join(data[1:])
+                if data[0] == 'V':
+                    v = float(data[2:]) / 1024. * 2.56 * 3
+                    print "voltage =", v,"V"
+ 
             pass
         
     def data(self, data, broadcast):
@@ -172,6 +177,9 @@ class Moodlamp:
     
     def setname(self, name):
         self.interface.packet( self.address, "N"+name+"\x00", 0,True)
+
+    def getvoltage(self):
+        self.interface.packet( self.address, "K", 0,True)
 
     def get_version(self):
         self.interface.packet( self.address, "V", 0,True)
@@ -312,6 +320,7 @@ class MLClient(asynchat.async_chat):
                     m.setname("".join(s[2:]))
                 elif cmd == "016":
                     m = self.ml.getLamp(s[1])
+                    m.getvoltage()
 		elif cmd == "?":
 		    self.push("000 - quit telnet ;)\r\n")
 		    self.push("001 - hello world?\r\n")
@@ -372,7 +381,7 @@ class MLClient(asynchat.async_chat):
         
     def new_lamp_detected(self, lamp):
         self.ml.lock.acquire()
-        self.push("103 New Lamp at %d version %s\r\n" % (lamp.address, lamp.version))
+        self.push("103 New Lamp at %d version %s config %s\r\n" % (lamp.address, lamp.version, lamp.config))
         self.ml.lock.release()
         
     def lamp_removed(self, lamp):
