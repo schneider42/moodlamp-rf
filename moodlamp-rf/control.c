@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
+
 #include "config.h"
 #include "fnordlicht.h"
 #include "common.h"
@@ -12,6 +14,8 @@
 #include <string.h>
 #include "interfaces.h"
 #include <avr/wdt.h>
+#include "adc.h"
+
 uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
@@ -131,6 +135,12 @@ void control_tick(void)
     static unsigned int control_beacon = 1000;
     if(control_beacontime !=  0 && control_beacon-- == 0 ){
         control_beacon = control_beacontime;
+        
+        uint16_t bat = adc_getChannel(6);
+        if( bat < ADC_MINBATIDLE ){
+            global.flags.lowbat = 1;
+        }
+
         if(control_state == CONTROL_SEARCHMASTER){
             p.flags = PACKET_BROADCAST;//don't know server yet
         }else{
@@ -151,8 +161,13 @@ void control_tick(void)
         }else{
 //            p.flags = PACKET_BROADCAST;//don't know server yet
 //            control_beacon = 100;
-            p.len = 1;
-            p.data[0] = 'B';
+            if( global.config >= 30){      //use the adc
+                sprintf((char *)p.data,"V=%u",bat);
+                p.len = strlen((char *)p.data);
+            }else{                  //no adc yet
+                p.len = 1;
+                p.data[0] = 'B';
+            }
         }
 
         packet_packetOut(&p);        

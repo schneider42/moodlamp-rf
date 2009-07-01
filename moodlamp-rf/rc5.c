@@ -36,10 +36,10 @@ ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
   uint8_t xrc5_in = 0;
   uint8_t xrc5 = 0;
 
-  if( config == 21){
+  if( global.config == 21){
     xrc5_in = xRC5C1_IN;
     xrc5 = xRC5C1;
-  }else if( config == 30 ){
+  }else if( global.config == 30 ){
     xrc5_in = xRC5C2_IN;
     xrc5 = xRC5C2;
   }
@@ -109,9 +109,9 @@ void rc5_init(void)
 //    TIMSK0 |= 1<<TOIE0;           //enable timer interrupt
     TIMSK |= 1<<TOIE0;          //enable timer interrupt
 #endif
-    if( config == 21){
+    if( global.config == 21){
         xRC5C1_PORT |= (1<<xRC5C1);
-    }else if( config == 30 ){
+    }else if( global.config == 30 ){
         xRC5C2_PORT |= (1<<xRC5C2);
     }
 }

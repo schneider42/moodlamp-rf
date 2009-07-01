@@ -31,6 +31,7 @@
 #ifndef __CMD_HANDLER_H_
 #define __CMD_HANDLER_H_
 
+#include "static_scripts.h"
 #define CMD_POWER               0x10
 #define CMD_BRIGHTNESS_UP       0x11
 #define CMD_BRIGHTNESS_DOWN     0x12
@@ -64,8 +65,10 @@
 #define CMD_SELF_ASSIGN         'A'
 #define CMD_STANDALONE          'X'
 #define CMD_FADE                'F'
+#define CMD_GET_VOLTAGE         'K'
 
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
 uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);
+void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t position);
 #endif

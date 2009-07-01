@@ -52,7 +52,6 @@
 #include "rs485_handler.h"
 #include "zbus.h"
 #include "raw.h"
-
 #include "cmd_handler.h"
 #include "control.h"
 #if RC5_DECODER
@@ -71,6 +70,8 @@
 #include "packet.h"
 #include "pinutils.h"
 #include "interfaces.h"
+#include "adc.h"
+#include "scripts.h"
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream);
@@ -82,7 +83,6 @@ volatile struct global_t global = {{0, 0}};
 /* prototypes */
 //uint16_t main_reset = 0;
 
-uint8_t  config;
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream)
@@ -121,17 +121,22 @@ int main(void) {
     DDR_CONFIG_IN(CONFIG1);
     PIN_SET(CONFIG1);
     if( !PIN_HIGH(CONFIG1) ){
-        config = 30;
+        global.config = 30;
     }else{
-        config = 21;
+        global.config = 21;
     }
 
-    if( config == 21 ){
+    if( global.config == 21 ){
         DDR_CONFIG_IN(JUMPER1C1);
         PIN_SET(JUMPER1C1);
-    }else if( config == 30){
+    }else if( global.config == 30 ){
         DDR_CONFIG_IN(JUMPER1C2);
         PIN_SET(JUMPER1C2);
+        adc_init();
+        uint16_t bat = adc_getChannel(6);
+        if( bat < ADC_MINBATIDLE ){
+            global.flags.lowbat = 1;
+        }
     }
 
     init_pwm();
@@ -148,7 +153,7 @@ int main(void) {
     init_script_threads();
 #endif
     settings_read();
-    if((config == 21 && !PIN_HIGH(JUMPER1C1)) || (config== 30 && !PIN_HIGH(JUMPER1C2)))
+    if((global.config == 21 && !PIN_HIGH(JUMPER1C1)) || (global.config== 30 && !PIN_HIGH(JUMPER1C2)))
         interfaces_setEnabled(IFACE_RF,0);
 
     control_init();
@@ -168,6 +173,7 @@ int main(void) {
 //    global.state = STATE_RUNNING;
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
+    uint8_t bat = 0;
     while (1) {
         if(packetbase > 32){
             packetbase = 0;
@@ -177,9 +183,20 @@ int main(void) {
                 raw_tick();
             //if(main_reset++ > 4000)
             //  jump_to_bootloader(); 
+            //uint16_t bat = adc_getChannel(6);
+            /*if( bat < ADC_MINBATIDLE ){
+                global.flags.lowbat = 1;
+            }*/
+        }
+        if( global.flags.lowbat ){
+            //{&memory_handler_flash, (uint16_t) &red_blink}
+            if( !bat ){
+                cmd_setscript(&memory_handler_flash, (uint16_t) &red_blink);
+                bat = 1;
+            }
         }
 
-        if(global.flags.timebase){
+        if( global.flags.timebase ){
             control_tick();
             global.flags.timebase=0;
         }
