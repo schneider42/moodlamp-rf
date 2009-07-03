@@ -38,6 +38,7 @@
 #include "common.h"
 #include "fnordlicht.h"
 #include "pwm.h"
+#include "control.h"
 
 #if RC5_DECODER
 #include "rc5.h"
