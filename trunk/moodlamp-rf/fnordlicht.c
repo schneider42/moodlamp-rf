@@ -175,6 +175,7 @@ int main(void) {
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
     uint8_t bat = 0;
+    //global.flags.lowbat = 1;
     while (1) {
         if(packetbase > 32){
             packetbase = 0;
@@ -192,8 +193,8 @@ int main(void) {
         if( global.flags.lowbat ){
             //{&memory_handler_flash, (uint16_t) &red_blink}
             if( !bat ){
-                cmd_setscript(&memory_handler_flash, (uint16_t) &red_blink);
                 bat = 1;
+                control_lowbat();
             }
         }
 

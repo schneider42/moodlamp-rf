@@ -9,6 +9,7 @@
 #define STATE_ENTERSLEEP    5
 #define STATE_SLEEP         6
 #define STATE_REMOTE        7
+#define STATE_LOWBAT        8
 
 #define SLEEP_TIME          (180 * 125)        //125 equals 1 second
 //#define STATE_
@@ -27,4 +28,6 @@ void control_tick(void);
 void control_gotAddress(void);
 void control_setupOK(void);
 void control_selfassign(void);
+void control_standby(uint16_t wait);
+void control_lowbat(void);
 #endif

@@ -345,7 +345,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
         LED_PORT |= (~pwm.initial_bitmask)&0x07;
 #endif
         /* if next timeslot would happen too fast or has already happened, just spinlock */
-        while (TCNT1 + 1000 > pwm.slots[pwm.index].top)
+        while (TCNT1 + 2000 > pwm.slots[pwm.index].top)
         {
             /* spin until timer interrupt is near enough */
             while (pwm.slots[pwm.index].top > TCNT1);

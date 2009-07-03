@@ -15,6 +15,8 @@
 #include "interfaces.h"
 #include <avr/wdt.h>
 #include "adc.h"
+#include "cmd_handler.h"
+#include "scripts.h"
 
 uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
@@ -23,7 +25,7 @@ uint16_t timeout = 0;
 uint8_t  serveradr = 0;
 uint16_t control_beacontime = 1000;
 uint8_t control_faderunning = 0;
-
+uint16_t time = 0;
 
 #define CONTROL_SEARCHMASTER         1
 #define CONTROL_IDENTIFY             2
@@ -86,8 +88,21 @@ void control_setupOK(void)
     control_state = CONTROL_SETUPOK;
 }
 
+void control_standby(uint16_t wait)
+{
+    time = wait;
+    global.state = STATE_ENTERSTANDBY;
+}
+
+void control_lowbat(void)
+{
+    cmd_setscript(&memory_handler_flash, (uint16_t) &red_blink);
+    global.state = STATE_LOWBAT;
+}
+
 void control_tick(void)
 {
+    static uint16_t time;
     switch(global.state){
         case STATE_REMOTE:
             control_faderunning = 1;
@@ -102,10 +117,12 @@ void control_tick(void)
             global.flags.running = 0;
         break;
         case STATE_ENTERSTANDBY:
-            global_pwm.olddim = global_pwm.dim;
-            global_pwm.dim = 0;
-            global.flags.running = 0;
-            global.state = STATE_STANDBY;
+            if( time-- == 0){
+                global_pwm.olddim = global_pwm.dim;
+                global_pwm.dim = 0;
+                global.flags.running = 0;
+                global.state = STATE_STANDBY;
+            }
         case STATE_STANDBY:                 //will be left by rc5_handler
         break;
         case STATE_LEAVESTANDBY:
@@ -130,6 +147,11 @@ void control_tick(void)
                 }
             }
         break;
+        case STATE_LOWBAT:
+            time = 3000;
+            global.state = STATE_ENTERSTANDBY;
+            break;
+            
     }
     
     static unsigned int control_beacon = 1000;

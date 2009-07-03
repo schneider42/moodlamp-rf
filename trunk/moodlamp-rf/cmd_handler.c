@@ -96,7 +96,8 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
                 global.oldstate = STATE_RUNNING;
             else
                 global.oldstate = global.state;
-            global.state = STATE_ENTERSTANDBY;
+            //global.state = STATE_ENTERSTANDBY;
+            control_standby(0);
         }else{
             global.state = STATE_LEAVESTANDBY;
         }
