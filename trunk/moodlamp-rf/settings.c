@@ -36,6 +36,8 @@
 #include "scripts.h"
 #include "static_scripts.h"
 #include "pwm.h"
+#include "control.h"
+
 struct settings_record_t global_settings_record EEMEM = {1,1};
 struct global_pwm_t global_pwm_record EEMEM;
 #if STATIC_SCRIPTS

@@ -1,6 +1,18 @@
 #ifndef __CONTROL_H_
 #define __CONTROL_H_
 
+#define STATE_RUNNING       0
+#define STATE_STANDBY       1
+#define STATE_PAUSE         2
+#define STATE_ENTERSTANDBY  3
+#define STATE_LEAVESTANDBY  4
+#define STATE_ENTERSLEEP    5
+#define STATE_SLEEP         6
+#define STATE_REMOTE        7
+
+#define SLEEP_TIME          (180 * 125)        //125 equals 1 second
+//#define STATE_
+
 //extern uint16_t timeoutmax;
 extern unsigned int initadr;
 extern uint16_t control_beacontime;
