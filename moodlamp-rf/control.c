@@ -17,6 +17,7 @@
 #include "adc.h"
 #include "cmd_handler.h"
 #include "scripts.h"
+#include <avr/sleep.h>
 
 uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
@@ -149,9 +150,17 @@ void control_tick(void)
         break;
         case STATE_LOWBAT:
             time = 3000;
-            global.state = STATE_ENTERSTANDBY;
-            break;
-            
+            global.state = STATE_ENTERPOWERDOWN;
+        break;
+        case STATE_ENTERPOWERDOWN:
+            if( time-- == 0){
+                //cli();
+                PORTA = 0;
+                set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+                while(1)
+                    sleep_mode();
+            }
+        break;
     }
     
     static unsigned int control_beacon = 1000;
