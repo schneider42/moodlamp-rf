@@ -10,7 +10,7 @@
 #define STATE_SLEEP         6
 #define STATE_REMOTE        7
 #define STATE_LOWBAT        8
-
+#define STATE_ENTERPOWERDOWN    9
 #define SLEEP_TIME          (180 * 125)        //125 equals 1 second
 //#define STATE_
 
