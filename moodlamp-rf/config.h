@@ -82,7 +82,7 @@
 #define	xRC5C1_IN       PIND
 #define	xRC5C1          PD7			// IR input low active
 
-#define ADC_MINBATIDLE  730         //4v
+#define ADC_MINBATIDLE  530         //4v
 
 /* debug defines */
 #ifndef DEBUG
