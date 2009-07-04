@@ -97,8 +97,10 @@ void control_standby(uint16_t wait)
 
 void control_lowbat(void)
 {
-    cmd_setscript(&memory_handler_flash, (uint16_t) &red_blink);
-    global.state = STATE_LOWBAT;
+    if( global.state != STATE_ENTERPOWERDOWN  && global.state != STATE_LOWBAT){
+        cmd_setscript(&memory_handler_flash, (uint16_t) &red_blink);
+        global.state = STATE_LOWBAT;
+    }
 }
 
 void control_tick(void)
