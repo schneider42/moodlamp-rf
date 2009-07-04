@@ -201,7 +201,7 @@ int main(void) {
         if (global.flags.last_pulse) {
             global.flags.last_pulse = 0;
             //if(global.flags.running)
-            //    update_pwm_timeslots();
+            update_pwm_timeslots();
         }
         
 
