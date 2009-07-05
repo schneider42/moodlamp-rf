@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include "rf12.h"
 #include "uart.h"
+#include "leds.h"
 
 struct RF12_stati
 {
@@ -56,16 +57,19 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
 //    sei();
     if(RF12_status.Rx){
         if(RF12_Index < RF12_DataLength){
+            leds_rx();
             unsigned char d  = rf12_trans(0xB000) & 0x00FF;
             if(RF12_Index == 0 && d > RF12_DataLength)
                 d = RF12_DataLength;
             RF12_Data[RF12_Index++]=d;
         }else{
             rf12_trans(0x8208);
+            leds_rxend();
             RF12_status.Rx = 0;
         }
         if(RF12_Index >= RF12_Data[0] + 3){		//EOT
             rf12_trans(0x8208);
+            leds_rxend();
             RF12_status.Rx = 0;
             RF12_status.New = 1;
             //GICR &= ~(1<<INT0);   //disable int0
@@ -85,6 +89,7 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
             RF12_status.Tx = 0;
             rf12_trans(0x8208);		// TX off
 			
+            leds_txend();
             //rf12_trans(0x0000);             //dummy read
             //rf12_trans(0xB000);
             //GIFR &= ~(1<<INTF0);
@@ -268,6 +273,7 @@ unsigned char rf12_txstart(unsigned char *data, unsigned char size)
 uart_puts("acbab");
 #endif
 #endif
+    leds_tx();
     unsigned char i, l;
     unsigned int crc;
     if(RF12_status.Tx)

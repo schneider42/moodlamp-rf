@@ -74,6 +74,15 @@
 #define JUMPER1C2_PIN     PC3
 #define JUMPER1C2_PORT    C
 
+#define LED3_PIN     PA4
+#define LED3_PORT    A
+
+#define LED2_PIN     PA5
+#define LED2_PORT    A
+
+#define LED1_PIN     PA7
+#define LED1_PORT    A
+
 #define xRC5C2_PORT     PORTB
 #define	xRC5C2_IN       PINB
 #define	xRC5C2          PB1			// IR input low active

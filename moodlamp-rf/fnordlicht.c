@@ -72,6 +72,7 @@
 #include "interfaces.h"
 #include "adc.h"
 #include "scripts.h"
+#include "leds.h"
 
 #if SERIAL_UART
 int uart_putc_file(char c, FILE *stream);
@@ -115,8 +116,6 @@ int main(void) {
     WDTCSR |= (1<<WDCE) | (1<<WDE);
     /* Turn off WDT */
     WDTCSR = 0x00;
-    DDRA |= (1<<PA4) | (1<<PA5) | (1<<PA7);
-    PORTA |= (1<<PA4) | (1<<PA5) | (1<<PA7);
     //volatile long l;
 //    for(l=0;l<1000000;l++);
     DDR_CONFIG_IN(CONFIG1);
@@ -126,6 +125,8 @@ int main(void) {
     }else{
         global.config = 21;
     }
+    
+    leds_init();
 
     if( global.config == 21 ){
         DDR_CONFIG_IN(JUMPER1C1);
@@ -139,7 +140,7 @@ int main(void) {
             global.flags.lowbat = 1;
         }
     }
-
+    
     init_pwm();
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));

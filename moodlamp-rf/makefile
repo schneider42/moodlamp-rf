@@ -101,7 +101,8 @@ SRC = $(TARGET).c \
 	cache.c \
 	zbusneu.c \
 	raw.c \
-	adc.c
+	adc.c \
+	leds.c
 #fifo.c uart.c
 
 
