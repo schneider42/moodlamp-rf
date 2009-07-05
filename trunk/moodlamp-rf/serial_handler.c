@@ -9,6 +9,7 @@
 #include <string.h>
 #include "control.h"
 #include "cmd_handler.h"
+#include "leds.h"
 
 //#include "settings.h"
 
@@ -71,6 +72,7 @@ void serial_sendFramec(uint8_t s)
 
 uint8_t serial_packetOut(struct packet_t * p)
 {
+    leds_tx();
     if(p->flags & PACKET_DONE){         //these are special flags
         serial_sendFrames("SD");           //for the host system
         //return 0;                     //they don't contain any data
@@ -97,6 +99,7 @@ uint8_t serial_packetOut(struct packet_t * p)
     }*/
     serial_putenc(p->data,p->len);
     serial_putStop();
+    leds_txend();
     return 0;
 }
 
@@ -206,6 +209,7 @@ unsigned int readline( void )
     if ( i & UART_NO_DATA ){
         return 0;
     }
+    leds_rx();
     data = i&0xFF;
 
     if(data == SERIAL_ESCAPE){
@@ -220,6 +224,7 @@ unsigned int readline( void )
             fill = 0;
             return 0;
         }else if( data == SERIAL_END){
+            leds_rxend();
             return fill;
         }
     }
