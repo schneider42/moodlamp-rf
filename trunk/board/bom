@@ -22,7 +22,7 @@ C14      100µF                      CPOL-EUE2.5-6              E2,5-6           
 C15      100µF                      CPOL-EUE2.5-6              E2,5-6           rcl                    1
 C16      100nF                      C-EUC0603                  C0603            rcl                    1
 C17      100nF                      C-EUC0603                  C0603            rcl                    1
-IC1      MEGA164P/324P/644P-AU      MEGA164P/324P/644P-AU      TQFP44           avr-5                  1
+IC1      MEGA644P-AU      MEGA164P/324P/644P-AU      TQFP44           avr-5                  1
 IC2      MAX481CSA                  MAX481CSA                  SO08             maxim                  1
 IC3                                 LP2992-3.3                 SOT-23-5         regulators             1
 IC4      FT232RL                    FT232RL                    SSOP28           ftdichip               1
@@ -54,7 +54,7 @@ R19      10K                        R-EU_M0805                 M0805            
 R20      150R                       R-EU_R0603                 R0603            rcl                    1
 R21      150R                       R-EU_R0603                 R0603            rcl                    1
 R22      150R                       R-EU_R0603                 R0603            rcl                    1
-R23      10µH                       R-EU_R0805                 R0805            rcl                    1
+L1       0µH                       R-EU_R0805                 R0805            rcl                    1
 R24      20K                        R-EU_R0603                 R0603            rcl                    1
 R25      10K                        R-EU_R0603                 R0603            rcl                    1
 RFM12    FRM12                      FRM12                      RFM12            RFM12                  1
@@ -65,4 +65,4 @@ USBPWR                              JP1E                       JP1              
 X1                                  W237-102-350               W237-102-3.5-1.2 clamps                 1
 X2       RIACON-4                   RIACON-4                   RIACON-4         con-riacon             1
 X3                                  PINHD-1X3SMALL             1X03-SMALL       pinhead-3small         1
-X4       MINI-USB-SCHIELD-32005-201 MINI-USB-SCHIELD-32005-201 32005-201        con-cypressindustries  1
+X4       MINI-USB                    MINI-USB-SCHIELD-32005-201 32005-201        con-cypressindustries  1
