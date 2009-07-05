@@ -9,189 +9,12 @@ import traceback
 import random
 import pickle
 import Timer
-            
-class MoodlampList(list):
-    lock = threading.RLock()
-    
-    def getLamp(self, lamp):
-        found = False
-        try:
-            lamp = int(lamp)
-            for l in self:
-                if l.address == lamp and l.ready:
-                    return l
-        except ValueError:
-            for l in self:
-                if l.name == lamp and l.ready:
-                    return l
-        raise NotFound()
-
-class IHexFile:
-    def __init__(self):
-        self.data = []
-        self.done = False
-        self.adr = -1
-        self.pagesize = 256
-        pass
-    
-    def parseLine(self, line):
-        if not line[0] == ':':
-            return False
-        try:
-            l = int("0x%s" % line[1:1+2],16)
-            adr = int("0x%s" % line[3:3+4],16)
-            type = int("0x%s" % line[7:7+2],16)
-            
-            if type == 1:
-                self.done = True
-                return True
-            if not type == 0:
-                return False
-            if self.adr + len(self.data) != adr and self.adr != -1:
-                return False
-            
-            if self.adr == -1:
-                self.adr = adr
-            
-            for i in range(l):
-                v = chr(int("0x%s" % line[9+i*2:9+i*2+2],16))
-                self.data.append(v)
-            
-        except (IndexError, ValueError):
-            return False
-        return True
-    
-    def isDone(self):
-        return self.done
-    
-    def pages(self):
-        n =  int(len(self.data) / self.pagesize)
-        if n * self.pagesize < len(self.data):
-            return n+1
-        else:
-            return n
-    
-    def page(self, i):
-        if i == self.pages()-1:
-            data = self.data[i*self.pagesize:]
-            print "data=",data
-            data += [chr(0xff)]*(self.pagesize-len(data))
-            print "data=", data
-            return data
-        else:
-            return self.data[i*self.pagesize:(i+1)*self.pagesize]
-        
-        
-class DummyLamp:
-    timer = 60
-    address = 0
-    version = "dummy"
-    name = "dummy"
-    ready = False
-    
-    def data(self, data, broadcast):
-        pass
-    
-class Moodlamp:
-    version = ''
-    color = [0xff,0,0]
-    done = True
-    ready = False
-    
-    def __init__(self, interface, mld, adr, name):
-        self.interface = interface
-        self.mld = mld
-        self.timer = 60
-        self.address = adr
-        self.get_version()
-        self.state = 2
-        self.name = name;
-    
-    def timer(self):
-        self.tick(2, [], False)
-        
-    def get_address(self):
-        pass
-        
-    def set_address(self, oldadr, newadr):
-        self.mld.remove_lamp(newadr)
-        self.address = newadr
-        self.interface.packet(oldadr, "ADR="+chr(newadr)+self.name, 0, True)
-    
-    def setcolor(self, color):
-        self.color = color
-        self.interface.packet( self.address, "C%c%c%c" % (color[0],color[1],color[2]),0,True)
-        
-    def pause(self, pause):
-        self.interface.packet( self.address, "\x17", 0,True)
-        
-    def updatefirmware(self, firmware):
-        self.interface.packet( self.address,"R",0,True);
-        chunkno = 0
-        chunk = handle.read (pagesize)
-        chunklen = len (chunk)
-        while 1:
-            while len (chunk) < pagesize:
-                chunk = chunk + "\377"
-            print "%02x (%02x): " % (chunkno, chunklen)
-            #self.interface.writeflashpage(firmware)
-            
-    def tick(self, type, data, broadcast):
-#        print "ml tick"
-#        print list(data)
-        if self.state == 2:
-            if type == 1:
-                if len(data) > 2 :
-                    if data[0:2] == "D=":
-                        print "processing date"
-                        self.version = data[2:data.find('H=')-1]
-                        self.config = data[data.find('H=')+2:]
-                        self.interface.packet( self.address, "O", 0,True)
-                        self.mld.new_lamp(self)
-                        self.state = 3
-                        self.ready = True
-        elif self.state == 3:
-            if len(data) > 1:
-                if data[0] == 'N':
-                    self.name = "".join(data[1:])
-                if data[0] == 'V':
-                    v = float(data[2:]) / 1024. * 2.56 * 3
-                    print "voltage =", v,"V"
- 
-            pass
-        
-    def data(self, data, broadcast):
-        #print "ml data:",data
-        self.tick(1, data, broadcast)
-        self.timer = 60
-    
-    def packet_done(self, broadcast):
-        #print "ml done"
-        self.tick(0, [], broadcast)
-        
-    def setraw(self, mode):
-        self.interface.set_raw(mode)
-        
-    def setprog(self, prog):
-        self.interface.packet( self.address, "\x21"+chr(prog), 0,True)
-    
-    def setname(self, name):
-        self.interface.packet( self.address, "N"+name+"\x00", 0,True)
-
-    def getvoltage(self):
-        self.interface.packet( self.address, "K", 0,True)
-
-    def get_version(self):
-        self.interface.packet( self.address, "V", 0,True)
-
-    def reset(self):
-        self.interface.packet( self.address, "r", 0,True)
-
-class NotFound(Exception):
-    pass
+import moodlamp
+import hex
+       
 
 class MLClient(asynchat.async_chat):
-    lock = threading.Lock()
+    #lock = threading.Lock()
 
     def sendLampNotFound(self):
         self.push("402 No such moodlamp\r\n")
@@ -280,7 +103,7 @@ class MLClient(asynchat.async_chat):
                     for m in self.interfaces:
                         m.set_raw(True)
                 elif cmd == "007":
-                    self.firmware = IHexFile()
+                    self.firmware = hex.IHexFile()
                     self.state = 1
                 elif cmd == "008":
                    self.push("007 start 0X%X len 0X%X\r\n" % (self.firmware.adr, len(self.firmware.data) ))
@@ -361,7 +184,7 @@ class MLClient(asynchat.async_chat):
             print err
             print err.args
             print self.formatExceptionInfo()
-        except NotFound, err:
+        except moodlamp.NotFound, err:
             self.sendLampNotFound()
         if self.state == 0:
             self.push(">")
@@ -421,7 +244,7 @@ class ClientServer(asyncore.dispatcher):
             
 class MLD:
     def serve(self, port=2324):
-        self.ml = MoodlampList()
+        self.ml = moodlamp.MoodlampList()
         self.interfaces = []
         #try:
         self.interfaces.append(rf12interface.RF12Interface("/dev/ttyUSB0",230400,1,2,self))
@@ -471,7 +294,7 @@ class MLD:
         if data[0] == 'R':
             if adr == 0:
                 adr = self.getNewAddress()
-            dummy = DummyLamp()
+            dummy = moodlamp.DummyLamp()
             dummy.address = adr
             self.ml.append(dummy)
             reply = "x"+"".join(data[1:])+("\x00%c%c\x01" %(adr,0))
@@ -485,7 +308,7 @@ class MLD:
         if data[0] == 'I':
             self.remove_lamp(adr)
             name = "".join(data[1:])
-            lamp = Moodlamp(self.interfaces[0], self, adr, name)
+            lamp = moodlamp.Moodlamp(self.interfaces[0], self, adr, name)
             self.ml.append(lamp)
             print "len ml:"+str(len(self.ml))
             self.ml.lock.release()
