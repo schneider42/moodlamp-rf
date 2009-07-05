@@ -1,10 +1,11 @@
 Partlist
 
-Exported from ml-rf.sch at 11/21/08 12:08 AM
+Exported from ml-rf.sch at 7/5/09 4:33 AM
 
-EAGLE Version 5.2.0 Copyright (c) 1988-2008 CadSoft
+EAGLE Version 5.6.0 Copyright (c) 1988-2009 CadSoft
 
 Part     Value                      Device                     Package          Library                Sheet
+
 C1       100nF                      C-EUC0805K                 C0805K           rcl                    1
 C2       100nF                      C-EUC0805K                 C0805K           rcl                    1
 C3       100nF                      C-EUC0805K                 C0805K           rcl                    1
@@ -16,17 +17,21 @@ C8       10µF                       C-EUC0805K                 C0805K           
 C9       100nF                      C-EUC0805K                 C0805K           rcl                    1
 C10      100nF                      C-EUC0805K                 C0805K           rcl                    1
 C11      100nF                      C-EUC0805K                 C0805K           rcl                    1
-C12      100nF                      C-EUC0805K                 C0805K           rcl                    1
 C13      100nF                      C-EUC0805K                 C0805K           rcl                    1
-IC1      MEGA16-A                   MEGA16-A                   TQFP44           atmel                  1
+C14      100µF                      CPOL-EUE2.5-6              E2,5-6           rcl                    1
+C15      100µF                      CPOL-EUE2.5-6              E2,5-6           rcl                    1
+C16      100nF                      C-EUC0603                  C0603            rcl                    1
+C17      100nF                      C-EUC0603                  C0603            rcl                    1
+IC1      MEGA164P/324P/644P-AU      MEGA164P/324P/644P-AU      TQFP44           avr-5                  1
 IC2      MAX481CSA                  MAX481CSA                  SO08             maxim                  1
-IC3      LP2992-3.3                 LP2992-3.3                 SOT-23-5         regulators             1
+IC3                                 LP2992-3.3                 SOT-23-5         regulators             1
 IC4      FT232RL                    FT232RL                    SSOP28           ftdichip               1
-IR                                  PINHD-1X3                  1X03             pinhead                1
 ISP      AVR-ISP-6                  AVR-ISP-6                  AVR-ISP-6        atmel                  1
-JP1                                 JP1E                       JP1              jumper                 1
-JP2                                 JP1E                       JP1              jumper                 1
-Q1       18.432MHz                  CRYTALHC49UP               HC49UP           crystal                1
+JP2                                 PINHD-2X3                  2X03             pinhead                1
+LED1     B                          LEDCHIP-LED0603            CHIP-LED0603     led                    1
+LED2     G                          LEDCHIP-LED0603            CHIP-LED0603     led                    1
+LED3     R                          LEDCHIP-LED0603            CHIP-LED0603     led                    1
+Q1       18.432MHz                  CRYTALHC49UP               HC49UP@1         crystal                1
 R1       10K                        R-EU_M0805                 M0805            rcl                    1
 R2       100K                       R-EU_M0805                 M0805            rcl                    1
 R3       100K                       R-EU_M0805                 M0805            rcl                    1
@@ -46,9 +51,18 @@ R16      10R                        R-EU_M0805                 M0805            
 R17      10R                        R-EU_M0805                 M0805            rcl                    1
 R18      10R                        R-EU_M0805                 M0805            rcl                    1
 R19      10K                        R-EU_M0805                 M0805            rcl                    1
+R20      150R                       R-EU_R0603                 R0603            rcl                    1
+R21      150R                       R-EU_R0603                 R0603            rcl                    1
+R22      150R                       R-EU_R0603                 R0603            rcl                    1
+R23      10µH                       R-EU_R0805                 R0805            rcl                    1
+R24      20K                        R-EU_R0603                 R0603            rcl                    1
+R25      10K                        R-EU_R0603                 R0603            rcl                    1
 RFM12    FRM12                      FRM12                      RFM12            RFM12                  1
+SJ1                                 SJ                         SJ               jumper                 1
 T1       IRF7103                    IRF7103                    SO-8             transistor-fet+irf7201 1
 T2       IRF7103                    IRF7103                    SO-8             transistor-fet+irf7201 1
+USBPWR                              JP1E                       JP1              jumper                 1
 X1                                  W237-102-350               W237-102-3.5-1.2 clamps                 1
-X2                                  W237-103350                W237-103-3.5-1.2 clamps                 1
+X2       RIACON-4                   RIACON-4                   RIACON-4         con-riacon             1
+X3                                  PINHD-1X3SMALL             1X03-SMALL       pinhead-3small         1
 X4       MINI-USB-SCHIELD-32005-201 MINI-USB-SCHIELD-32005-201 32005-201        con-cypressindustries  1
