@@ -1,4 +1,5 @@
-import socket, sys, threading, time, os
+import threading        #for RLock 
+
 class MoodlampList(list):
     lock = threading.RLock()
     def getLamp(self, lamp):
