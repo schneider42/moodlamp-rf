@@ -49,7 +49,7 @@ if s.endswith("100"):
         elif b == 0 and not r == 255:
             g -= 1
             r += 1
-        s = "003 "+str(lamp)+" "+hex(r)[2:]+" "+hex(g)[2:]+" "+hex(b)[2:]+"\r\n"
+        s = "003 "+str(lamp)+" "+hex(r/16)[2:]+" "+hex(g/16)[2:]+" "+hex(b/16)[2:]+"\r\n"
         #print s
         con.write(s)
         s = con.read_until("106", 10)

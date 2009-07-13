@@ -309,7 +309,7 @@ static inline void prepare_next_timeslot(void)
         global.flags.last_pulse = 1;
         //PORTD |= (1<<PD6);
         OCR1B = 65000;
-        //update_pwm_timeslots();
+        update_pwm_timeslots();
         //PORTD &= ~(1<<PD6);
     } else {
         /* load new top and bitmask */

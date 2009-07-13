@@ -176,6 +176,7 @@ int main(void) {
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
     while (1) {
+        leds_main();
         if(packetbase > 32){
             packetbase = 0;
             if(global.flags.rawmode == 0){
@@ -202,10 +203,8 @@ int main(void) {
         if (global.flags.last_pulse) {
             global.flags.last_pulse = 0;
             //if(global.flags.running)
-            update_pwm_timeslots();
+            //update_pwm_timeslots();
         }
-        
-
         /* at the beginning of each pwm cycle, call the fading engine and
          * execute all script threads */
         if (global.flags.new_cycle) {
