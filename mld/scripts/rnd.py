@@ -53,6 +53,6 @@ if s.endswith("100"):
         a1+=random.random() *0.015 #0.02
         a2+=random.random() *0.02 #0.03
 
-        setc(con,lamp,r,b,g)
+        setc(con,lamp,r/8,b/8,g/8)
         time.sleep(0.1)
         

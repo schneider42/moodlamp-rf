@@ -7,4 +7,5 @@ inline void leds_tx(void);
 inline void leds_txend(void);
 inline void leds_adc(void);
 inline void leds_adcnd(void);
+inline void leds_main(void);
 #endif

@@ -45,6 +45,10 @@ MCU = atmega644p
 #MCU = atmega32
 #MCU = atmega16
 
+AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
+AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd0:m
+AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
+
 
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
@@ -309,9 +313,6 @@ AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
-AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
-AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd0:m
-AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
 
 #---------------- Debugging Options ----------------
 
