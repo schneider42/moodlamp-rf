@@ -55,7 +55,7 @@ X3                                  PINHD-1X3SMALL             1X03-SMALL       
 
 RF Module:
 Part     Value                      Device                     Package          Library                Sheet
-RFM12    FRM12                      FRM12                      RFM12            RFM12                  1
+RFM12    RFM12                      FRM12                      RFM12            RFM12                  1
 R8       100K                       R-EU_M0805                 M0805            rcl                    1
 R9       10K                        R-EU_M0805                 M0805            rcl                    1
 R10      0                          R-EU_M0805                 M0805            rcl                    1
@@ -68,8 +68,8 @@ R19      10K                        R-EU_M0805                 M0805            
 
 RS485:
 Part     Value                      Device                     Package          Library                Sheet
-IC2      MAX481CSA                  MAX481CSA                  SO08             maxim                  1
-X2       RIACON-4                   RIACON-4                   RIACON-4         con-riacon             1
+IC2      MAX487CSA                  MAX481CSA                  SO08             maxim                  1
+X2       AKL166-4                   RIACON-4                   RIACON-4         con-riacon             1
 
 3V Regulator:
 Part     Value                      Device                     Package          Library                Sheet
