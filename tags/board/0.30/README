@@ -8,7 +8,7 @@ Please view the schematic to see which parts you have to put on the board. Diffe
 The file bom-grouped contains the list of parts used to build your moodlamp.
 
 Special Notes:
-R23 changed its name to L1.
+R23 changed it's name to L1.
 
 Parts not populated or replaced:
 Some parts are not populated and some have been replaced by solder bridges:
