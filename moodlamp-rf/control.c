@@ -171,7 +171,7 @@ void control_tick(void)
         
         uint16_t bat = adc_getChannel(6);
         if( bat < ADC_MINBATIDLE ){
-            global.flags.lowbat = 1;
+            //global.flags.lowbat = 1;
         }
 
         if(control_state == CONTROL_SEARCHMASTER){

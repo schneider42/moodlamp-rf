@@ -137,7 +137,7 @@ int main(void) {
         adc_init();
         uint16_t bat = adc_getChannel(6);
         if( bat < ADC_MINBATIDLE ){
-            global.flags.lowbat = 1;
+            //global.flags.lowbat = 1;
         }
     }
     
