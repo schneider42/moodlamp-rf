@@ -1,12 +1,15 @@
-0 alles fb
-1 alles f
-2 alles b
-3 alles f1
-4 alles f2
-5 alles f3
-6 alles b1
-7 alles b2
-8 alles b3
+0x0 alles fb
+0x1 alles f
+0x2 alles b
+0x3 alles f1
+0x4 alles f2
+0x5 alles f3
+0x6 alles b1
+0x7 alles b2
+0x8 alles b3
+0x9 alles fb1
+0xA alles fb2
+0xB alles fb3
 
   C   C    C
 0x10 0x20 0x30
