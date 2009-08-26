@@ -18,6 +18,9 @@ Parts replaced by a solder bridge:      L1, R10, R11, R12
 
 The 3V regulater is usually not populated. These parts are probably not included in your kit.
 
+Parts not populated: C6, C7, C8, C9, C10, IC3
+Solderbridge to short out: SJ1
+
 Please refer to https://wiki.muc.ccc.de/geekend08:moodlamp_howto for more information about building a moodlamp.
 
 For an introduction to SMD soldering visit http://www.spida.net/projects/hardware/smd-soldering/
