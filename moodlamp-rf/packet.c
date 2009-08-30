@@ -32,58 +32,11 @@ uint8_t packet_isOwnBroadcast(struct packet_t * p)
     return (p->dest == broadcastadr) ? 1 : 0;
 }
 
-#define ADR_FRONT   1
-#define ADR_BACK    2
-#define ADR_FRONT1  3
-#define ADR_FRONT2  4
-#define ADR_FRONT3  5
-#define ADR_BACK1   6
-#define ADR_BACK2   7
-#define ADR_BACK3   8
-#define ADR_FB1     9
-#define ADR_FB2     10
-#define ADR_FB3     11
-
-#define CMASK       0xF0
-#define SIDEMASK    0x08
-
-#define FRONT       0x08
-#define BACK        0x00
-
-#define C1          0x10
-#define C2          0x20
-#define C3          0x30
-
-uint8_t packet_isDreicBroadcast(uint8_t adr)
+uint8_t packet_isBroadcast(uint8_t adr)
 {
     if( adr == 0 )
         return 1;
     if( adr == localadr )
-        return 1;
-    if( adr == ADR_FRONT && (localadr & SIDEMASK) == FRONT )
-        return 1;
-    if( adr == ADR_BACK  && (localadr & SIDEMASK) == BACK )
-        return 1;
-
-    if( adr == ADR_FRONT1 && (localadr & SIDEMASK) == FRONT && (localadr & CMASK) == C1)
-        return 1;
-    if( adr == ADR_FRONT2 && (localadr & SIDEMASK) == FRONT && (localadr & CMASK) == C2)
-        return 1;
-    if( adr == ADR_FRONT3 && (localadr & SIDEMASK) == FRONT && (localadr & CMASK) == C3)
-        return 1;
-
-    if( adr == ADR_BACK1 && (localadr & SIDEMASK) == BACK && (localadr & CMASK) == C1)
-        return 1;
-    if( adr == ADR_BACK2 && (localadr & SIDEMASK) == BACK && (localadr & CMASK) == C2)
-        return 1;
-    if( adr == ADR_BACK3 && (localadr & SIDEMASK) == BACK && (localadr & CMASK) == C3)
-        return 1;
-
-    if( adr == ADR_FB1 && (localadr & CMASK) == C1 )
-        return 1;
-    if( adr == ADR_FB2 && (localadr & CMASK) == C2 )
-        return 1;
-    if( adr == ADR_FB3 && (localadr & CMASK) == C3 )
         return 1;
     return 0;
 }
@@ -112,7 +65,7 @@ void packet_packetIn(struct packet_t * p, uint8_t interface)
     if(p->flags & PACKET_BROADCAST){
         packet_packetOut(p);
         //if(p->dest == broadcastadr || p->dest == 0 || packet_isDreicBroadcast(p->dest))
-        if( packet_isDreicBroadcast(p->dest) )
+        if( packet_isBroadcast(p->dest) )
             cmd_interpret(p->data,NULL);
         if( p->flags & PACKET_REPLYDONE ){
             if(p->flags & PACKET_REPLYDONE){
