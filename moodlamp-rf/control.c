@@ -105,7 +105,6 @@ void control_lowbat(void)
 
 void control_tick(void)
 {
-    static uint16_t time;
     switch(global.state){
         case STATE_REMOTE:
             control_faderunning = 1;
