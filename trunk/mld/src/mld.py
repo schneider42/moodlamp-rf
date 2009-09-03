@@ -120,7 +120,7 @@ class MLD:
         for m in self.ml:
             m.timer -= 1
             if m.timer <= 0:
-                if m is not DummyLamp:
+                if m is not moodlamp.DummyLamp:
                     self.server.lamp_removed(m)
                 self.ml.remove(m)
                 
