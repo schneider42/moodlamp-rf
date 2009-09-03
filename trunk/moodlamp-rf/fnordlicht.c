@@ -120,6 +120,10 @@ int main(void) {
 //    for(l=0;l<1000000;l++);
     DDR_CONFIG_IN(CONFIG1);
     PIN_SET(CONFIG1);
+    
+    volatile unsigned long l;     
+    for(l=0;l<10;l++);
+
     if( !PIN_HIGH(CONFIG1) ){
         global.config = 30;
     }else{
