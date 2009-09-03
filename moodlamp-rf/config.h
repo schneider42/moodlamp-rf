@@ -89,7 +89,7 @@
 
 #define xRC5C1_PORT     PORTD
 #define	xRC5C1_IN       PIND
-#define	xRC5C1          PD7			// IR input low active
+#define	xRC5C1          PD6			// IR input low active
 
 #define ADC_MINBATIDLE  530         //4v
 
