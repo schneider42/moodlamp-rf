@@ -3,7 +3,7 @@ import gtk
 import sys
 import socket
 
-host = "10.0.0.23"
+host = "10.0.0.80"
 port = 2324
 addr = (host,port)
 s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
