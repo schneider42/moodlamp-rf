@@ -127,8 +127,14 @@ class MLClient(asynchat.async_chat):
                     m = self.ml.getLamp(s[1])
                     m.reset();
                 elif cmd == "014":
-                    m = self.ml.getLamp(s[1])
-                    m.setprog(int(s[2]))
+                    if int(s[1]) == 0:
+		        for n in self.ml:
+			    if n.ready:
+			        m = self.ml.getLamp(n.address)
+			        m.setprog(int(s[2]))
+		    else:
+                        m = self.ml.getLamp(s[1])
+                        m.setprog(int(s[2]))
                 elif cmd == "015":
                     m = self.ml.getLamp(s[1])
                     m.setname("".join(s[2:]))
