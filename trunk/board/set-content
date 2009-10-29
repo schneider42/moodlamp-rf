@@ -2,7 +2,7 @@
 
 PCB version: 0.30           Kit revision 2          Partlist $Revision$
 
-README: Please have a look at https://wiki.muc.ccc.de/moodlamp_30_build and https://wiki.muc.ccc.de/moodlamp_30 for build instructions and more information on the contents if this kit.
+README: Please have a look at https://wiki.muc.ccc.de/moodlamp_30_build and https://wiki.muc.ccc.de/moodlamp for pictured build instructions and more information about moodlamps
 
 WARNING: Some parts are not included in this kit. These parts are not needed or need to be replaced by a solder bridge:
 
@@ -57,7 +57,7 @@ X4                      -           1           -       mini usb jack
 
                             RF Module:
 Part                    Value       Count       Mark    Package
-FRM12                   RFM12       1           -       board2board module
+FRM12                   RFM12       1           -       pcb module
 Wire                    -           1           -       15cm
 
                             RS485:
