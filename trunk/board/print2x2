@@ -1,0 +1,2 @@
+#!/bin/sh
+a2ps set-content -o tmp.ps -R --columns 1 -B && ps2pdf tmp.ps && pdfnup --nup 2x2 tmp.pdf --pages 1,1,1,1 --orient portrait && acroread tmp-2x2.pdf
