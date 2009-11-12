@@ -182,6 +182,7 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
+#CFLAGS += -ffunction-sections
 
 
 #---------------- Compiler Options C++ ----------------
@@ -282,7 +283,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-
+#LDFLAGS += -ffunction-sections -Wl,--gc-sections
 
 
 #---------------- Programming Options (avrdude) ----------------
