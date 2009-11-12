@@ -10,4 +10,4 @@ def tohex(val):
 def setcolor(lamp, r, g, b):
     cmd = "acC#%s#%s%s%sab"%(lamp,tohex(r),tohex(g),tohex(b))
     print cmd
-    bus.sendto(cmd,("10.0.0.80",2324))
+    bus.sendto(cmd,("83.133.178.75",2324))
