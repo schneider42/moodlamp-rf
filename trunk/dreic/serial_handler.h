@@ -5,7 +5,7 @@
 #include <packet.h>
 #include "config.h"
 
-#define SERIAL_BUFFERLEN        200
+#define SERIAL_BUFFERLEN        270
 extern uint8_t serial_buffer[SERIAL_BUFFERLEN];
 
 #define SERIAL_ESCAPE   'a'
