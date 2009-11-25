@@ -30,4 +30,5 @@ void control_setupOK(void);
 void control_selfassign(void);
 void control_standby(uint16_t wait);
 void control_lowbat(void);
+void control_scriptTimer(uint8_t scriptnum, uint16_t time);
 #endif

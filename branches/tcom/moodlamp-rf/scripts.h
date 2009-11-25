@@ -203,15 +203,39 @@ static const uint8_t blinken[] PROGMEM = {
     MACRO_SLEEP(125),
     MACRO_JUMP(-24)
     };
+
+static const uint8_t yamica[] PROGMEM = {
+    MACRO_SET_CHANNEL(CHANNEL_RED, 255),
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 0),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 0),
+    MACRO_SLEEP(125),
+    MACRO_SET_CHANNEL(CHANNEL_RED, 0),
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 255),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 0),
+    MACRO_SLEEP(125),
+    MACRO_SET_CHANNEL(CHANNEL_RED, 255),
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 255),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 0),
+    MACRO_SLEEP(125),
+    MACRO_JUMP(-12)
+    };
+
+static const uint8_t white[] PROGMEM = {
+    MACRO_SET_CHANNEL(CHANNEL_RED, 255),
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 255),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 255),
+    MACRO_SLEEP(125),
+    MACRO_JUMP(-3)
+};
 static const struct playlist_t global_playlist[] = {
     {&memory_handler_flash, (uint16_t) &green_flash},
     {&memory_handler_flash, (uint16_t) &blinken},
     {&memory_handler_flash, (uint16_t) &colorchange_rnd},
     {&memory_handler_flash, (uint16_t) &colorchange_red},
     {&memory_handler_flash, (uint16_t) &colorchange_red_blue},
-    {&memory_handler_flash, (uint16_t) &green_blink},
     {&memory_handler_flash, (uint16_t) &police},
     {&memory_handler_flash, (uint16_t) &red_blink},
-    {&memory_handler_flash, (uint16_t) &colorchange_stress}
+    {&memory_handler_flash, (uint16_t) &white},
+    {&memory_handler_flash, (uint16_t) &yamica},
 };
 #endif
