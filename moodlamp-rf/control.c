@@ -67,6 +67,15 @@ void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
 
 }
 
+uint16_t control_scriptTime;
+uint8_t control_scriptNum;
+
+void control_scriptTimer(uint8_t scriptnum, uint16_t time)
+{
+    control_scriptTime = time;
+    control_scriptNum = scriptnum;
+}
+
 void control_setTimeout(void)
 {
     if(timeout)
@@ -164,6 +173,9 @@ void control_tick(void)
         break;
     }
     
+    if( control_scriptTime && --control_scriptTime == 0 ){
+        cmd_setscriptNum(control_scriptNum);
+    }
     static unsigned int control_beacon = 1000;
     if(control_beacontime !=  0 && control_beacon-- == 0 ){
         control_beacon = control_beacontime;

@@ -71,4 +71,5 @@
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
 uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);
 void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t position);
+void cmd_setscriptNum(uint8_t index);
 #endif

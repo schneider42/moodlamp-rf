@@ -71,6 +71,10 @@ void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t po
     cmd_dark(); 
 }
 
+void cmd_setscriptNum(uint8_t index){
+    cmd_setscript(global_playlist[index].execute, global_playlist[index].position);
+}
+
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result)
 {
     return cmd_handler(cmd[0],cmd+1,result);
@@ -102,9 +106,11 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
             global.state = STATE_LEAVESTANDBY;
         }
     }else if(cmd == CMD_SET_SCRIPT){
-        if(sizeof(global_playlist)/(sizeof(struct playlist_t)) > param[0])
-                cmd_setscript(
-                    global_playlist[param[0]].execute, global_playlist[param[0]].position);
+        if(sizeof(global_playlist)/(sizeof(struct playlist_t)) > param[0]){
+            cmd_setscript(
+                global_playlist[param[0]].execute, global_playlist[param[0]].position);
+            control_scriptTimer(7,35000);
+        }
     }else if(cmd == CMD_FASTER){
         if(script_threads[0].speed_adjustment < 8){
             script_threads[0].speed_adjustment++;
