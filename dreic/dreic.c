@@ -11,7 +11,7 @@
 #include "cmd_handler.h"
 #include "fnordlicht.h"
 
-#define UART_BAUDRATE   115200
+#define UART_BAUDRATE   230400
 #define DREIC_COLOR     'C'
 #define DREIC_FADE      'F'
 
@@ -21,11 +21,11 @@
 //((F_CPU/512) / 2)
 #define PRE_1MS         (PRE_500MS / 500)
 
-
 volatile uint8_t timebase = 0;
 struct packet_t outpacket;
 uint8_t sendpacket = 0;
-uint8_t debug = 0;
+uint8_t debug = 3;
+uint8_t raw = 0;
 
 ISR(TIMER0_OVF_vect)
 {
@@ -116,7 +116,7 @@ uint8_t fromHex(uint8_t * str)
     return fromDigit(str[0])* 16 + fromDigit(str[1]);
 }
 
-void cmd(uint8_t * cmd)
+void cmd(uint8_t * cmd, uint16_t len)
 {
     uint8_t adr,r,g,b;
     uint16_t speed;
@@ -146,6 +146,19 @@ void cmd(uint8_t * cmd)
         case 'D':
             debug = cmd[1]-'0';
         break;
+        case 'Z':
+            zbus_txbuf[0] = 0x42;
+            zbus_txbuf[1] = 0x42;
+            zbus_txstart(2);
+        break;
+        case 'W':
+            raw = cmd[1]-'0';
+        break;
+        case 'r':
+            raw = 1;
+            memcpy((char*)zbus_txbuf, (char*)cmd+1, len-1);
+            zbus_txstart(len-1);
+        break;
     }
    
 }
@@ -166,6 +179,7 @@ int main(void)
 
 #ifndef USART_USE_0
     zbus_core_init();
+    zbus_rxstart();
 #else
     PORTC |= (1<<PC4);
 #endif
@@ -192,7 +206,12 @@ int main(void)
     uart1_puts("reset\r\n");
    
     while(1){
-        if(serial_readline()){
+        
+        if(zbus_ready()){
+            zbus_rxstart();
+        }
+        uint16_t cmdlen = serial_readline();
+        if(cmdlen){
             if(debug > 1)
             uart1_puts("readline\r\n");
             gotcmd = 1;
@@ -203,13 +222,17 @@ int main(void)
            if(debug > 1)
            uart1_puts("cmd\r\n");
            gotcmd = 0;
-           cmd(serial_buffer);
+           cmd(serial_buffer, cmdlen);
         }
 
         len = zbus_rxfinish();
         if(len){
             if(debug)
             uart1_puts("Eingang auf zbus\r\n");
+            uart1_puts("acR");
+            serial_putenc((uint8_t*)zbus_buf,len);
+            uart1_puts("ab");
+
             zbus_rxdone();
             zbus_rxstart();
         }
@@ -244,7 +267,7 @@ int main(void)
                     //uart1_puts("maintenace packet failed\r\n");
                 }
             }
-            if(--ms500 == 0){
+            if(--ms500 == 0 && !raw){
                 ms500 = PRE_500MS;
                 if(debug > 1)
                 uart1_puts("mark\r\n");
