@@ -69,7 +69,7 @@ MCU = atmega644p
 
 
 # Output format. (can be srec, ihex, binary)
-FORMAT = ihex
+FORMAT = binary
 
 
 # Target file name (without extension).
@@ -182,6 +182,7 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
+#CFLAGS += -ffunction-sections
 
 
 #---------------- Compiler Options C++ ----------------
@@ -282,7 +283,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-
+#LDFLAGS += -ffunction-sections -Wl,--gc-sections
 
 
 #---------------- Programming Options (avrdude) ----------------
@@ -296,7 +297,7 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #AVRDUDE_PROGRAMMER = usbasp 
 #AVRDUDE_PROGRAMMER = avr910
 # com1 = serial port. Use lpt1 to connect to parallel port.
-AVRDUDE_PORT = /dev/ttyUSB0
+#AVRDUDE_PORT = /dev/ttyUSB0
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
@@ -316,7 +317,7 @@ AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 # reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) 
+AVRDUDE_FLAGS = -p $(MCU) -B 1
 
 ifdef AVRDUDE_PROGRAMMER
 AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
@@ -327,11 +328,11 @@ AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
 #Full swing crystal oscillator
-AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
+AVRDUDE_LFUSE_FLAGS = -B 10 -U lfuse:w:0xe7:m
 #preserve eeprom, max boot section
-AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd0:m
+AVRDUDE_HFUSE_FLAGS = -B 10 -U hfuse:w:0xd0:m
 #2.7v brown out
-AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
+AVRDUDE_EFUSE_FLAGS = -B 10 -U efuse:w:0xfd:m
 
 #---------------- Debugging Options ----------------
 
