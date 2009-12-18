@@ -221,11 +221,11 @@ static const uint8_t yamica[] PROGMEM = {
     };
 
 static const uint8_t white[] PROGMEM = {
-    MACRO_SET_CHANNEL(CHANNEL_RED, 255),
+    MACRO_SET_CHANNEL(CHANNEL_RED, 220),
     MACRO_SET_CHANNEL(CHANNEL_GREEN, 255),
-    MACRO_SET_CHANNEL(CHANNEL_BLUE, 255),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 200),
     MACRO_SLEEP(125),
-    MACRO_JUMP(-3)
+    MACRO_JUMP(-4)
 };
 static const struct playlist_t global_playlist[] = {
     {&memory_handler_flash, (uint16_t) &green_flash},
