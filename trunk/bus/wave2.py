@@ -9,7 +9,7 @@ def fadeOn(lamp):
 def fadeOff(lamp):
     lamplib.fade(lamp,0,0,255,200*speed)
 
-lamps = ('31','30','51','33','4F','32')
+lamps = ('31','30','51','33','10','32')
 #,'12','21','1B','2A','14','1A')
 lamp = 0
 lamplib.setcolor('FE',0,0,255);
