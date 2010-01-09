@@ -1,0 +1,21 @@
+feld am ende des eeprom, 50 ascii zeichen(domain)
+initial zustand duch mc gesetzt
+python,avrdude gui zum setzten per isp
+python,mld zum setzten per funk/rs485
+mld bitet get lamp <name>
+adressen dynamisch
+gui kann passende lampe blinken lassen
+eeprom fuse setzen
+
+C R<id> broadcast an 0
+S x<id><0><loacladr><broadcast><serveradr> broadcast an 0
+    ->  server iface da
+        cmd: packet init
+             set server
+C: I<id>
+S: V
+C  <__DATE__>
+S: OK
+C:      wenn ok, dann normal weiter
+        wenn timout, dann packet reset und bei 0 losgehen
+C: alle 30s beacon senden
