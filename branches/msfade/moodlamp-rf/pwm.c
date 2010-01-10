@@ -177,11 +177,11 @@ void update_pwm_timeslots(void)
     olddim = global_pwm.dim;
     */
     for(i=0;i<PWM_CHANNELS;i++){
-#ifdef PWM_USESCALE
-        global_pwm.channels[i].brightness_scale = scalevalue(global_pwm.channels[i].brightness,global_pwm.dim);
-#else
+//#ifdef PWM_USESCALE
+//        global_pwm.channels[i].brightness_scale = scalevalue(global_pwm.channels[i].brightness,global_pwm.dim);
+//#else
         global_pwm.channels[i].brightness_scale = global_pwm.channels[i].brightness;
-#endif
+//#endif
     }
         
     /* sort channels according to the current brightness */
@@ -339,15 +339,16 @@ ISR(SIG_OUTPUT_COMPARE1A)
     /* decide if this interrupt is the beginning of a pwm cycle */
     if (pwm.next_bitmask == 0) {
         /* output initial values */
+        uint8_t port = LED_PORT;
 #if LED_PORT_INVERT
-        LED_PORT &= ~0x07;
-        LED_PORT |= pwm.initial_bitmask & 0x07;
+        port &= ~0x07;
+        port |= pwm.initial_bitmask & 0x07;
 #else
-        //LED_PORT |= 0x07;
-        //LED_PORT &= ~(pwm.initial_bitmask & 0x07);
-        LED_PORT &= ~0x07;
-        LED_PORT |= (~pwm.initial_bitmask)&0x07;
+        port &= ~0x07;
+        port |= (~pwm.initial_bitmask)&0x07;
 #endif
+        LED_PORT = port;
+
         /* if next timeslot would happen too fast or has already happened, just spinlock */
         while (TCNT1 + 2000 > pwm.slots[pwm.index].top)
         {
