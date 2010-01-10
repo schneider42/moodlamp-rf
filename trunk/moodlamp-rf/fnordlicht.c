@@ -82,7 +82,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putc_file, NULL, _FDEV_SETUP_WRITE
 /* structs */
 volatile struct global_t global = {{0, 0}};
 /* prototypes */
-//uint16_t main_reset = 0;
+uint16_t main_reset = 0;
 
 
 #if SERIAL_UART
@@ -97,7 +97,7 @@ void jump_to_bootloader(void)
 {
     //uart1_puts("acDRab");
     //cli();
-    wdt_enable(WDTO_30MS);
+    //wdt_enable(WDTO_30MS);
     while(1);
 }
 
@@ -120,7 +120,8 @@ int main(void) {
 //    for(l=0;l<1000000;l++);
     DDR_CONFIG_IN(CONFIG1);
     PIN_SET(CONFIG1);
-    
+    wdt_enable(WDTO_8S);    
+    wdt_reset();
     volatile unsigned long l;     
     for(l=0;l<10;l++);
 
@@ -132,6 +133,7 @@ int main(void) {
     
     leds_init();
 
+    wdt_reset();
     if( global.config == 21 ){
         DDR_CONFIG_IN(JUMPER1C1);
         PIN_SET(JUMPER1C1);
@@ -145,6 +147,7 @@ int main(void) {
         }
     }
     
+    wdt_reset();
     init_pwm();
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
@@ -155,6 +158,7 @@ int main(void) {
     rc5_init();
 #endif
 
+    wdt_reset();
 #if STATIC_SCRIPTS
     init_script_threads();
 #endif
@@ -164,6 +168,7 @@ int main(void) {
 
     control_init();
 
+    wdt_reset();
 #if RS485_CTRL
     rs485_init();
     zbus_core_init();
@@ -171,6 +176,7 @@ int main(void) {
     rf_init();
     packet_init(0,0);
 
+    wdt_reset();
     srandom(random_seed);
     random_seed = random();
 
@@ -180,6 +186,7 @@ int main(void) {
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
     while (1) {
+        wdt_reset();
         leds_main();
         if(packetbase > 32){
             packetbase = 0;
@@ -188,7 +195,7 @@ int main(void) {
             }else
                 raw_tick();
             //if(main_reset++ > 4000)
-            //  jump_to_bootloader(); 
+            //    jump_to_bootloader(); 
             //uint16_t bat = adc_getChannel(6);
             /*if( bat < ADC_MINBATIDLE ){
                 global.flags.lowbat = 1;

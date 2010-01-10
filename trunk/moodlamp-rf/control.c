@@ -272,8 +272,8 @@ void control_tick(void)
 void control_selfassign(void)
 {
     uint8_t adr = idbuf[0];
-    //wdt_reset();
-    //main_reset = 0;
+    wdt_reset();
+    main_reset = 0;
     if(control_state == CONTROL_SETUPOK)
         return;
     packet_setAddress(adr,adr);
