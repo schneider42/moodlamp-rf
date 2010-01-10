@@ -297,9 +297,9 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #AVRDUDE_PROGRAMMER = usbasp 
 #AVRDUDE_PROGRAMMER = avr910
 # com1 = serial port. Use lpt1 to connect to parallel port.
-AVRDUDE_PORT = /dev/ttyUSB0
+#AVRDUDE_PORT = /dev/ttyUSB0
 
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
+AVRDUDE_WRITE_FLASH = -B 1 -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
 
@@ -317,7 +317,7 @@ AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 # reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) 
+AVRDUDE_FLAGS = -p $(MCU)
 
 ifdef AVRDUDE_PROGRAMMER
 AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
@@ -328,11 +328,11 @@ AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
 #Full swing crystal oscillator
-AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
+AVRDUDE_LFUSE_FLAGS = -B 100 -U lfuse:w:0xe7:m
 #preserve eeprom, max boot section
-AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd0:m
+AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd0:m
 #2.7v brown out
-AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
+AVRDUDE_EFUSE_FLAGS = -B 100 -U efuse:w:0xfd:m
 
 #---------------- Debugging Options ----------------
 
