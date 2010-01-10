@@ -177,11 +177,11 @@ void update_pwm_timeslots(void)
     olddim = global_pwm.dim;
     */
     for(i=0;i<PWM_CHANNELS;i++){
-//#ifdef PWM_USESCALE
-//        global_pwm.channels[i].brightness_scale = scalevalue(global_pwm.channels[i].brightness,global_pwm.dim);
-//#else
+#ifdef PWM_USESCALE
+        global_pwm.channels[i].brightness_scale = scalevalue(global_pwm.channels[i].brightness,global_pwm.dim);
+#else
         global_pwm.channels[i].brightness_scale = global_pwm.channels[i].brightness;
-//#endif
+#endif
     }
         
     /* sort channels according to the current brightness */
