@@ -199,6 +199,9 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
     }else if(cmd == CMD_FADEMS){
         uint16_t time = (param[3]<<8)+param[4];
         control_fadems(param[0],param[1],param[2],time);
+    }else if(cmd == CMD_FADEMSALT){
+        uint16_t time = (param[3]<<8)+param[4];
+        control_fademsalt(param[0],param[1],param[2],time);
     }else if(cmd == CMD_GET_VOLTAGE){
         uint16_t adc = adc_getChannel(6);
         sprintf((char *)result,"V=%u",adc);

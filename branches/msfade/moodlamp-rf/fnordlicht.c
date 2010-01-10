@@ -179,6 +179,8 @@ int main(void) {
     global.state = STATE_REMOTE;
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 1;
+    DDRC |= (1<<PC0)|(1<<PC1);
+
     while (1) {
         leds_main();
         if(packetbase > 32){
@@ -188,14 +190,14 @@ int main(void) {
             }else
                 raw_tick();
             if(main_reset++ == 0){
-                control_fadems(255, 255, 0, 10000);
+                control_fademsalt(255, 127, 127, 10000);
                 //control_setColor(255, 255, 0);
-            }else if( main_reset == 15000){
+            }else if( main_reset == 20000){
 
                 control_setColor(255, 0, 0);
-                control_fadems(0, 0, 0, 10000);
+                control_fadems(0, 0, 0, 1000);
                 //control_setColor(0, 0, 0);
-            }else if( main_reset == 30000){
+            }else if( main_reset == 22000){
                 main_reset = 0;
             }
             //  jump_to_bootloader(); 

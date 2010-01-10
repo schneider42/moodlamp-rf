@@ -66,6 +66,7 @@
 #define CMD_STANDALONE          'X'
 #define CMD_FADE                'F'
 #define CMD_FADEMS              'M'
+#define CMD_FADEMSALT           'T'
 #define CMD_GET_VOLTAGE         'K'
 
 

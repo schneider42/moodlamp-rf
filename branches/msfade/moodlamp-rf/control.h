@@ -24,6 +24,7 @@ void control_setServer(uint8_t s);
 void control_setColor(uint8_t r, uint8_t g, uint8_t b);
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed);
 void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
+void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
 void control_setTimeout(void);
 void control_tick(void);
 void control_gotAddress(void);
