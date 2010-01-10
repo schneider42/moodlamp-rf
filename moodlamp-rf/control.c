@@ -96,6 +96,35 @@ void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
     control_setTimeout();
 }
 
+void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
+{
+    uint8_t pos;
+    global_pwm.channels[0].target_brightness = r;
+    global_pwm.channels[1].target_brightness = g;
+    global_pwm.channels[2].target_brightness = b;
+
+    for(pos = 0; pos < 3; pos++){
+        //about 1000 cycles per channel
+        //PORTC |= (1<<PC0) | (1<<PC1);
+        uint8_t a = global_pwm.channels[pos].brightness;
+        uint8_t b = global_pwm.channels[pos].target_brightness;
+        if( a == b ){
+            PORTC &= ~((1<<PC1) | (1<<PC0));
+            continue;
+        }
+        uint8_t dist = abs(a-b);
+
+        //PORTC &= ~(1<<PC1);
+        uint32_t lsteps = dist * 1024L * 256L; //good enough
+        uint16_t speed = lsteps / (time * 144L);
+        global_pwm.channels[pos].speed_h = speed >> 8;
+        global_pwm.channels[pos].speed_l = speed & 0xFF;
+        //PORTC &= ~((1<<PC0));
+    }
+
+    control_setTimeout();
+
+}
 void control_setTimeout(void)
 {
     if(timeout)
