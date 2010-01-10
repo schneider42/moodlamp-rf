@@ -45,6 +45,8 @@ uint8_t zbus_ready(void)
 void
 zbus_txstart(zbus_index_t size)
 {
+    return;
+
     if(zbus_intx)
         return;
     zbus_txlen = size;
