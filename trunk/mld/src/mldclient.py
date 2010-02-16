@@ -144,7 +144,7 @@ class MLClient(asynchat.async_chat):
                         for n in self.ml:
                             if n.ready:
                                 m = self.ml.getLamp(n.address)
-                                m.setprog(int(s[2]) - 1)
+                                m.setprog(int(s[2]) + 1)
                     else:
                         m = self.ml.getLamp(s[1])
                         m.setprog(int(s[2]))
