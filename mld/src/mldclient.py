@@ -60,12 +60,12 @@ class MLClient(asynchat.async_chat):
                 print "cmd=",cmd
                 ok = True
                 
-		if cmd == "000":
-		    self.close() 
-                elif cmd == "001":
+                if cmd == "000": # close terminal
+                    self.close() 
+                elif cmd == "001": # test command
                     self.push("100 Hello World\r\n")
                     ok = False
-                elif cmd == "002":
+                elif cmd == "002": # list moodlamps
                     found = 0
                     for m in self.ml:
                         if m.ready:
@@ -74,35 +74,35 @@ class MLClient(asynchat.async_chat):
                     if found==0:
                         self.sendNoLampsDetected()
                         ok = False
-                elif cmd == "003":
-		    if int(s[1]) == 0:
-		        for n in self.ml:
-			    if n.ready:
-				self.push("Send %2d -> %s %s %s\r\n" % (n.address, int(s[2],16),int(s[3],16),int(s[4],16)))
-			        m = self.ml.getLamp(n.address)
-			        m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
-		    else:
-			self.push("Send %2d -> %s %s %s\r\n" % (int(s[1]), int(s[2],16),int(s[3],16),int(s[4],16)))
+                elif cmd == "003": # change color
+                    if int(s[1]) == 0:
+                        for n in self.ml:
+                            if n.ready:
+                                self.push("Send %2d -> %s %s %s\r\n" % (n.address, int(s[2],16),int(s[3],16),int(s[4],16)))
+                                m = self.ml.getLamp(n.address)
+                                m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
+                    else:
+                        self.push("Send %2d -> %s %s %s\r\n" % (int(s[1]), int(s[2],16),int(s[3],16),int(s[4],16)))
                         m = self.ml.getLamp(s[1])
                         m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
-                elif cmd == "004":
+                elif cmd == "004": # toogle pause
                     m = self.ml.getLamp(s[1])
                     m.pause(True);
-                elif cmd == "005":
+                elif cmd == "005": # unused
                     pass
-                elif cmd == "006":
+                elif cmd == "006": # set interface raw
                     for m in self.interfaces:
                         m.set_raw(True)
-                elif cmd == "007":
+                elif cmd == "007": # flash firmware
                     self.firmware = hex.IHexFile()
                     self.state = 1
-                elif cmd == "008":
-                   self.push("007 start 0X%X len 0X%X\r\n" % (self.firmware.adr, len(self.firmware.data) ))
-                elif cmd == "009":
+                elif cmd == "008": # flash firmware
+                    self.push("007 start 0X%X len 0X%X\r\n" % (self.firmware.adr, len(self.firmware.data) ))
+                elif cmd == "009": # flash firmware
                     if len(self.interfaces) > int(s[1]):
                         interface = self.interfaces[int(s[1])]
                         self.push( "108 flashing on interface %s 0x%X bytes from adr 0x%X\r\n" % 
-                                   (interface, len(self.firmware.data), self.firmware.adr))
+                        (interface, len(self.firmware.data), self.firmware.adr))
                         r = interface.flash(self.firmware)
                         if r:
                             self.push("404 error while flashing")
@@ -110,20 +110,20 @@ class MLClient(asynchat.async_chat):
                     else:
                         self.sendNoSuchInterface()
                         ok = False
-                elif cmd == "r":
+                elif cmd == "r": #reset interface
                     self.interfaces[0].reset()
-                elif cmd == "010":
+                elif cmd == "010": # show interface
                     pos = 0
                     for i in self.interfaces:
                         self.sendInterface(i, pos)
                         pos+=1
-                elif cmd == "011":
+                elif cmd == "011": # unset interface raw
                     for i in self.interfaces:
                         i.set_raw(False)
-                elif cmd == "012":
+                elif cmd == "012": # start app
                     for i in self.interfaces:
                         i.start_app()
-                elif cmd == "013":
+                elif cmd == "013": # reset moodlamps
                     if int(s[1]) == 0:
                         for n in self.ml:
                             if n.ready:
@@ -139,40 +139,40 @@ class MLClient(asynchat.async_chat):
                     else:
                         m = self.ml.getLamp(s[1])
                         m.reset();
-                elif cmd == "014":
+                elif cmd == "014": # run programm
                     if int(s[1]) == 0:
-		        for n in self.ml:
-			    if n.ready:
-			        m = self.ml.getLamp(n.address)
-			        m.setprog(int(s[2]))
-		    else:
+                        for n in self.ml:
+                            if n.ready:
+                                m = self.ml.getLamp(n.address)
+                                m.setprog(int(s[2]) - 1)
+                    else:
                         m = self.ml.getLamp(s[1])
                         m.setprog(int(s[2]))
-                elif cmd == "015":
+                elif cmd == "015": # set name
                     m = self.ml.getLamp(s[1])
                     m.setname("".join(s[2:]))
-                elif cmd == "016":
+                elif cmd == "016": # get voltage
                     m = self.ml.getLamp(s[1])
                     m.getvoltage()
-		elif cmd == "?":
-		    self.push("000 - quit telnet ;)\r\n")
-		    self.push("001 - hello world?\r\n")
-		    self.push("002 - list of all available and ready moodlamps\r\n")
-		    self.push("003 [moodlamp_id] <ff> <00> <00> - change color r/g/b as hex\r\n    moodlamp id = 0 for all moodlamps\r\n")
-		    self.push("004 [moodlamp_id] - toggle pause\r\n")
-		    self.push("005 - \r\n")
-		    self.push("006 - \r\n")
-		    self.push("007 - \r\n")
-		    self.push("008 - \r\n")
-		    self.push("009 - \r\n")
-		    self.push("010 - \r\n")
-		    self.push("011 - \r\n")
-		    self.push("012 - \r\n")
-		    self.push("013 [moodlamp_id] - reseting moodlamp\r\n    moodlamp id = 0 for all moodlamps\r\n")
-		    self.push("014 - \r\n")
-		    self.push("015 [moodlamp_id] <name> - to change name\r\n")
-		    self.push("016 - \r\n")
-		    self.push("r   - reseting the serial device\r\n")
+                elif cmd == "?":
+                    self.push("000 - quit telnet ;)\r\n")
+                    self.push("001 - hello world?\r\n")
+                    self.push("002 - list of all available and ready moodlamps\r\n")
+                    self.push("003 [moodlamp_id] <ff> <00> <00> - change color r/g/b as hex\r\n     moodlamp id = 0 for all moodlamps\r\n")
+                    self.push("004 [moodlamp_id] - toggle pause\r\n")
+                    self.push("005 - \r\n")
+                    self.push("006 - set interface raw \r\n")
+                    self.push("007 - flash firmware\r\n")
+                    self.push("008 - flash firmware\r\n")
+                    self.push("009 - flash firmware\r\n")
+                    self.push("010 - show interface\r\n")
+                    self.push("011 - unset interface raw \r\n")
+                    self.push("012 - start app \r\n")
+                    self.push("013 [moodlamp_id] - reseting moodlamp\r\n     moodlamp id = 0 for all moodlamps\r\n")
+                    self.push("014 [moodlamp_id] <prog Nr 1-7> - run programm, alike ir-remote\r\n     moodlamp id = 0 for all moodlamps\r\n")
+                    self.push("015 [moodlamp_id] <name> - to change name\r\n")
+                    self.push("016 [moodlamp_id] - get voltage\r\n")
+                    self.push("r   - reseting the serial device\r\n")
                 elif cmd == "":
                     pass
                 else:
