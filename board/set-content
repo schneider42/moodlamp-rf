@@ -31,7 +31,7 @@ Q1                      18.432MHz   1           -       HC49US
 ISP,JP2                 -           2           -       2x3 pin header
 X1                      -           1           -       2x screw terminal
 C[14|15]                100uF       1           -       radial capacitor
-Heat Shrinking Tube     9.6mm       1           -       2cm
+Heat Shrinking Tube     12.7mm      1           -       2cm
 Twin Wire               0.14mm      1           -       10cm
 DC Jack                 2.5mm       1           -       -
 
