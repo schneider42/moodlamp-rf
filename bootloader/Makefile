@@ -115,13 +115,13 @@ uploadtest: datatestfile.raw
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(SERIAL_PROG) -s -u -P $(SERIAL_DEV) -U f:w:$<:r
 
 lock:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c avr910 -P $(ISP_DEV) -U lock:w:0x2f:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c avr910 -P usb -U lock:w:0x2f:m
 
 launcher:
 	$(MAKE) -C launcher
 
 fuse:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -U lfuse:w:0xe7:m
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -U hfuse:w:0xd0:m
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -U efuse:w:0xfd:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 100 -U lfuse:w:0xe7:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 100 -U hfuse:w:0xd0:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 100 -U efuse:w:0xfd:m
 

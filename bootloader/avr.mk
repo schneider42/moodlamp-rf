@@ -1,11 +1,11 @@
 # Programmer used for In System Programming
 #ISP_PROG = dapa
 # device the ISP programmer is connected to
-ISP_DEV = /dev/parport0
+ISP_DEV = usb
 # Programmer used for serial programming (using the bootloader)
 SERIAL_PROG = avr109
 # device the serial programmer is connected to
-SERIAL_DEV = /dev/ttyS0
+SERIAL_DEV = usb
 
 # programs
 CC = avr-gcc
@@ -85,7 +85,7 @@ interactive-serial:
 .PHONY: all clean interactive-isp interactive-serial
 
 program-isp-%: %.hex
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -P $(ISP_DEV) -U flash:w:$<
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -B 1 -P $(ISP_DEV) -U flash:w:$<
 
 program-isp-eeprom-%: %.eep.hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS)) -P $(ISP_DEV) -U eeprom:w:$<
