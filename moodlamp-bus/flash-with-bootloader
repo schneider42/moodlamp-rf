@@ -1,0 +1,4 @@
+#!/bin/bash
+make
+launch-bootloader /dev/ttyUSB0 115200
+avrdude -p m644p -b 115200 -u -c avr109 -P /dev/ttyUSB0 -U f:w:fnordlicht.hex -U eeprom:w:fnordlicht.eep
