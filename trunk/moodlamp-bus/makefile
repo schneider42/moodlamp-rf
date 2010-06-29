@@ -41,7 +41,8 @@
 
 
 # MCU name
-MCU = atmega644p
+#MCU = atmega644p
+MCU = atmega324p
 #MCU = atmega32
 #MCU = atmega16
 
@@ -69,7 +70,7 @@ MCU = atmega644p
 
 
 # Output format. (can be srec, ihex, binary)
-FORMAT = ihex
+FORMAT = binary
 
 
 # Target file name (without extension).
@@ -86,25 +87,17 @@ OBJDIR = .
 SRC = $(TARGET).c \
 	pwm.c \
 	static_scripts.c \
-	rc5.c rc5_handler.c \
 	settings.c \
-	lib/rf12.c \
-	lib/rf12packet.c \
+    rc5.c \
+    lib/uart.c \
 	cmd_handler.c \
-	rf_handler.c \
 	control.c \
-	lib/uart.c \
-	serial_handler.c \
 	rs485_handler.c \
-	interfaces.c \
 	packet.c \
-	cache.c \
 	zbusneu.c \
-	raw.c \
 	adc.c \
-	leds.c
+	leds.c \
 #fifo.c uart.c
-
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -123,7 +116,7 @@ ASRC =
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = 2
+OPT = 3
 
 
 # Debugging format.

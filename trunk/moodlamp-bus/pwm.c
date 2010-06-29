@@ -127,6 +127,8 @@ inline void init_pwm(void)
         global_pwm.channels[i].mask = _BV(i);
     }
 
+    global_pwm.channels[0].target_brightness = 255;
+    global_pwm.channels[1].target_brightness = 255;
     update_pwm_timeslots();
     /* set all channels high -> leds off */
 #if LED_PORT_INVERT

@@ -11,13 +11,7 @@
 
 #define PACKET_MAXDATA              150
 struct packet_t {
-    uint8_t src;
     uint8_t dest;
-    uint8_t lasthop;
-    uint8_t nexthop;
-    uint8_t flags;
-    uint8_t iface;
-    uint8_t len;
     uint8_t data[PACKET_MAXDATA];
 };
 

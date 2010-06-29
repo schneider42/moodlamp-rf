@@ -9,11 +9,9 @@
 #include "common.h"
 #include "control.h"
 #include "pwm.h"
-#include "lib/rf12packet.h"
 #include "packet.h"
 #include "settings.h"
 #include <string.h>
-#include "interfaces.h"
 #include <avr/wdt.h>
 #include "adc.h"
 #include "cmd_handler.h"
@@ -28,6 +26,7 @@ uint8_t  serveradr = 0;
 uint16_t control_beacontime = 1000;
 uint8_t control_faderunning = 0;
 uint16_t time = 0;
+uint8_t control_r,control_g,control_b;
 
 #define CONTROL_SEARCHMASTER         1
 #define CONTROL_IDENTIFY             2
@@ -42,16 +41,30 @@ void control_init(void)
 
 void control_setColor(uint8_t r, uint8_t g, uint8_t b)
 {
-cli();
-    global_pwm.channels[0].brightness = r;
-    global_pwm.channels[0].target_brightness = r;
-    global_pwm.channels[1].brightness = g;
-    global_pwm.channels[1].target_brightness = g;
-    global_pwm.channels[2].brightness = b;
-    global_pwm.channels[2].target_brightness = b;
-sei();
-control_setTimeout();
+    control_r=r;
+    control_g=g;
+    control_b=b;
+    control_update();
+}
 
+void control_prepareColor(uint8_t r, uint8_t g, uint8_t b)
+{
+    control_r=r;
+    control_g=g;
+    control_b=b;
+}
+
+inline void control_update(void)
+{
+cli();
+    global_pwm.channels[0].brightness = control_r;
+    global_pwm.channels[0].target_brightness = control_r;
+    global_pwm.channels[1].brightness = control_g;
+    global_pwm.channels[1].target_brightness = control_g;
+    global_pwm.channels[2].brightness = control_b;
+    global_pwm.channels[2].target_brightness = control_b;
+sei();
+    //control_setTimeout();
 }
 
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
@@ -221,7 +234,7 @@ void control_tick(void)
             }
         break;
     }
-    
+/*    
     static unsigned int control_beacon = 1000;
     if(control_beacontime !=  0 && control_beacon-- == 0 ){
         control_beacon = control_beacontime;
@@ -263,7 +276,7 @@ void control_tick(void)
         packet_packetOut(&p);        
 //        control_beacon = 0;
     }
-
+*/
     if(timeout && --timeout == 0)
         global.state = global.oldstate;
 

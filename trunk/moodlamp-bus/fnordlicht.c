@@ -50,26 +50,19 @@
 #include "lib/uart.h"
 
 #include "rs485_handler.h"
-#include "zbus.h"
 #include "raw.h"
 #include "cmd_handler.h"
 #include "control.h"
 #if RC5_DECODER
 #include "rc5.h"
-#include "rc5_handler.h"
 #endif
-#include "lib/rf12.h"
-#include "lib/rf12packet.h"
-#include "rf_handler.h"
 #if STATIC_SCRIPTS
 #include "static_scripts.h"
 #endif
 #include "settings.h"
 #include "control.h"
-#include "serial_handler.h"
 #include "packet.h"
 #include "pinutils.h"
-#include "interfaces.h"
 #include "adc.h"
 #include "scripts.h"
 #include "leds.h"
@@ -120,7 +113,7 @@ int main(void) {
 //    for(l=0;l<1000000;l++);
     DDR_CONFIG_IN(CONFIG1);
     PIN_SET(CONFIG1);
-    wdt_enable(WDTO_8S);    
+    wdt_enable(WDTO_2S);
     wdt_reset();
     volatile unsigned long l;     
     for(l=0;l<10;l++);
@@ -163,8 +156,8 @@ int main(void) {
     init_script_threads();
 #endif
     settings_read();
-    if((global.config == 21 && !PIN_HIGH(JUMPER1C1)) || (global.config== 30 && !PIN_HIGH(JUMPER1C2)))
-        interfaces_setEnabled(IFACE_RF,0);
+    //if((global.config == 21 && !PIN_HIGH(JUMPER1C1)) || (global.config== 30 && !PIN_HIGH(JUMPER1C2)))
+    //    interfaces_setEnabled(IFACE_RF,0);
 
     control_init();
 
@@ -173,8 +166,8 @@ int main(void) {
     rs485_init();
     zbus_core_init();
 #endif
-    rf_init();
-    packet_init(0,0);
+    //rf_init();
+    packet_init(idbuf[0],0);
 
     wdt_reset();
     srandom(random_seed);
@@ -187,35 +180,38 @@ int main(void) {
 //    global.flags.running = 0;
     while (1) {
         wdt_reset();
-        leds_main();
-        if(packetbase > 32){
+        //leds_main();
+
+        #if 1
+        packet_tick();
+        #else
+        if(packetbase ){//> 32){
             packetbase = 0;
-            if(global.flags.rawmode == 0){
-                packet_tick();
-            }else
-                raw_tick();
-            if(main_reset++ > 4000)
-                jump_to_bootloader(); 
+
+            packet_tick();
+            //if(main_reset++ > 16000)
+            //    jump_to_bootloader(); 
             //uint16_t bat = adc_getChannel(6);
             /*if( bat < ADC_MINBATIDLE ){
                 global.flags.lowbat = 1;
             }*/
         }
-        if( global.flags.lowbat ){
-            control_lowbat();
-        }
+        #endif
+        //if( global.flags.lowbat ){
+        //    control_lowbat();
+        //}
 
         if( global.flags.timebase ){
-            control_tick();
+            //control_tick();
             global.flags.timebase=0;
         }
         /* after the last pwm timeslot, rebuild the timeslot table */
         
-        if (global.flags.last_pulse) {
-            global.flags.last_pulse = 0;
+        //if (global.flags.last_pulse) {
+        //    global.flags.last_pulse = 0;
             //if(global.flags.running)
             //update_pwm_timeslots();
-        }
+        //}
         /* at the beginning of each pwm cycle, call the fading engine and
          * execute all script threads */
         if (global.flags.new_cycle) {
@@ -225,19 +221,18 @@ int main(void) {
 
             if(global.flags.running){
 #if STATIC_SCRIPTS
-                execute_script_threads();
+//                execute_script_threads();
 #endif
             }
-            continue;
+            //continue;
         }
 #if RC5_DECODER
-        rc5_handler();
 #endif
 #if RS485_CTRL
         rs485_process();
 #endif
 #if SERIAL_UART
-        serial_process();
+//serial_process();
 #endif
     }
 }

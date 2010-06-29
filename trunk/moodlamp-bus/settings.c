@@ -46,8 +46,8 @@ struct thread_t script_threads_record[MAX_THREADS] EEMEM;
 struct timeslots_t pwm_record EEMEM;
 struct global_t global_record EEMEM;
 struct settings_record_t global_settings;
-char name[50] EEMEM = "\x55master5.lamp.blinkenlichts.net";
-//char * name = (char *)(E2END - 50);
+//char name[50] EEMEM = "\x33master5.lamp.blinkenlichts.net";
+char * name = (char *)(E2END - 50);
 
 uint8_t idbuf[60];
 
@@ -67,6 +67,7 @@ uint8_t settings_compareid(uint8_t * buf)
 
 void settings_setid(uint8_t * buf)
 {
+    return;
     uint8_t len = strlen((char*)buf);
 //    if(len > (sizeof(id)-1)){
 //        len = sizeof(id)-1;
@@ -80,6 +81,7 @@ void settings_setid(uint8_t * buf)
 
 void settings_save(void)
 {
+    return;
     const void * temp;
     global_settings.firstboot = 0;
     eeprom_write_block(&global_settings, &global_settings_record,sizeof(global_settings)); 
@@ -101,8 +103,8 @@ void settings_save(void)
 void settings_read(void)
 {
     void * temp;
-    eeprom_read_block(&global_settings, &global_settings_record,sizeof(global_settings));
-    if(global_settings.firstboot){
+    //eeprom_read_block(&global_settings, &global_settings_record,sizeof(global_settings));
+//    if(global_settings.firstboot){
         global_pwm.dim = 255;
 #if STATIC_SCRIPTS
 //#if RS485_CTRL == 0
@@ -121,6 +123,7 @@ void settings_read(void)
         global.flags.running = 1;
         global.state = STATE_RUNNING;
         //global.flags.rawmode = 0;
+#if 0
     }else{
         temp = (void *) &global_pwm;
         eeprom_read_block(/*(void *)&global_pwm*/temp,&global_pwm_record,sizeof(global_pwm));
@@ -131,11 +134,14 @@ void settings_read(void)
         temp = (void *) &global;
         eeprom_read_block(/*(struct global_t *)&global*/temp,&global_record,sizeof(global));
     }
+#endif
     eeprom_read_block(idbuf,name,50);
+#if 0
     if(idbuf[0] == 255){
         strcpy((char*)idbuf,"newlamp.local");
         eeprom_write_block(idbuf,name,50);
     }
+#endif
 
 //    eeprom_read_block(idbuf,&id,sizeof(id));
 }
