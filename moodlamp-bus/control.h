@@ -32,4 +32,6 @@ void control_setupOK(void);
 void control_selfassign(void);
 void control_standby(uint16_t wait);
 void control_lowbat(void);
+inline void control_update(void);
+void control_prepareColor(uint8_t r, uint8_t g, uint8_t b);
 #endif

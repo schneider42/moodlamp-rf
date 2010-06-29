@@ -6,7 +6,7 @@
 
 #if RS485_CTRL
 
-#define ZBUS_BUFFER_LEN    270
+#define ZBUS_BUFFER_LEN    70
 
 typedef uint16_t zbus_index_t;
 
@@ -22,8 +22,8 @@ uint8_t zbus_ready(void);
 void zbus_txstart(zbus_index_t len);
 
 void zbus_rxstart (void);
-zbus_index_t zbus_rxfinish(void);
 
+zbus_index_t zbus_rxfinish(uint8_t *buf); 
 void zbus_process(void);
 
 void zbus_rxdone(void);
