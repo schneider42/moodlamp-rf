@@ -32,10 +32,10 @@ except getopt.GetoptError:
 for opt, arg in opts:
     if opt in ("-h", "--host"):
         host = arg
-    elif opt == ("-p", "--port"):
+    elif opt in ("-p", "--port"):
         port = int(arg)
     elif opt in ("-l", "--lamp"):
-        lamp = int(arg)
+        lamp = arg
 if len(args) > 0:
     filename = args[0]
 else:
