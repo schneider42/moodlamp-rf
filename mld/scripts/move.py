@@ -38,16 +38,16 @@ except getopt.GetoptError:
 for opt, arg in opts:
     if opt in ("-h", "--host"):
         host = arg
-    elif opt == ("-p", "--port"):
+    elif opt in ("-p", "--port"):
         port = int(arg)
     elif opt in ("-l", "--lamp"):
-        lamp = int(arg)
+        lamp = arg
 if lamp == -1:
-    print "Usage: load [OPTION] -l LAMP"
-    print "Fade a moodlamp connected to a MLD"
+    print "Usage: move [OPTION] -l LAMP"
+    print "move color of moodlamps connected to a MLD"
     print "  -h, --host=HOST     Connect to HOST. Default", host
     print "  -p, --port=PORT     Use remote port PORT. Default", port
-    print "  -l, --lamp=LAMP     Reset LAMP before flashing."
+    print "  -l, --lamp=LAMP     address or name, -l 0 for all"
     sys.exit(2)
     
 

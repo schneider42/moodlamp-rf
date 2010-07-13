@@ -20,6 +20,7 @@ import telnetlib
 import time
 import getopt
 import logging
+import gtk
 
 def setc(con,lamp,r,g,b):
     r = int(r)
@@ -31,13 +32,22 @@ def setc(con,lamp,r,g,b):
 
 def usage():
     print ""
-    print "Usage: fade [OPTION] -l LAMP"
-    print "Fade a moodlamp connected to a MLD"
+    print "Usage:", sys.argv[0], "[OPTION] -l LAMP"
+    print "select color with gtk colorui and"
+    print "send color to moodlamp connected to a MLD"
     print "  -h, --host=HOST     Connect to HOST. Default", host
     print "  -p, --port=PORT     Use remote port PORT. Default", port
     print "  -l, --lamp=LAMP     address or name, -l 0 for all"
     print "  -d, --debug         Enable debugging"
     print "  -u, --usage         print help"
+
+def new_color(color):
+    c = color.get_current_color()
+    r = c.red/256;
+    g = c.green/256;
+    b = c.blue/256;
+    logging.debug("new color: r = %d g = %d b = %d", r, g, b )
+    setc(con,lamp,r,g,b)
 
 port = 2324
 host = "localhost"
@@ -84,27 +94,14 @@ con = telnetlib.Telnet(host, port)
 con.write("001\r\n")
 s = con.read_until(">100", 10)
 if s.endswith("100"):
-#if True:
-    r = 255
-    g = 0
-    b = 0
-    while True:
-        if r == 255 and g == 0 and b == 0:
-            logging.info("Mark "+str(time.time()))
-        if r == 0 and not g == 255:
-            logging.debug("1 b- g+")
-            b -= 1
-            g += 1
-        elif g == 0 and not b == 255:
-            logging.debug("2 r- b+")
-            r -= 1
-            b += 1
-        elif b == 0 and not r == 255:
-            logging.debug("3 r+ g-")
-            g -= 1
-            r += 1
-
-        setc(con,lamp,r,g,b)
+    window = gtk.Window()
+    window.connect("delete_event", gtk.main_quit)
+    window.set_border_width(10)
+    color = gtk.ColorSelection()
+    color.connect("color_changed",new_color)
+    window.add(color)
+    window.show_all()
+    gtk.main()    
 else:
     logging.error("initial mld test command: 001 failed")
 

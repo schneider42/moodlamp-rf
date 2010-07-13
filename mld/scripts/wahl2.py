@@ -89,10 +89,11 @@ except getopt.GetoptError:
 for opt, arg in opts:
     if opt in ("-h", "--host"):
         host = arg
-    elif opt == ("-p", "--port"):
+    elif opt in ("-p", "--port"):
         port = int(arg)
     elif opt in ("-l", "--lamp"):
-        lamp = int(arg)
+        lamp = arg
+
 if lamp == -1:
     print "Usage: load [OPTION] -l LAMP"
     print "Fade a moodlamp connected to a MLD"
