@@ -1,0 +1,79 @@
+Wir verwenden einen RS485-Bus fuer die Installation.
+Jede Zeile hat einen eigenen Bus und wird ueber eine sogenannte Bridge an den Steuerrechner angeschlossen.
+
+Bus Spezifikation
+Ein RS485-Bus verwendet drei Leitungen: A, B und Masse
+Auf dem A/B Aderpaar werden Daten uebertragen, die Masse dient als Referenz fuer diese Signale. A und B tragen immer einen gegensaetzlichen Pegel um Stoerungen ausgleichen zu koennen.
+
+Um die Lampen mit Strom zu versorgen werden diese zusaetzlich mit einer Spannung von 24 V bis 28 V versorgt.
+
+Datenleitungen und Energieversorgung werden in CAT5 Ethernetkabeln gefuehrt.
+Dabei sind drei Aderpaare fuer die Energieversorgung und ein Aderpaar fuer die Datenleitungen A und B vorgesehen.
+
+Die ersten drei Paare sind fuer die Energieversorgung zustaendig:
+24 V: Ader 1,3,5 (weis/gruen, weis/gelb, weis/blau)
+Masse: Ader 2,4,6 (gruen, gelb, blau)
+
+Das vierte Aderpaar enthaellt die Datenleitungen:
+A/B: Ader 7,8 (braun, weis/braun)
+
+Die Energie wird an zwei Punkten pro Bus eingespeist.
+Jedes der 150W Netzteile bedient dabei 12 Lampen mit einer Last von ca. 70Watt.
+
+Dazu werden Ethernet Doppelbuchsen 1-1 Durchverdrahtet und ueber die Adern x,y,z bzw. X,Y,Z mit dem Netzteil verbunden.
+
+Auf den Lampen befinden sich zwei Buchsen sowie ein Jumper zum Verbinden der 24V Leitungen der zwei Buchsen. Ist dieser Jumper gesetzt wird die Versorgungsspannung an die naechste Lampe weitergereicht.
+Die Lampe bezieht dabei ihre Energie immer aus der mit XOUT bezeichneten Buchse.
+
+Schematischer Busaufbau von innen gesehen:
+
+ Lampe mit gezogenem Jumper---\
+                              |
+  L1--L2--...--L6-\/-L7--L8--L12--L13-...-L18-\/-L19-..-L24
+  |               ||                          ||
+RS485         Doppelbuchse               Doppelbuchse
+  |                |                          |
+Bridge        24V Netzteil               24V Netzteil
+  |
+ USB
+  |
+Server
+
+Die Bridge besitzt eine Schraubklemme mit 4 Polen. Davon werden die Pins A,B undd GND benoetigt.
+Diese werden entweder mit einem aufgeschnittenden CAT5-Kabel verbunden oder auf einen Port einer Doppelbuchse gelegt. Hier werden wieder die Adern X,Y fuer A/B und eine der Adern 2,4,6 fuer Masse(GND) verwendet(siehe oben).
+
+Der Bus wird mit einer Bitrate von 115200 Baud, 8N1 betrieben.
+Die Bridge setzt dies 1-1 auf eine serielle Schnittstelle am USB um.
+
+Adressierung:
+Aus historischen Gruenden besitzt die erste Lampe einer Zeile die Adresse 0x10(16 dezimal) und die letzte Lampe die Adresse 0x27. Die Adresse 0x00 spricht alle Lampen an.
+
+Programmierung:
+Auf den Lampen selbst befindet sich kein ISP-Adapter. Daher werden die Mikrocontroller vor dem Verloeten mit einem Bootloader versehen. Dieser ist unter truck/ubloader im svn zu finden.
+
+Todo: more on programming
+
+Befehlsaufbau:
+
+Format:
+0x 0x <Adresse> <Kommando> <Paramter> 0x 0x
+
+Das Zeichen 0x('\') dient als Escapesequenz. kommt dieses Zeichen in Adresse, Komando oder Paramtern vor muss es mit sich selbst escaped werden.
+
+Adresse  (1 Byte):   Adresse der Lampe(beginnend bei 0x10)
+Kommando (1 Byte):   Auszufuehrendes Kommando
+Parameter(0-5 Byte): Kommando entsprechende Paramter
+
+Kommandos:
+Kommando    Beschreibung        Parameter
+'C'         Farbe setzen        (3 Byte): R,G,B
+'M'         Fade                (5 Byte): R,G,B,TH,TL
+'A'         Alt. Fade           (5 Byte): R,G,B,TH,TL
+'P'         Farbe vorbereiten   (3 Byte): R,G,B
+'U'         Farbe von 'P' setzen    -
+
+M und A erwarten eine Zeitdauer in Millisekunden. Diese wird als 16 Bit Wert in TL und TH codiert.
+
+Inbetriebnahme:
+
+
