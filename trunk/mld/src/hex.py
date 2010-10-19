@@ -27,9 +27,9 @@ class IHexFile:
         if not line[0] == ':':
             return False
         try:
-            l = int("0x%s" % line[1:1+2],16)
-            adr = int("0x%s" % line[3:3+4],16)
-            type = int("0x%s" % line[7:7+2],16)
+            l = int("0x%s" % line[1:1+2], 16)
+            adr = int("0x%s" % line[3:3+4], 16)
+            type = int("0x%s" % line[7:7+2], 16)
             
             if type == 1:
                 self.done = True
@@ -43,7 +43,7 @@ class IHexFile:
                 self.adr = adr
             
             for i in range(l):
-                v = chr(int("0x%s" % line[9+i*2:9+i*2+2],16))
+                v = chr(int("0x%s" % line[9+i*2:9+i*2+2], 16))
                 self.data.append(v)
             
         except (IndexError, ValueError):

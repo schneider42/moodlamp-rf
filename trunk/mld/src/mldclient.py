@@ -15,11 +15,12 @@
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import socket, sys, time, os
+import socket, sys 
 import asyncore, asynchat
 import traceback
 import moodlamp
 import hex
+import logging
        
 
 class MLClient(asynchat.async_chat):
@@ -31,21 +32,21 @@ class MLClient(asynchat.async_chat):
     def sendNoLampsDetected(self):
         self.push("403 No moodlamps detected\r\n")
     def sendLamp(self, l):
-        self.push("101 moodlamp at %2d version %s config %s name %s\r\n" % (l.address, l.version,l.config,l.name))
+        self.push("101 moodlamp at %2d version %s config %s name %s\r\n" % (l.address, l.version, l.config, l.name))
     def sendNoSuchInterface(self):
         self.push("405 no such interface")
-    def sendInterface(self,i,pos):
-        self.push("107 interface %s at %2d\r\n" %(i,pos))
+    def sendInterface(self, i, pos):
+        self.push("107 interface %s at %2d\r\n" %(i, pos))
     
     def formatExceptionInfo(self, maxTBlevel=5):
-         cla, exc, trbk = sys.exc_info()
-         excName = cla.__name__
-         try:
-             excArgs = exc.__dict__["args"]
-         except KeyError:
-             excArgs = "<no args>"
-         excTb = traceback.format_tb(trbk, maxTBlevel)
-         return (excName, excArgs, excTb)
+        cla, exc, trbk = sys.exc_info()
+        excName = cla.__name__
+        try:
+            excArgs = exc.__dict__["args"]
+        except KeyError:
+            excArgs = "<no args>"
+        excTb = traceback.format_tb(trbk, maxTBlevel)
+        return (excName, excArgs, excTb)
 
 
     def __init__(self, sock, addr, ml, mld, interfaces):
@@ -64,7 +65,7 @@ class MLClient(asynchat.async_chat):
         self.data = self.data + data
 
     def found_terminator(self):
-        #print "Client at",self.addr,":",tuple(self.data)
+        logging.info("Client at %s:%s", self.addr, tuple(self.data))
         if self.data.strip() == "":
             if self.state == 0:
                 self.push(">")
@@ -74,7 +75,7 @@ class MLClient(asynchat.async_chat):
         try:
             if self.state == 0:
                 cmd = s[0]
-                print "cmd=",cmd
+                logging.info("cmd= %s", cmd)
                 ok = True
                 
                 if cmd == "000": # close terminal
@@ -87,31 +88,31 @@ class MLClient(asynchat.async_chat):
                     for m in self.ml:
                         if m.ready:
                             self.sendLamp(m)
-                            found+=1
-                    if found==0:
+                            found += 1
+                    if found == 0:
                         self.sendNoLampsDetected()
                         ok = False
                 elif cmd == "003": # change color
                     if s[1] == "0":
                         for n in self.ml:
                             if n.ready:
-                                self.push("Send %2d (%s) -> %s %s %s\r\n" % (n.address, n.name, int(s[2],16),int(s[3],16),int(s[4],16)))
+                                self.push("Send %2d (%s) -> %s %s %s\r\n" % (n.address, n.name, int(s[2], 16), int(s[3], 16), int(s[4], 16)))
                                 m = self.ml.getLamp(n.address)
-                                m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
+                                m.setcolor([int(s[2], 16), int(s[3], 16), int(s[4], 16)])
                     else:
                         m = self.ml.getLamp(s[1])
-                        self.push("Send %2d (%s) -> %s %s %s\r\n" % (m.address, m.name, int(s[2],16),int(s[3],16),int(s[4],16)))
-                        m.setcolor([int(s[2],16),int(s[3],16),int(s[4],16)])
+                        self.push("Send %2d (%s) -> %s %s %s\r\n" % (m.address, m.name, int(s[2], 16), int(s[3], 16), int(s[4], 16)))
+                        m.setcolor([int(s[2], 16), int(s[3], 16), int(s[4], 16)])
                 elif cmd == "004": # toogle pause
                     if s[1] == "0":
                         for n in self.ml:
                             if n.ready:
-				n.pause(True);
-		    else:
-                    	m = self.ml.getLamp(s[1])
-                    	m.pause(True);
+                                n.pause(True)
+                    else:
+                        m = self.ml.getLamp(s[1])
+                        m.pause(True)
                 elif cmd == "005": # unused
-		    pass
+                    pass
                 elif cmd == "006": # set interface raw
                     for m in self.interfaces:
                         m.set_raw(True)
@@ -134,11 +135,12 @@ class MLClient(asynchat.async_chat):
                         ok = False
                 elif cmd == "r": #reset interface
                     self.interfaces[0].reset()
+                    sys.exit(0)
                 elif cmd == "010": # show interface
                     pos = 0
                     for i in self.interfaces:
                         self.sendInterface(i, pos)
-                        pos+=1
+                        pos += 1
                 elif cmd == "011": # unset interface raw
                     for i in self.interfaces:
                         i.set_raw(False)
@@ -152,15 +154,15 @@ class MLClient(asynchat.async_chat):
                                 if int(n.address) != 2: #skip master
                                     self.push("reset address = %d\r\n" %(n.address))
                                     m = self.ml.getLamp(n.address)
-                                    m.reset();
+                                    m.reset()
                         #reset master at last
                         m = self.ml.getLamp(2)
                         if m.ready:
                             self.push("reset master with address = %d\r\n" %(m.address))
-                            m.reset();
+                            m.reset()
                     else:
                         m = self.ml.getLamp(s[1])
-                        m.reset();
+                        m.reset()
                 elif cmd == "014": # run programm
                     if s[1] == "0":
                         for n in self.ml:
@@ -226,7 +228,7 @@ class MLClient(asynchat.async_chat):
     def timer(self):
         self.ml.lock.acquire()
         #for m in self.ml:
-        #    self.push("moodlamp at %2d version %s color %s\r\n" % (m.address, m.version,m.color))
+        #    self.push("moodlamp at %2d version %s color %s\r\n" % (m.address, m.version, m.color))
         self.ml.lock.release()
         
     def callback(self, data):
@@ -242,17 +244,17 @@ class MLClient(asynchat.async_chat):
     def lamp_removed(self, lamp):
         self.ml.lock.acquire()
         self.push("104 Lamp %3d removed(timeout)\r\n" % (lamp.address))
-        print "104 Lamp %2d removed(timeout)\r\n" % (lamp.address)
+        logging.info("104 Lamp %2d removed(timeout)\r\n" ,  (lamp.address))
         self.ml.lock.release()
         
 class ClientServer(asyncore.dispatcher):
-    def __init__(self, port,ml,interfaces,mld):
+    def __init__(self, port, ml, interfaces, mld):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.set_reuse_addr();
+        self.set_reuse_addr()
         self.bind(("", port))
         self.listen(5)
-        print "serving at port", port, "..."
+        logging.info("serving at port %s ...", port)
         self.ml = ml
         self.interfaces = interfaces
         self.clients = []
@@ -260,8 +262,8 @@ class ClientServer(asyncore.dispatcher):
         
     def handle_accept(self):
         conn, addr = self.accept()
-        print 'client is at', addr
-        self.clients.append(MLClient(conn, addr,self.ml,self.mld, self.interfaces))
+        logging.info('client is at %s', addr)
+        self.clients.append(MLClient(conn, addr, self.ml, self.mld, self.interfaces))
         
 #    def callback(self, data):
         #print data
