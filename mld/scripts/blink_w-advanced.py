@@ -71,6 +71,9 @@ if lamp == -1:
     print "  -r, --red=VALUE     set red value"
     print "  -g, --green=VALUE     set red value"
     print "  -b, --blue=VALUE     set red value"
+    print "examples:"
+    print "python blink_w-advanced.py -r 0 -g 255 -b 0 -l 0 -i 42 &"
+    print "python /root/mld/scripts/green_w.py -l NAME"
     sys.exit(2)
    
 
