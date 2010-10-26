@@ -1,6 +1,0 @@
-#!/bin/sh
-a2ps set-content -o tmp.ps -R --columns 1 -B && ps2pdf tmp.ps && pdfnup --nup 2x2 tmp.pdf --pages 1,1,1,1 --orient portrait && acroread tmp-2x2.pdf
-pngtopnm qr.png > qr.pnm
-pnmtops qr.pnm > qr.ps
-ps2pdf qr.ps && pdfnup --nup 2x2 qr.pdf --pages 1,1,1,1 --orient portrait && acroread qr-2x2.pdf
-
