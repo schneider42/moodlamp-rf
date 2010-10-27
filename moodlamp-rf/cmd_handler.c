@@ -69,6 +69,8 @@ void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t po
     script_threads[0].flags.disabled = 0;
     script_threads[0].handler_stack_offset = 0;
     cmd_dark(); 
+global.state=STATE_RUNNING;     // resets state & oldstate in case fadems was used
+global.oldstate=STATE_RUNNING;  // earlier. TODO: handle in state machnine
 }
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result)

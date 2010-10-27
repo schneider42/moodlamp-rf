@@ -111,8 +111,17 @@ class MLClient(asynchat.async_chat):
                     else:
                         m = self.ml.getLamp(s[1])
                         m.pause(True)
-                elif cmd == "005": # unused
-                    pass
+                elif cmd == "005": # fade to color in n miliseconds. only works with current moodlamp-rf firmware!!!
+                    if s[1] == "0":
+                        for n in self.ml:
+                            if n.ready:
+                                self.push("Send %2d (%s) -> %s %s %s in %s\r\n" % (n.address, n.name, int(s[2], 16), int(s[3], 16), int(s[4], 16), int(s[5])))
+                                m = self.ml.getLamp(n.address)
+                                m.fadems([int(s[2], 16), int(s[3], 16), int(s[4], 16)], int(s[5]))
+                    else:
+                        m = self.ml.getLamp(s[1])
+                        self.push("Send %2d (%s) -> %s %s %s in %s\r\n" % (m.address, m.name, int(s[2], 16), int(s[3], 16), int(s[4], 16), int(s[5])))
+                        m.fadems([int(s[2], 16), int(s[3], 16), int(s[4], 16)], int(s[5]))
                 elif cmd == "006": # set interface raw
                     for m in self.interfaces:
                         m.set_raw(True)
@@ -184,7 +193,7 @@ class MLClient(asynchat.async_chat):
                     self.push("002 - list of all available and ready moodlamps\r\n")
                     self.push("003 [moodlamp_id] <ff> <00> <00> - change color r/g/b as hex\r\n     moodlamp id = 0 for all moodlamps\r\n")
                     self.push("004 [moodlamp_id] - toggle pause\r\n")
-                    self.push("005 - \r\n")
+                    self.push("005 - [moodlamp_id] <ff> <00> <00> <n> - fade to color r/g/b as hex in n ms as dec (0-65535)\r\n     moodlamp id = 0 for all moodlamps\r\n")
                     self.push("006 - set interface raw \r\n")
                     self.push("007 - flash firmware\r\n")
                     self.push("008 - flash firmware\r\n")

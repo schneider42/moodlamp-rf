@@ -72,6 +72,12 @@ class Moodlamp:
         self.color = color
         self.interface.packet( self.address, "C%c%c%c" % (color[0], color[1], color[2]), 0, True)
         
+    def fadems(self, color, time):
+        self.color = color
+        timeh=time/256
+        timel=time%256
+        self.interface.packet( self.address, "M%c%c%c%c%c" % (color[0], color[1], color[2], timeh, timel), 0, True)
+
     def pause(self, pause):
         self.interface.packet( self.address, "\x17", 0, True)
         #unused pause 

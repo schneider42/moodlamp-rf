@@ -93,7 +93,10 @@ void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
         global_pwm.channels[pos].speed_h = speed >> 8;
         global_pwm.channels[pos].speed_l = speed & 0xFF;
     }
-    control_setTimeout();
+  //control_setTimeout();           //setting state manually since without STATE_REMOTE scripts will
+    global.state = STATE_REMOTE;    //inerfere with fadems. Because of this state has to be reset also
+    global.oldstate = STATE_REMOTE; //manually when launching script. see => cmd_handler.c
+                                    //TODO: add STATE_REMOTE handling to state-machine
 }
 
 void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
