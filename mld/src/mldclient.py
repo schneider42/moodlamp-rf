@@ -21,7 +21,6 @@ import traceback
 import moodlamp
 import hex
 import logging
-       
 
 class MLClient(asynchat.async_chat):
 

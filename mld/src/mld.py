@@ -17,13 +17,7 @@
 
 #from __future__ import with_statement
 
-daemonize = 'false' #true/false
-serial = "/dev/ttyUSB0"
-force = "true"
-pidfile = "/tmp/mld.pid"
-log = "false"
-port = int(2324)
-
+import conf
 import sys, os
 import asyncore
 import rf12interface
@@ -41,10 +35,10 @@ class MLD:
         self.ml = moodlamp.MoodlampList()
         self.interfaces = []
         try:
-            self.interfaces.append(rf12interface.RF12Interface(str(serial), 230400, 1, 2, self))
+            self.interfaces.append(rf12interface.RF12Interface(str(conf.serial), 230400, 1, 2, self))
         except: #TODO error type
-            logging.error("can't connect to serial device: %s", serial)
-            if force == "true":
+            logging.error("can't connect to serial device: %s", conf.serial)
+            if conf.force == "true":
                 logging.info("force = true, starting without serial device")
             else:
                 logging.info("force = false, mld refuses to start without serial device")
@@ -184,7 +178,7 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         print 'fork #2 failed: %d (%s)' % (error.errno, error.strerror)
         sys.exit(1)
 
-    if log !=  "true":  
+    if conf.log !=  "true":  
         for f in sys.stdout, sys.stderr:
             f.flush( )
         si = file(stdin, 'r')
@@ -198,7 +192,7 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         # Check for a pidfile to see if the daemon already runs
 #
     try:
-        pf = file(pidfile,'r')
+        pf = file(conf.pidfile,'r')
         pid = int(pf.read().strip())
         pf.close()
     except IOError:
@@ -206,7 +200,7 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
 #
     if pid:
         message = "pidfile %s already exist. Daemon already running?\n"
-        sys.stderr.write(message % pidfile)
+        sys.stderr.write(message % conf.pidfile)
         try:
            while 1:
                os.kill(pid,SIGTERM)
@@ -214,34 +208,34 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         except OSError, err:
            err = str(err)
            if err.find("No such process") > 0:
-               os.remove(pidfile)
+               os.remove(conf.pidfile)
 
     atexit.register(delpid)
     pid = str(os.getpid())
-    file(pidfile,'w+').write("%s\n" % pid)
-    file(pidfile).close()
+    file(conf.pidfile,'w+').write("%s\n" % pid)
+    file(conf.pidfile).close()
     #pfile = open(pidfile,'w')
     #pfile.write("%s\n" % pid)
     #pfile.close()
-    print "register pidfile: %s", pidfile
+    print "register pidfile: %s", conf.pidfile
     #atexit.register(os.remove(pidfile))
 
-    MLD().serve(port)
+    MLD().serve(conf.port)
 
 def delpid():
     logging.info("delete pidfile")
-    os.remove(pidfile)
+    os.remove(conf.pidfile)
 
 def usage():
     print ""
     print "Usage:", sys.argv[0], "[OPTION]"
     print "fireup mld daemon"
-    print "  -i, --serial=DEVICE     Connect to Device. Default:", serial
-    print "  -p, --port=PORT         set port. Default:", port
-    print "  -e, --pidfile=PIDFILE   set pidfile. Default:", pidfile
-    print "  -f, --force             start without serial Device. Default:", force
-    print "  -d, --daemonize          Enable daemonize. Default:", daemonize
-    print "  -l, --log               Enable debugging. Default:", log
+    print "  -i, --serial=DEVICE     Connect to Device. Default:", conf.serial
+    print "  -p, --port=PORT         set port. Default:", conf.port
+    print "  -e, --pidfile=PIDFILE   set pidfile. Default:", conf.pidfile
+    print "  -f, --force             start without serial Device. Default:", conf.force
+    print "  -d, --daemonize          Enable daemonize. Default:", conf.daemonize
+    print "  -l, --log               Enable debugging. Default:", conf.log
     print "  -u, --usage             print help"
 
 
@@ -257,17 +251,17 @@ except getopt.GetoptError:
 
 for opt, arg in opts:
     if opt in ("-i", "--serial"):
-        serial = arg
+        conf.serial = arg
     elif opt in ("-p", "--port"):
-        port = int(arg) 
+        conf.port = int(arg) 
     elif opt in ("-e", "--pidfile"):
-        pidfile = str(arg)
+        conf.pidfile = str(arg)
     elif opt in ("-f", "--force"):
-        force = "true"
+        conf.force = "true"
     elif opt in ("-d", "--daemonize"):
-        daemonize = "true"  
+        conf.daemonize = "true"  
     elif opt in ("-l", "--log"):
-        log = "true"  
+        conf.log = "true"  
     elif opt in ("-u", "--usage"):
         usage()
         sys.exit(2)
@@ -276,12 +270,12 @@ for opt, arg in opts:
         usage()
         sys.exit(2)
 
-if log == "true":
+if conf.log == "true":
     logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(filename)s: %(message)s")
 else:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(filename)s: %(message)s")
 
-if daemonize == 'true': 
+if conf.daemonize == 'true': 
     daemon()
 else:
-    MLD().serve(port)
+    MLD().serve(conf.port)
