@@ -35,7 +35,7 @@ class MLD:
         self.ml = moodlamp.MoodlampList()
         self.interfaces = []
         try:
-            self.interfaces.append(rf12interface.RF12Interface(str(conf.serial), 230400, 1, 2, self))
+            self.interfaces.append(rf12interface.RF12Interface(str(conf.serial), conf.baudrate, 1, 2, self))
         except: #TODO error type
             logging.error("can't connect to serial device: %s", conf.serial)
             if conf.force == "true":

@@ -15,6 +15,7 @@
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import conf
 import threading
 import serial
 import string  #deprecated
@@ -231,7 +232,7 @@ class RF12Interface:
         
     def reset(self):
         logging.info("reset serial device")
-        self.rf12 = serial.Serial("/dev/ttyUSB0", 230400) #TODO ttyUSB0 hardcoded
+        self.rf12 = serial.Serial("conf.serial", conf.baudrate)
         self.readthread.stop()
         
     def initinterface(self):
