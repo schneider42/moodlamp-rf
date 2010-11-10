@@ -61,7 +61,8 @@ class ReadSerial(threading.Thread):
         self.queue = queue
         self.ready = False
         self.portok = True
-      
+        self.finished = threading.Event()
+
     def readline(self):
         #a escapes, c starts new line, b ends line
         #print '       r'
@@ -95,8 +96,12 @@ class ReadSerial(threading.Thread):
         self.ar.append(data)
         return False
 
+    def stop (self):
+        self.finished.set()
+        self.join()
+
     def run(self):
-        while 1:
+        while not self.finished.isSet():
             if not self.portok:
                 break
             if self.readline():
@@ -226,7 +231,7 @@ class RF12Interface:
         
     def reset(self):
         logging.info("reset serial device")
-        self.rf12 = serial.Serial("/dev/ttyUSB0", 115200) #TODO ttyUSB0 hardcoded, :RF12Interface.reset: Instance of 'ReadSerial' has no 'stop' member
+        self.rf12 = serial.Serial("/dev/ttyUSB0", 230400) #TODO ttyUSB0 hardcoded
         self.readthread.stop()
         
     def initinterface(self):
