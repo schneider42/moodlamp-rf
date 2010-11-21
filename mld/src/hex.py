@@ -14,6 +14,7 @@
  # You should have received a copy of the GNU General Public License
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 
 class IHexFile:
     def __init__(self):
@@ -63,9 +64,9 @@ class IHexFile:
     def page(self, i):
         if i == self.pages()-1:
             data = self.data[i*self.pagesize:]
-            print "data=",data
+            logging.info("data=%s", data)
             data += [chr(0xff)]*(self.pagesize-len(data))
-            print "data=", data
+            logging.info("data=%s", data)
             return data
         else:
             return self.data[i*self.pagesize:(i+1)*self.pagesize]

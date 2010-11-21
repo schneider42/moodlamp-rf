@@ -74,8 +74,8 @@ class Moodlamp:
         
     def fadems(self, color, time):
         self.color = color
-        timeh=time/256
-        timel=time%256
+        timeh = time/256
+        timel = time%256
         self.interface.packet( self.address, "M%c%c%c%c%c" % (color[0], color[1], color[2], timeh, timel), 0, True)
 
     def pause(self, pause):
@@ -115,7 +115,7 @@ class Moodlamp:
                     self.name = "".join(data[1:])
                     logging.info("get N for Name")
                 if data[0] == 'V':
-                    logging.info("get V voltage right before calculation: %s", data[2:])
+                    logging.debug("get V voltage right before calculation: %s", data[2:])
                     v = float(data[2:]) / 1024. * 2.56 * 3
                     logging.info("calculated voltage = %f V", v)
  

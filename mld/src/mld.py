@@ -134,9 +134,9 @@ class MLD:
         logging.info("packet done adr= %s" , adr)
         logging.info("len ml: %s", len(self.ml))
         for m in self.ml:
-            #print "iter ml adr="+str(m.address)
+            logging.debug("iter ml adr=%s", m.address)
             if m.address == adr:
-                #print "adr ok"
+                logging.debug("packet done adr ok")
                 m.packet_done(broadcast)
                 break
         #self.ml.lock.release()
@@ -161,10 +161,10 @@ class MLD:
 def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     try:
         if os.fork() > 0:
-            print 'first fork, ok'
+            logging.info("first fork, ok")
             sys.exit(0)
     except OSError, error:
-        print 'fork #1 failed: %d (%s)' % (error.errno, error.strerror)
+        logging.error("fork #1 failed: %d (%s)", (error.errno, error.strerror))
         sys.exit(1)
     os.chdir('.')
     os.setsid()
@@ -172,10 +172,10 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     try:
         pid = os.fork()
         if pid > 0:
-            print 'mld daemon pid %d' % pid
+            logging.info("mld daemon pid %d", pid)
             sys.exit(0)
     except OSError, error:
-        print 'fork #2 failed: %d (%s)' % (error.errno, error.strerror)
+        logging.error("fork #2 failed: %d (%s)", (error.errno, error.strerror))
         sys.exit(1)
 
     if conf.log !=  "true":  
@@ -202,13 +202,13 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         message = "pidfile %s already exist. Daemon already running?\n"
         sys.stderr.write(message % conf.pidfile)
         try:
-           while 1:
-               os.kill(pid,SIGTERM)
-               time.sleep(1)
+            while 1:
+                os.kill(pid, SIGTERM)
+                time.sleep(1)
         except OSError, err:
-           err = str(err)
-           if err.find("No such process") > 0:
-               os.remove(conf.pidfile)
+            err = str(err)
+            if err.find("No such process") > 0:
+                os.remove(conf.pidfile)
 
     atexit.register(delpid)
     pid = str(os.getpid())
@@ -217,7 +217,7 @@ def daemon(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     #pfile = open(pidfile,'w')
     #pfile.write("%s\n" % pid)
     #pfile.close()
-    print "register pidfile: %s", conf.pidfile
+    logging.info("register pidfile: %s", conf.pidfile)
     #atexit.register(os.remove(pidfile))
 
     MLD().serve(conf.port)

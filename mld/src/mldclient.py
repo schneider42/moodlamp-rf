@@ -64,6 +64,7 @@ class MLClient(asynchat.async_chat):
         self.data = self.data + data
 
     def found_terminator(self):
+        logging.info("=== new mldclient command ===")
         logging.info("Client at %s:%s", self.addr, tuple(self.data))
         if self.data.strip() == "":
             if self.state == 0:
@@ -223,9 +224,8 @@ class MLClient(asynchat.async_chat):
                     self.state = 0
         except (IndexError, ValueError), err:
             self.push("400 syntax error\r\n")
-            print err
-            print err.args
-            print self.formatExceptionInfo()
+            logging.error("error %s", err.args)
+            logging.error(self.formatExceptionInfo())
         except moodlamp.NotFound, err:
             self.sendLampNotFound()
         if self.state == 0:

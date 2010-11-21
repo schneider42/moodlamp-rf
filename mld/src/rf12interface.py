@@ -52,7 +52,6 @@ class ProcessPacket(threading.Thread):
 class ReadSerial(threading.Thread):
     escaped = False
     ar = []
-    debug = 1
 
     def __init__(self, rf12, callback, owner, queue):
         self.rf12 = rf12
@@ -81,7 +80,7 @@ class ReadSerial(threading.Thread):
                 logging.error("timeout")
             return False
         #return False
-        logging.debug('d %s', data)
+        logging.debug('data: %s', data)
         if data == 'a':
             if self.escaped == False:
                 self.escaped = True
@@ -106,8 +105,8 @@ class ReadSerial(threading.Thread):
             if not self.portok:
                 break
             if self.readline():
-                if self.debug:
-                    logging.info("readline %s", self.ar)
+                logging.info("=== new serial transmission ===")
+                logging.info("readline %s", self.ar)
                 if not self.ready :
 
                 #elif self.ar[0] == 'S':
@@ -117,8 +116,9 @@ class ReadSerial(threading.Thread):
                     logging.info("Ignoring: %s", str(self.ar))
                 elif len(self.ar) > 3 and (self.ar[0] == 'P' or self.ar[0] == 'B'):
                     logging.debug("received packet")
-                    logging.debug("%s Sender=%d Rec=%d Data:" , time.time(), ord(self.ar[3]), ord(self.ar[2]))
-                    logging.debug("%s", self.ar[4:])
+                    logging.debug("Time=%s", time.time())
+                    logging.info("Sender=%d Rec=%d", ord(self.ar[3]), ord(self.ar[2]))
+                    logging.debug("Data=%s", self.ar[4:])
                     pass
                 elif len(self.ar) > 1 and self.ar[0] == 'D':                        #debug info
                     #if ar[1] != 'f':
@@ -130,10 +130,8 @@ class ReadSerial(threading.Thread):
                     logging.info("%s -----------Error: %s-----------------", time.time(), ''.join(self.ar[1:]))
                 elif len(self.ar) > 1 and self.ar[0] == 'S':
                     if self.ar[1] == 'D':
-                        if self.debug:
-                            logging.info("Status: done")
+                        logging.info("Status: done")
                     elif self.ar[1] == 'T':
-                        #print time.time()
                         logging.info("%s ------------------Status: timeout--------------------" , time.time())
                     else:
                         logging.info("?: %s" , self.ar)
@@ -154,7 +152,7 @@ class ReadSerial(threading.Thread):
                     adr = ord(self.ar[3])
                     p = Packet(''.join(self.ar[4:]), adr, broadcast)
                     #self.callback.new_packet(adr, ''.join(self.ar[4:]), broadcast)
- #                   print "queueing packet"
+                    #print "queueing packet"
                     self.queue.put(p)                #don't block incomming packet dones
                     
                 elif self.ar[0] == 'E' or self.ar[0] == 'D':
@@ -170,7 +168,6 @@ class ReadSerial(threading.Thread):
 class RF12Interface:
     done = True
     broadcast = 0
-    debug = 1
     
     def __init__(self, port, baud, ownadr, gateadr, callback):
         self.port = port   #port as in serialport /dev/ttyUSB0
@@ -247,13 +244,12 @@ class RF12Interface:
         self.done = True
         
     def write(self, data):
-        #print "write"
+        logging.debug("write")
         self.rf12.write("ac" + data.replace('a','aa') + "ab")
         
     def packet_done(self):
         self.done = True
-        if self.debug:
-            logging.info("release")
+        logging.info("release")
         self.free.acquire(False);
         self.free.release()
         self.callback.packet_done(self.broadcast, self.remadr)    #Todo use a queue or something to prevent blocking
@@ -262,13 +258,14 @@ class RF12Interface:
         self.readthread.start()
         time.sleep(1)
         self.readthread.ready = True
-        if self.debug:
-            logging.info("ready")
+        logging.info("ready")
         
     def packet(self, remadr, data, broadcast, wait):
-        if self.debug:
-            print str(time.time())+" send packet to "+str(remadr)+" len="+str(len(data))
-            print list(data)
+        logging.info("=== new rf12 packet ===")
+        logging.debug("time=%s", time.time())
+        logging.info("send packet to %s", remadr)
+        logging.debug("length=%s", len(data))
+        logging.info("list of data=%s", list(data))
         if self.mode == 1:
             return 0
         """if self.done == False:
@@ -291,17 +288,17 @@ class RF12Interface:
             return 1"""
         i = 0
         while not self.free.acquire(False):
-            #print "not free"
+            logging.debug("not free")
             if not wait:
                 return 1
             time.sleep(0.001)
             i += 1
             if i > 100:
-                print "giving up"
+                logging.error("giving up")
                 self.free.release()
                 return 1
         
-        #print "sending"
+        logging.debug("sending")
         self.broadcast = broadcast
         self.remadr = remadr
         try:
@@ -313,19 +310,17 @@ class RF12Interface:
             self.rf12.write(data.replace('a','aa'))
             self.rf12.write("ab")
         except serial.serialutil.SerialException:
-            print "will net raus gehen, serialexception"
+            logging.error("will net raus gehen, serialexception")
         except OSError:
-            print "blubb oserror blubb"
-        if self.debug:
-            print "sent packet"
-        return 0
+            logging.error("blubb oserror blubb")
+            logging.info("sent packet")
     
     def sniff(self, sniff):
         if sniff == True:
-            print "setting mode to sniffer"
+            logging.info("setting mode to sniffer")
             self.rf12.write("acS\x02ab")
         else:
-            print "sniffer off"
+            logging.info("sniffer off")
             self.rf12.write("acS\x00ab")
             
     def set_raw(self, mode):
@@ -337,12 +332,12 @@ class RF12Interface:
         else:
             self.mode = 0
             #self.done = True
-        print "setting raw to", mode
+        logging.info("setting raw to %s", mode)
         self.rf12.write("acW%cab" % self.mode)            #raw mode = 1
         self.free.release()
     
     def rawdata(self, data):
-        print "rawdata=", data
+        logging.info("rawdata=%s", data)
         if len(data) > 1 and data[0] == 'R':
             if len(data) > 2 and data[1] == chr(0x23) and data[2] == self.pagecrc:        #page flashed
                 self.pageflashed = 1
@@ -351,18 +346,18 @@ class RF12Interface:
                 pass
     
     def start_app(self):
-        print "start app"
+        loggin.info("start app")
         self.rf12.write("acr")
-        self.rf12.write("%c%c"%(0x42,0));  #0x42 = ? ascii char
+        self.rf12.write("%c%c"%(0x42, 0))  #0x42 = ? ascii char
         self.rf12.write("ab")
         
     def flashpage(self, data, pagenumber, pagesize):
         #pagesize = 128
         #chunk = data[:]
-        print "flashpage"
-        print "data=", data
-        print "pagenum=", pagenumber
-        print "pagesize=", pagesize
+        logging.info("flashpage")
+        logging.info("data=", data)
+        logging.info("pagenum=", pagenumber)
+        logging.info("pagesize=", pagesize)
         retries = 0
         while True:
             if retries > 10:
@@ -373,11 +368,11 @@ class RF12Interface:
             sendchunk += data
             crc8 = crc.Crc8()
             dcrc = crc8.crc_calc (data, pagesize)
-            print "crc=", dcrc
+            logging.info("crc=", dcrc)
             self.pagecrc = chr(dcrc)
             #sendchunk.append( chr ( crc.crc8.crc_calc (data, pagesize)))
             sendchunk.append( chr(dcrc))
-            print "sendchunk=", sendchunk
+            logging.info("sendchunk=", sendchunk)
             file = open("/tmp/file",'w');
             file.write(''.join(data))
             file.close()

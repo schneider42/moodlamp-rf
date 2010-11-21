@@ -7,6 +7,4 @@ log = "false"
 port = int(2324)
 baudrate = int(230400)
 
-#   def data(self, data, broadcast):
-#      pass
 
