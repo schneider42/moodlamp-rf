@@ -1,13 +1,17 @@
 from acab import set
 import time
-t = 1
+import sys
+t = .3
 n = 300
-while 1:
-    set(0,255,0,0)
-    time.sleep(t)
-    print "."
-    set(0,0,255,0)
-    time.sleep(t)
-    print ","
+lamp = int(sys.argv[1])
 
+while 1:
+    set(lamp,255,0,0)
+    time.sleep(t)
+    set(lamp,0,255,0)
+    time.sleep(t)
+    set(lamp,0,0,255)
+    time.sleep(t)
+    set(lamp,255,255,255)
+    time.sleep(t)
 
