@@ -22,6 +22,7 @@ class SerialInterface:
         #print "writing",list(enc)
         self.ser.write(enc)
     def write(self, data):
+        print "writing", list(data)
         self.ser.write(data)
 
     def readMessage(self):

@@ -1,0 +1,24 @@
+from acab import set
+import time
+import sys
+t = 1
+row = int(sys.argv[1])
+
+start = row * 0x10
+end = start + 0xF
+
+for lamp in range(start,end+1):
+    set(lamp,255,0,0)
+    time.sleep(t)
+    set(lamp,0,255,0)
+    time.sleep(t)
+    set(lamp,0,0,255)
+    time.sleep(t)
+    set(lamp,0,0,0)
+    time.sleep(t)
+
+for lamp in range(start,end+1):
+    set(lamp,255,255,255)
+    time.sleep(t)
+
+

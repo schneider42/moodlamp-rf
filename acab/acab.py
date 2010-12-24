@@ -10,10 +10,12 @@ def low(x):
     return x&0xff;
 
 def set(lamp,r,g,b):
-    serial.write("\x5c\x30%cC%c%c%c\x5c\x31"%
-        (chr(lamp),chr(r),chr(g),chr(b)))
+    cmd = "%cC%c%c%c"%(chr(lamp),chr(r),chr(g),chr(b))
+    cmd = cmd.replace("\\","\\\\")
+    serial.write("\x5c\x30%s\x5c\x31"%cmd);
 
 def fade(lamp,r,g,b,ms):
-    serial.write("\x5c\x30%cM%c%c%c%c%c\x5c\x31"%
-        (chr(lamp),chr(r),chr(g),chr(b),chr(high(ms)),chr(low(ms))))
+    cmd = "\x5c\x30%cM%c%c%c%c%c\x5c\x31"%(chr(lamp),chr(r),chr(g),chr(b),chr(high(ms)),chr(low(ms))))
+    cmd = cmd.replace("\\","\\\\")
+    serial.write("\x5c\x30%s\x5c\x31"%cmd);
 
