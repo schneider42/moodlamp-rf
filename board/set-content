@@ -1,6 +1,6 @@
                         Moodlamp Kit Partlist
 
-PCB version: 0.30           Kit revision 4          Partlist $Revision$
+PCB version: 0.30           Kit revision 5          Partlist $Revision$
 
 README: Please have a look at https://wiki.muc.ccc.de/moodlamp_30_build and https://wiki.muc.ccc.de/moodlamp for pictured build instructions and more information about moodlamps
 
@@ -24,7 +24,6 @@ R[2,3,4,8]              100kOhm     4           brown   0805
 R[20,21,22]             150Ohm      3           gray    0603
 R24                     22kOhm      1           pink    0603
 R25                     10kOhm      1           green   0603
-T[1,2]                  IRF7103     2           -       SO-8
 LED[1,2,3]              -           3           R,G,B   0603
 IC1                     ATMEGA644P  1           -       TQFP44
 Q1                      18.432MHz   1           -       HC49US
@@ -37,10 +36,11 @@ DC Jack                 2.5mm       1           -       -
 
                             RGB LED:
 Part                    Value       Count       Mark    Package
-RGB LED on heat sink     -           1          -       -
+T[1,2]                  IRF7103     2           -       SO-8
+RGB LED on heat sink     -          1           -       -
 R[5,6]                  5Ohm        2           -       0414/15
 R7                      8Ohm        1           -       0414/15
-Wire                    0.25mm      4           -       15cm
+Wire                    0.14mm      4           -       15cm
 
                             IR Sensor:
 Part                    Value       Count       Mark    Package
