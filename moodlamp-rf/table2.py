@@ -11,7 +11,7 @@ if __name__ == "__main__":
     for i in range(1,levels):
         cycles = (i/float(levels-1))**2*float(clock)/float(basefreq)
         delta = round(cycles-last)
-        print round(cycles)
+        print int(round(cycles/2.)), ','
         last = cycles
         sum+=delta
 

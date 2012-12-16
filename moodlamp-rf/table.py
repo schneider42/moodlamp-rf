@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 clock = 16000000
-basefreq = 125
+basefreq = 250
 levels = 256
 interval_cycles = 64000
 
