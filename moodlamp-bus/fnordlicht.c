@@ -94,6 +94,14 @@ void jump_to_bootloader(void)
     while(1);
 }
 
+int getxval(int x)
+{ 
+    int v = toupper(x) - '0';
+    if( v < 10 )
+        return v;
+    return v - 7;
+}
+
 unsigned int random_seed __attribute__ ((section (".noinit")));
 
 /** main function
@@ -109,8 +117,7 @@ int main(void) {
     WDTCSR |= (1<<WDCE) | (1<<WDE);
     /* Turn off WDT */
     WDTCSR = 0x00;
-    //volatile long l;
-//    for(l=0;l<1000000;l++);
+
     DDR_CONFIG_IN(CONFIG1);
     PIN_SET(CONFIG1);
     wdt_enable(WDTO_2S);
@@ -142,6 +149,9 @@ int main(void) {
     
     wdt_reset();
     init_pwm();
+    global_pwm.channels[0].target_brightness = 255;
+    global_pwm.channels[1].target_brightness = 255;
+
 #if SERIAL_UART
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
     stdout = &mystdout;
@@ -166,8 +176,9 @@ int main(void) {
     rs485_init();
     zbus_core_init();
 #endif
-    //rf_init();
-    packet_init(idbuf[0],0);
+    int adr = getxval(idbuf[4])*16 + getxval(idbuf[5]);
+    
+    packet_init(adr,0);
 
     wdt_reset();
     srandom(random_seed);
