@@ -1,19 +1,15 @@
                         Moodlamp Kit Partlist
-
-PCB version: 0.30           Kit revision 5          Partlist $Revision$
-
-README: Please have a look at https://wiki.muc.ccc.de/moodlamp_30_build and https://wiki.muc.ccc.de/moodlamp for pictured build instructions and more information about moodlamps
+PCB version: 0.30           Kit revision 5          Partlist $Revision: 257 $
+README: Please have a look at wiki.muc.ccc.de/moodlamp_30_build andwiki.muc.ccc.de/moodlamp for pictured build instructions and more information about moodlamps
 
 WARNING: Some parts are not included in this kit. These parts are not needed or need to be replaced by a solder bridge:
 
 Parts replaced by a solder bridge:
 R[10,11,12,16,17,18], L1
-
 Parts not needed:
 R[13,14,15], IC3, C6, C7, C8
 
 Parts contained in this kit:
-
                             Base System:
 Part                    Value       Count       Mark    Package
 C[4,5]                  22pF        2           blue    0805
@@ -33,7 +29,6 @@ C[14|15]                100uF       1           -       radial capacitor
 Heat Shrinking Tube     12.7mm      1           -       2cm
 Twin Wire               0.14mm      1           -       10cm
 DC Jack                 2.5mm       1           -       -
-
                             RGB LED:
 Part                    Value       Count       Mark    Package
 T[1,2]                  IRF7103     2           -       SO-8
@@ -41,25 +36,21 @@ RGB LED on heat sink     -          1           -       -
 R[5,6]                  5Ohm        2           -       0414/15
 R7                      8Ohm        1           -       0414/15
 Wire                    0.14mm      4           -       15cm
-
                             IR Sensor:
 Part                    Value       Count       Mark    Package
 X3                      -           1           -       1x3 jack with connector
 -                       TSOP3436    1           -       -
 heat shrinking tube     4.8mm       1           -       30cm
 heat shrinking tube     2.4mm       1           -       10cm
-
                             USB:
 Part                    Value       Count       Mark    Package
 IC4                     FT232RL     1           -       SSOP28
 JP1                     -           1           -       1x2 pin header
 X4                      -           1           -       mini usb jack
-
                             RF Module:
 Part                    Value       Count       Mark    Package
 FRM12                   RFM12       1           -       pcb module
 Wire                    -           1           -       15cm
-
                             RS485:
 Part                    Value       Count       Mark    Package
 IC2                     MAX487CSA   1           -       SO-8
