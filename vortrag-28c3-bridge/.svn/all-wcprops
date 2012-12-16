@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge
+END
+uart.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/uart.h
+END
+rs485bridge.c
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/rs485bridge.c
+END
+leds.c
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/leds.c
+END
+config.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/config.h
+END
+uart.c
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/uart.c
+END
+leds.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/leds.h
+END
+makefile
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/makefile
+END
+pinutils.h
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/moodlamp-rf/!svn/ver/237/trunk/rs485bridge/pinutils.h
+END
