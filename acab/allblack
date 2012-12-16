@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+from acab import set
+from acab import fade
+import time
+import sys
+t = 2
+
+fade(0,0,0,0,100)
+
+

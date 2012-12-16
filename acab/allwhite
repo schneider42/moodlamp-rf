@@ -1,0 +1,13 @@
+#!/usr/bin/python
+
+from acab import set
+from acab import fade
+import time
+import sys
+t = .2
+
+for lamp in range(0x10,0x74):
+    fade(lamp,255,255,255,100)
+    time.sleep(t)
+
+

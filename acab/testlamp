@@ -1,0 +1,26 @@
+#!/usr/bin/python
+
+from acab import set
+from acab import fade
+from acab import update
+import time
+import sys
+t = 2
+
+lamp = int(sys.argv[1],16)
+
+
+while 1:
+    fade(lamp,255,0,0,int(t*1000))
+    update()
+    time.sleep(t)
+    fade(lamp,0,255,0,int(t*1000))
+    update()
+    time.sleep(t)
+    fade(lamp,0,0,255,int(t*1000))
+    update()
+    time.sleep(t)
+    #set(lamp,255,255,int(t*1000))
+    #time.sleep(t)
+
+
