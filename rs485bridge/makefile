@@ -299,7 +299,7 @@ AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 # reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
-AVRDUDE_FLAGS = -p $(MCU)
+AVRDUDE_FLAGS = -p $(MCU) -F
 
 ifdef AVRDUDE_PROGRAMMER
 AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
