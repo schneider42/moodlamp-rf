@@ -210,6 +210,18 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         control_update();
     }else if(cmd == CMD_PREPARE){
         control_prepareColor(param[0],param[1],param[2]);
+    }else if(cmd == CMD_PREPARE_FADE){
+        uint16_t speed = (param[3]<<8)+param[4];
+        control_prepareFade(param[0],param[1],param[2], speed);
+    }else if(cmd == CMD_PREPARE_FADEMS){
+        uint16_t time = (param[3]<<8)+param[4];
+        control_prepareFadems(param[0],param[1],param[2], time);
+    }else if(cmd == CMD_PREPARE_FADEMSALT){
+        uint16_t time = (param[3]<<8)+param[4];
+        control_prepareFademsalt(param[0],param[1],param[2], time);
+    }else if(cmd == CMD_DICE){
+        if( (random() & 0xff) < 23 )
+            jump_to_bootloader();    
     }
     return 0;
 }

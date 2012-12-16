@@ -69,8 +69,11 @@
 #define CMD_FADEMSALT           'T'
 #define CMD_GET_VOLTAGE         'K'
 #define CMD_UPDATE              'U'
-#define CMD_PREPARE              'P'
-
+#define CMD_PREPARE             'P'
+#define CMD_PREPARE_FADE        'a'
+#define CMD_PREPARE_FADEMS      'b'
+#define CMD_PREPARE_FADEMSALT   'c'
+#define CMD_DICE                'B'
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result);
 uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result);

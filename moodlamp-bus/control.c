@@ -27,6 +27,8 @@ uint16_t control_beacontime = 1000;
 uint8_t control_faderunning = 0;
 uint16_t time = 0;
 uint8_t control_r,control_g,control_b;
+uint16_t control_speed, control_time;
+uint8_t control_cmd;
 
 #define CONTROL_SEARCHMASTER         1
 #define CONTROL_IDENTIFY             2
@@ -39,32 +41,70 @@ void control_init(void)
     control_faderunning = global.flags.running;
 }
 
-void control_setColor(uint8_t r, uint8_t g, uint8_t b)
-{
-    control_r=r;
-    control_g=g;
-    control_b=b;
-    control_update();
-}
-
 void control_prepareColor(uint8_t r, uint8_t g, uint8_t b)
 {
-    control_r=r;
-    control_g=g;
-    control_b=b;
+    control_r = r;
+    control_g = g;
+    control_b = b;
+    control_cmd = CMD_SET_COLOR;
+}
+
+void control_prepareFade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
+{
+    control_r = r;
+    control_g = g;
+    control_b = b;
+    control_speed = speed;
+    control_cmd = CMD_FADE;
+}
+
+void control_prepareFadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
+{
+    control_r = r;
+    control_g = g;
+    control_b = b;
+    control_time = time;
+    control_cmd = CMD_FADEMS;
+}
+
+void control_prepareFademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
+{
+    control_r = r;
+    control_g = g;
+    control_b = b;
+    control_time = time;
+    control_cmd = CMD_FADEMSALT;
 }
 
 inline void control_update(void)
 {
-cli();
-    global_pwm.channels[0].brightness = control_r;
-    global_pwm.channels[0].target_brightness = control_r;
-    global_pwm.channels[1].brightness = control_g;
-    global_pwm.channels[1].target_brightness = control_g;
-    global_pwm.channels[2].brightness = control_b;
-    global_pwm.channels[2].target_brightness = control_b;
-sei();
+    switch( control_cmd ){
+        case CMD_SET_COLOR:
+            control_setColor(control_r, control_g, control_b);
+        break;
+        case CMD_FADE:
+            control_fade(control_r, control_g, control_b, control_speed);
+        break;
+        case CMD_FADEMS:
+            control_fadems(control_r, control_g, control_b, control_time);
+        break;
+        case CMD_FADEMSALT:
+            control_fademsalt(control_r, control_g, control_b, control_time);
+        break;
+    }
     //control_setTimeout();
+}
+
+void control_setColor(uint8_t r, uint8_t g, uint8_t b)
+{
+    cli();
+    global_pwm.channels[0].brightness = r;
+    global_pwm.channels[0].target_brightness = r;
+    global_pwm.channels[1].brightness = g;
+    global_pwm.channels[1].target_brightness = g;
+    global_pwm.channels[2].brightness = b;
+    global_pwm.channels[2].target_brightness = b;
+    sei();
 }
 
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)

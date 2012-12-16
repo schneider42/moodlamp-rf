@@ -34,4 +34,7 @@ void control_standby(uint16_t wait);
 void control_lowbat(void);
 inline void control_update(void);
 void control_prepareColor(uint8_t r, uint8_t g, uint8_t b);
+void control_prepareFade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed);
+void control_prepareFadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
+void control_prepareFademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
 #endif
