@@ -41,8 +41,8 @@
 
 
 # MCU name
-#MCU = atmega644p
-MCU = atmega324p
+MCU = atmega644p
+#MCU = atmega324p
 #MCU = atmega32
 #MCU = atmega16
 
@@ -421,12 +421,13 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 # Default target.
 all: begin gccversion sizebefore build sizeafter end
 # Change the build target to build a HEX file or a library.
-build: elf hex eep lss sym
+build: elf hex bin eep lss sym
 #build: lib
 
 
 elf: $(TARGET).elf
 hex: $(TARGET).hex
+bin: $(TARGET).bin
 eep: $(TARGET).eep
 lss: $(TARGET).lss
 sym: $(TARGET).sym
@@ -534,7 +535,12 @@ extcoff: $(TARGET).elf
 %.hex: %.elf
 	@echo
 	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
+	$(OBJCOPY) -O ihex -R .eeprom $< $@
+
+%.bin: %.elf
+	@echo
+	@echo $(MSG_FLASH) $@
+	$(OBJCOPY) -O binary -R .eeprom $< $@
 
 %.eep: %.elf
 	@echo
@@ -617,6 +623,7 @@ clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
 	$(REMOVE) $(TARGET).hex
+	$(REMOVE) $(TARGET).bin
 	$(REMOVE) $(TARGET).eep
 	$(REMOVE) $(TARGET).cof
 	$(REMOVE) $(TARGET).elf
@@ -642,6 +649,6 @@ $(shell mkdir $(OBJDIR) 2>/dev/null)
 # Listing of phony targets.
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
-clean clean_list program program-flash debug gdb-config
+clean clean_list program program-flash debug gdb-config bin
 
 
