@@ -1,0 +1,10 @@
+*.pyc
+*.o
+*.lst
+*.eep
+*.elf
+*.hex
+*.map
+*.sym
+*.lss
+.dep

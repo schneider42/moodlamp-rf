@@ -1,1 +1,1 @@
-python flash.py -A write -m eeprom -d "\x$1"
+python flash.py -A write -m eeprom -d lamp$1,muc.ccc.de

@@ -41,11 +41,16 @@
 
 
 # MCU name
-MCU = atmega644p
-BOOTLOADER_ADDRESS = E000
+#MCU = atmega644p
+#BOOTLOADER_ADDRESS = E000
+#preserve eeprom, max boot section
+#AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd0:m
 
-#MCU = atmega324p
-#BOOTLOADER_ADDRESS = 7800
+MCU = atmega324p
+BOOTLOADER_ADDRESS = 7800
+#preserve eeprom, 1kword boot section(for 324p)
+AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd2:m
+
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
 #     processor frequency. You can then use this symbol in your source code to 
@@ -318,10 +323,6 @@ AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 #AVRDUDE_LFUSE_FLAGS = -B 100 -U lfuse:w:0xe7:m
 #Full swing crystal oscillator, 16k, 0ms (for bod)
 AVRDUDE_LFUSE_FLAGS = -B 100 -U lfuse:w:0xd7:m
-#preserve eeprom, max boot section
-#AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd0:m
-#preserve eeprom, 1kword boot section(for 324p)
-AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd2:m
 #2.7v brown out
 #AVRDUDE_EFUSE_FLAGS = -B 100 -U efuse:w:0xfd:m
 #4.3v brown out

@@ -17,11 +17,15 @@ class SerialInterface:
         c = crcmod.Crc(0x11021)
         c.update(message);
         message += c.digest()
+        #the bootloader needs escaping
         message = message.replace('\\','\\\\')
         enc = "\\5" + message + "\\2"
+        data = enc.replace('\\','\\\\')
         #print "writing",list(enc)
-        self.ser.write(enc)
+        self.ser.write(data)
     def write(self, data):
+        #the bridge needs escaping
+        data = data.replace('\\','\\\\')
         self.ser.write(data)
 
     def readMessage(self):
@@ -31,6 +35,7 @@ class SerialInterface:
         start = False
 
         while True:
+            d = ''
             c = self.ser.read(1)
             if len(c) == 0:             #A timout occured
                 print 'TIMEOUT'

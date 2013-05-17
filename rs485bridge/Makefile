@@ -42,7 +42,7 @@
 
 # MCU name
 MCU = atmega644p
-#MCU = atmega32
+#MCU = atmega32p
 #MCU = atmega16
 
 
@@ -466,6 +466,11 @@ program: $(TARGET).hex $(TARGET).eep
 
 program-flash: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
+
+bootload: $(TARGET).hex
+	python ../bootloader/launcher/launcher.py /dev/ttyUSB0
+	$(AVRDUDE) -p m644p -b 115200 -u -c avr109 -P /dev/ttyUSB0 -U f:w:$(TARGET).hex
+	python ../bootloader/launcher/launch-application.py /dev/ttyUSB0
 # Generate avr-gdb config/init file which does the following:
 #     define the reset signal, load the target file, connect to target, and set 
 #     a breakpoint at main().

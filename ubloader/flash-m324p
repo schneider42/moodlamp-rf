@@ -1,1 +1,1 @@
-python flash.py -p 128 -f ../moodlamp-bus/fnordlicht.bin -A write
+python flash.py -p 128 -f $1 -A write
