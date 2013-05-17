@@ -586,7 +586,7 @@ static inline void prepare_next_timeslot(void)
 /** interrupts*/
 
 /** timer1 overflow (=output compare a) interrupt */
-ISR(SIG_OUTPUT_COMPARE1A)
+ISR(TIMER1_COMPA_vect)
 /*{{{*/ {
     if( pwm.index == 0 ){
         /* signal new cycle to main procedure */

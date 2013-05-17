@@ -328,7 +328,7 @@ static inline void prepare_next_timeslot(void)
 /** interrupts*/
 
 /** timer1 overflow (=output compare a) interrupt */
-ISR(SIG_OUTPUT_COMPARE1A)
+ISR(TIMER1_COMPA_vect)
 /*{{{*/ {
     //static uint8_t timebase = 0;
    // PORTD |= (1<<PD3);
@@ -375,7 +375,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
 } /*}}}*/
 
 /** timer1 output compare b interrupt */
-ISR(SIG_OUTPUT_COMPARE1B)
+ISR(TIMER1_COMPB_vect)
 /*{{{*/ {
     /* normal interrupt, output pre-calculated bitmask */
     //PORTD |= (1<<PD4);
