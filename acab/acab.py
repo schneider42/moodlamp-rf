@@ -8,6 +8,8 @@ serials = [
 #    "/dev/ttyUSB3",
 #    "/dev/ttyUSB4",
 #    "/dev/ttyUSB5",
+#    "/dev/ttyUSB6",
+#    "/dev/ttyUSB7",
     ]
 
 def createSerial(dev):
@@ -33,6 +35,7 @@ def set(lamp,r,g,b):
 
 def fade(lamp,r,g,b,ms):
     cmd = "%cc%c%c%c%c%c"%(chr(lamp),chr(r),chr(g),chr(b),chr(high(ms)),chr(low(ms)))
+    cmd = cmd.replace("\\","\\\\")
     cmd = "\x5c\x30%s\x5c\x31"%cmd
     cmd = cmd.replace("\\","\\\\")
     for serial in serials:
