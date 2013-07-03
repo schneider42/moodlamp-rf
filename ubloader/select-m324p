@@ -1,1 +1,1 @@
-python flash.py -n "$1" -A select
+python flash.py -n "lamp$1" -A select
