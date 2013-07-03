@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# This file is used to flash lamps for our ACAB installation
+
+echo "This script re-programs lamps with"
+echo "new firmware."
+echo
+echo "Please create a valid firmware image"
+echo "at ../moodlamp-bus/fnordlicht.bin"
+echo
+echo "This can be done by executing 'make'"
+echo "in ../modlamp-bus"
+echo "Please check that you chose the correct"
+echo "MCU (m644p or m324p) in the Makefile"
+echo
+echo
+
+while [ true ]
+do
+echo "Please enter the address of a lamp you want to"
+echo "program. Hit enter to program any available lamp."
+echo "(It is not possible to program more than a single lamp"
+echo "simultaneously)"
+echo "Example addresses: 10, 11, 1A, 7B, ..."
+echo "Hit CTRL+C to abort."
+read address
+echo "Please cycle the power of this lamp."
+./select-m324p $address
+
+echo "WARNING: this script assumes an ATMega324P as the MCU."
+echo "Please check if the hardware is actually a ATMega324P."
+echo "If it is not, change the script and try again ;)"
+echo "Hit Enter to continue"
+
+read address
+./flash-m324p ../moodlamp-bus/fnordlicht.bin
+./boot-m644p
+
+# Test the lamp
+#python ../acab/blink.py $address
+done

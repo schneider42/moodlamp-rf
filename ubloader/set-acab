@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo "This script changes the address of a lamp."
+echo
+
+while [ true ]
+do
+echo
+echo "Please enter the address of a lamp you want to"
+echo "change the address of. Hit enter to select any available lamp."
+echo "(It is not possible to change the address of  more than a single lamp"
+echo "simultaneously)"
+echo "Example addresses: 10, 11, 1A, 7B, ..."
+read address
+echo
+echo "Please cycle the power of this lamp."
+./select-m324p $address
+
+echo
+echo "Please enter the new desired address of the lamp."
+echo "Example addresses: 10, 11, 1A, 7B, ..."
+read address
+
+./set-m324p $address
+./boot-m644p
+
+# Test the lamp
+#python ../acab/blink.py $address
+done
