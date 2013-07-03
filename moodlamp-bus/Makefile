@@ -41,8 +41,8 @@
 
 
 # MCU name
-MCU = atmega644p
-#MCU = atmega324p
+#MCU = atmega644p
+MCU = atmega324p
 #MCU = atmega32
 #MCU = atmega16
 
