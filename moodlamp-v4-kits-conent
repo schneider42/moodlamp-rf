@@ -1,0 +1,34 @@
+*D1
+*IC2
+*Q1
+*C8
+*R5
+
+*R6
+*R7
+*DC
+*L1
+*C9
+
+*C10
+*IC4
+*IC1
+*T1
+*T2
+
+*R1,R3 - black
+*C1, C2, C3, C7, C11, C12, C13, C14 - neutral x10
+*C6 - neutral x1
+*L2, L3 - neutral x2
+*R9 - purple x1
+*R2 - blue x1
+*C4, C5 - red x2
+*R4 - yellow
+
+LED
+3x2 header
+Jumper
+1x2 header
+RJ45 connector
+
+
