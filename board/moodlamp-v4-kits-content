@@ -1,3 +1,4 @@
+```
 Part                                Type        Value           Marking
 IC1                                 MCU         ATMEGA324A-20AU ATMEGA324A AU
 IC2                                 RS485 TRX   MAX487          MAX487
@@ -32,4 +33,6 @@ JP1                                 Connector   1x2 Header      1x2 Header
 
 LED1                                LED         RGB             "Big LED"
 Jumper                              Jumper      Jumper          Black Jumper
+```
 
+See also https://wiki.muc.ccc.de/_media/moodlamp-r4-round-passives.jpg
