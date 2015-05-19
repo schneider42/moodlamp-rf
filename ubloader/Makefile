@@ -46,7 +46,10 @@
 #preserve eeprom, max boot section
 #AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd0:m
 
-MCU = atmega324p
+# version <= r3
+#MCU = atmega324p
+# version >= r4
+MCU = atmega324a
 BOOTLOADER_ADDRESS = 7800
 #preserve eeprom, 1kword boot section(for 324p)
 AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd2:m
